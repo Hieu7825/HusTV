@@ -1,0 +1,222 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #f84565;
+  --color-primary-dull: #d63854;
+}
+
+* {
+  font-family: "Outfit", sans-serif;
+  scrollbar-width: thin;
+  scrollbar-color: #787777 #1e1e1e;
+}
+
+body {
+  color: white;
+  background-color: #09090b;
+}
+.carousel .list .item:nth-child(1) .content {
+  filter: blur(20px);
+  opacity: 0;
+  animation: showContent 0.5s 1s linear 1 forwards;
+}
+
+@keyframes showContent {
+  to {
+    filter: blur(0px);
+    opacity: 1;
+  }
+}
+
+/* Example for next click animations */
+.carousel.next .list .item:nth-child(1) img {
+  width: 150px;
+  height: 220px;
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  border-radius: 100%;
+  animation: showImage 0.5s linear 1 forwards;
+}
+
+@keyframes showImage {
+  to {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+}
+
+.carousel.next .thumbnail {
+  animation: effectNext 0.5s linear 1 forwards;
+}
+
+@keyframes effectNext {
+  from {
+    transform: translateX(150px);
+  }
+}
+
+/* Running time animation */
+.carousel.next .time,
+.carousel.prev .time {
+  animation: runningTime 2s linear 1 forwards;
+}
+
+@keyframes runningTime {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0;
+  }
+}
+
+/* Prev click animations */
+.carousel.prev .list .item:nth-child(2) {
+  z-index: 200; /* Higher z-index for the item moving out */
+}
+
+.carousel.prev .list .item:nth-child(2) img {
+  animation: outFrame 0.5s linear 1 forwards;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+@keyframes outFrame {
+  to {
+    width: 150px;
+    height: 220px;
+    bottom: 50px;
+    left: 50%;
+    border-radius: 50px;
+  }
+}
+
+.carousel.prev .list .item:nth-child(2) .content {
+  animation: contentOut 1.5s linear 1 forwards !important;
+}
+
+@keyframes contentOut {
+  to {
+    filter: blur(20px);
+    opacity: 0;
+  }
+}
+
+/* Media queries for responsiveness */
+@media screen and (max-width: 678px) {
+  .carousel .list .item .content {
+    padding-right: 0;
+  }
+  .carousel .list .item .content h1 {
+    font-size: 40px;
+  }
+  .details p {
+    font-size: 17px;
+  }
+  .content h4 {
+    margin: 10px 0;
+  }
+  .vid-box {
+    margin-top: 20px;
+  }
+  /* `nav` and `header` are not in the provided HTML snippet, but if they were,
+       they would be styled with Tailwind classes or hidden with `hidden` class. */
+  .content {
+    top: 10%;
+  }
+  .thumbnail {
+    top: 75%;
+  }
+  .arrows {
+    left: 15%;
+  }
+}
+/* Gradient Animation - Dark Red Theme */
+.gradient {
+  background: linear-gradient(
+    to right,
+
+    #7f1d1d,
+    #dc2626,
+    #ea580c,
+    #f97316,
+    #dc2626,
+    #f97316,
+    #ea580c,
+    #dc2626,
+    #7f1d1d
+  );
+  background-size: 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: animate-gradient 2.5s linear infinite;
+}
+@keyframes animate-gradient {
+  to {
+    background-position: 200%;
+  }
+}
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+  opacity: 0;
+}
+/* Animation cho "sun-moon" khi chuyển đổi */
+@keyframes rotate-center {
+  0% {
+    -webkit-transform: rotate(0);
+    transform: rotate(0);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+/* Animation cho các đám mây (clouds) */
+@keyframes cloud-move {
+  0% {
+    transform: translateX(0px);
+  }
+  40% {
+    transform: translateX(4px); /* Di chuyển nhẹ sang phải */
+  }
+  80% {
+    transform: translateX(-4px); /* Di chuyển nhẹ sang trái */
+  }
+  100% {
+    transform: translateX(0px); /* Quay lại vị trí ban đầu */
+  }
+}
+
+/* Animation cho các ngôi sao (stars) */
+@keyframes star-twinkle {
+  0% {
+    transform: scale(1); /* Kích thước bình thường */
+  }
+  40% {
+    transform: scale(1.2); /* Phóng to nhẹ để tạo hiệu ứng lấp lánh */
+  }
+  80% {
+    transform: scale(0.8); /* Thu nhỏ nhẹ */
+  }
+  100% {
+    transform: scale(1); /* Quay lại kích thước bình thường */
+  }
+}

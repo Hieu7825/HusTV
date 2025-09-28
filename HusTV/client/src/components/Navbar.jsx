@@ -75,7 +75,12 @@ const Navbar = () => {
       </div>
       <div className="flex items-center gap-8">
         <Switch />
-        <SearchIcon className="max-md:hidden w-6 h-6 cursor-pointer" />
+        <SearchIcon
+          onClick={() => {
+            scrollTo(0, 0), navigate("/movies");
+          }}
+          className="max-md:hidden w-6 h-6 cursor-pointer"
+        />
         {!user ? (
           <button
             onClick={openSignIn}

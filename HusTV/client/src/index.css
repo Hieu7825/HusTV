@@ -614,3 +614,124 @@ body {
   color: rgba(255, 255, 255, 0.7);
   font-weight: 500;
 }
+/* Loading */
+/* Head animation */
+.head {
+  animation: move 3s linear infinite;
+}
+
+/* Eye animation and pseudo-element */
+.eye {
+  animation: move 5s alternate infinite;
+}
+
+.eye::before {
+  content: "";
+  display: flex;
+  width: 1rem;
+  height: 2rem;
+  background: radial-gradient(
+    rgba(0, 0, 0, 1) 44%,
+    #e220b8 50%,
+    transparent 60%
+  );
+  border-radius: 50%;
+  animation: blink 4s ease-in-out alternate infinite;
+}
+
+/* Flames glow effect */
+.flames::before {
+  content: "";
+  position: absolute;
+  width: 8rem;
+  height: 8rem;
+  background: #f865d8;
+  filter: blur(5rem);
+  opacity: 0.5;
+  border-radius: 50%;
+  top: -8rem;
+  left: -4rem;
+  z-index: 4;
+  animation: pulse 3s linear infinite;
+}
+
+/* Particle animations */
+.particle-1 {
+  animation: move 7s alternate-reverse infinite;
+}
+
+.particle-2 {
+  animation: move 1.5s ease-in-out reverse infinite;
+}
+
+.particle-3 {
+  animation: move 8s alternate-reverse infinite;
+}
+
+.particle-4 {
+  animation: move 4s alternate-reverse infinite;
+}
+
+.particle-5 {
+  animation: move 2.5s alternate-reverse infinite;
+}
+
+.particle-6 {
+  animation: move 5s alternate-reverse infinite;
+}
+
+.particle-7 {
+  animation: move 1.2s alternate-reverse infinite;
+}
+
+.particle-8 {
+  animation: move 2.5s alternate-reverse infinite;
+}
+
+/* Keyframe animations */
+@keyframes move {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(4px, 6px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes blink {
+  20% {
+    transform: translate(0, 0);
+    height: 2rem;
+  }
+  30% {
+    height: 0;
+  }
+  40% {
+    transform: translate(5px, 10px);
+    height: 0;
+  }
+  50% {
+    height: 2rem;
+  }
+  70% {
+    transform: translate(-10px, -10px);
+  }
+  90% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}

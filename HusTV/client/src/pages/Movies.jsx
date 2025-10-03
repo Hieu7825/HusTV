@@ -1,10 +1,68 @@
-import React from "react";
+import React, { useState } from "react";
 import { dummyShowsData } from "../assets/assets";
 import MovieCard from "../components/MovieCard";
 import BlurCircle from "../components/BlurCircle";
 import { Film, Sparkles, Search, Filter, ArrowRight } from "lucide-react";
 
 const Movies = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const moviesPerPage = 12;
+
+  // Tính toán phân trang
+  const totalPages = Math.ceil(dummyShowsData.length / moviesPerPage);
+  const indexOfLastMovie = currentPage * moviesPerPage;
+  const indexOfFirstMovie = indexOfLastMovie - moviesPerPage;
+  const currentMovies = dummyShowsData.slice(
+    indexOfFirstMovie,
+    indexOfLastMovie
+  );
+
+  // Hàm chuyển trang
+  const goToPage = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const goToPrevious = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1);
+    }
+  };
+
+  // Tạo mảng số trang để hiển thị
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= maxVisiblePages; i++) {
+          pages.push(i);
+        }
+      } else if (currentPage >= totalPages - 2) {
+        for (let i = totalPages - maxVisiblePages + 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        for (let i = currentPage - 2; i <= currentPage + 2; i++) {
+          pages.push(i);
+        }
+      }
+    }
+
+    return pages;
+  };
+
   return dummyShowsData.length > 0 ? (
     <div className="relative my-20 mb-60 px-6 md:px-16 lg:px-24 xl:px-44 overflow-hidden min-h-[80vh]">
       {/* Background Effects */}
@@ -140,7 +198,7 @@ const Movies = () => {
 
       {/* Movies Grid */}
       <div className="flex flex-wrap gap-8 max-sm:justify-center">
-        {dummyShowsData.map((movie, index) => (
+        {currentMovies.map((movie, index) => (
           <div
             key={movie._id}
             className="animate-fade-in-up"
@@ -151,45 +209,63 @@ const Movies = () => {
         ))}
       </div>
 
-      {/* Enhanced Pagination Section */}
-      <div className="flex justify-center items-center mt-15 gap-4 mb-10">
-        {/* Previous Button */}
-        <button className="group flex items-center gap-2 px-6 py-3 text-sm text-gray-400 hover:text-red-400 transition-all duration-300 border border-gray-700 hover:border-red-500/50 rounded-xl backdrop-blur-sm hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-red-500/10">
-          <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform duration-300" />
-          <span>Previous</span>
-        </button>
+      {/* Enhanced Pagination Section - Chỉ hiển thị khi có > 12 phim */}
+      {dummyShowsData.length > 12 && (
+        <div className="flex justify-center items-center mt-15 gap-4 mb-10">
+          {/* Previous Button */}
+          <button
+            onClick={goToPrevious}
+            disabled={currentPage === 1}
+            className="group flex items-center gap-2 px-6 py-3 text-sm text-gray-400 hover:text-red-400 transition-all duration-300 border border-gray-700 hover:border-red-500/50 rounded-xl backdrop-blur-sm hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-red-500/10"
+          >
+            <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform duration-300" />
+            <span>Previous</span>
+          </button>
 
-        {/* Page Numbers */}
-        <div className="flex gap-3">
-          {[1, 2, 3, 4, 5].map((page) => (
-            <button
-              key={page}
-              className={`w-12 h-12 rounded-xl font-bold transition-all duration-300 ${
-                page === 1
-                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-xl shadow-red-500/30 scale-110 border-2 border-red-400"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-red-500/20 hover:text-red-400 border border-gray-700 hover:border-red-500/50 hover:scale-105 hover:shadow-lg"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
+          {/* Page Numbers */}
+          <div className="flex gap-3">
+            {getPageNumbers().map((page) => (
+              <button
+                key={page}
+                onClick={() => goToPage(page)}
+                className={`w-12 h-12 rounded-xl font-bold transition-all duration-300 ${
+                  page === currentPage
+                    ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-xl shadow-red-500/30 scale-110 border-2 border-red-400"
+                    : "bg-gray-800/50 text-gray-400 hover:bg-red-500/20 hover:text-red-400 border border-gray-700 hover:border-red-500/50 hover:scale-105 hover:shadow-lg"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
 
-          {/* Dots */}
-          <div className="flex items-center px-3">
-            <span className="text-gray-500 text-lg">...</span>
+            {/* Dots - Hiển thị nếu có nhiều trang hơn */}
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <>
+                <div className="flex items-center px-3">
+                  <span className="text-gray-500 text-lg">...</span>
+                </div>
+
+                <button
+                  onClick={() => goToPage(totalPages)}
+                  className="w-12 h-12 rounded-xl font-bold bg-gray-800/50 text-gray-400 hover:bg-red-500/20 hover:text-red-400 border border-gray-700 hover:border-red-500/50 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                >
+                  {totalPages}
+                </button>
+              </>
+            )}
           </div>
 
-          <button className="w-12 h-12 rounded-xl font-bold bg-gray-800/50 text-gray-400 hover:bg-red-500/20 hover:text-red-400 border border-gray-700 hover:border-red-500/50 transition-all duration-300 hover:scale-105 hover:shadow-lg">
-            12
+          {/* Next Button */}
+          <button
+            onClick={goToNext}
+            disabled={currentPage === totalPages}
+            className="group flex items-center gap-2 px-6 py-3 text-sm text-gray-400 hover:text-red-400 transition-all duration-300 border border-gray-700 hover:border-red-500/50 rounded-xl backdrop-blur-sm hover:bg-red-900/20 hover:shadow-lg hover:shadow-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span>Next</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
           </button>
         </div>
-
-        {/* Next Button */}
-        <button className="group flex items-center gap-2 px-6 py-3 text-sm text-gray-400 hover:text-red-400 transition-all duration-300 border border-gray-700 hover:border-red-500/50 rounded-xl backdrop-blur-sm hover:bg-red-900/20 hover:shadow-lg hover:shadow-red-500/10">
-          <span>Next</span>
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-        </button>
-      </div>
+      )}
     </div>
   ) : (
     <div className="flex flex-col items-center justify-center h-screen animate-fade-in">

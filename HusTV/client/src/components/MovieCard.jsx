@@ -24,7 +24,7 @@ const MovieCard = ({ movie }) => {
         {movie.title}
       </p>
 
-      <p className="text-sm text-gray-300 mt-2 drop-shadow-md">
+      <p className="text-sm text-gray-300 mt-2 drop-shadow-md truncate">
         {new Date(movie.release_date).getFullYear()} |{" "}
         {movie.genres
           .slice(0, 2)
@@ -44,7 +44,7 @@ const MovieCard = ({ movie }) => {
           Play Now
         </button>
 
-        <p className="flex items-center gap-1 text-sm text-gray-300 mt-1 pr-1 drop-shadow-md">
+        <p className="flex items-center gap-1 text-sm text-gray-300 mt-1 pr-1 drop-shadow-md truncate">
           <StarIcon className="w-4 h-4 text-yellow-400 fill-yellow-400 drop-shadow-lg" />
           {movie.vote_average.toFixed(1)} ({movie.vote_count} votes)
         </p>

@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import timeFormat from "../lib/timeFormat";
 
 // Use dummyShowsData instead of carouselData
-const carouselData = dummyShowsData;
+const carouselData = dummyShowsData.slice(0, 6); // Lấy 6 phần tử đầu tiên làm ví dụ
 
 const timeRunning = 2000; // 2 seconds for animation
 const displayedThumbnails = 2; // Số lượng thumbnail muốn hiển thị cùng lúc

@@ -38,7 +38,7 @@ const Movies = () => {
   // Tạo mảng số trang để hiển thị
   const getPageNumbers = () => {
     const pages = [];
-    const maxVisiblePages = 5;
+    const maxVisiblePages = 3;
 
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
@@ -239,7 +239,7 @@ const Movies = () => {
             ))}
 
             {/* Dots - Hiển thị nếu có nhiều trang hơn */}
-            {totalPages > 5 && currentPage < totalPages - 2 && (
+            {totalPages > 3 && currentPage < totalPages - 2 && (
               <>
                 <div className="flex items-center px-3">
                   <span className="text-gray-500 text-lg">...</span>

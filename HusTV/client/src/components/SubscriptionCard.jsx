@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircle, Star, Crown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const SubscriptionCard = ({
   planName = "Premium",
@@ -13,7 +14,11 @@ const SubscriptionCard = ({
     "Premium Support",
   ],
   isPopular = false,
+  duration = "Monthly",
+  tierRank = 1,
 }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="relative group ">
       {/* Animated border gradient */}
@@ -24,8 +29,6 @@ const SubscriptionCard = ({
         {/* Popular badge */}
         {isPopular && (
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-            {" "}
-            {/* Adjusted top */}
             <div className="flex items-center gap-1 bg-gradient-to-r from-red-600 to-red-700 px-4 py-1.5 rounded-full text-xs font-bold text-white shadow-lg animate-bounce">
               <Crown className="w-3 h-3" />
               MOST POPULAR
@@ -36,10 +39,8 @@ const SubscriptionCard = ({
         {/* Glowing effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 via-transparent to-red-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-        {/* Content - Increased padding-top to push content down */}
+        {/* Content */}
         <div className="relative p-8 pt-20 text-center h-full flex flex-col justify-between">
-          {" "}
-          {/* Added pt-20, h-full, flex-col, justify-between */}
           <div>
             <div className="mb-6">
               <h3 className="text-2xl font-bold text-white mb-2 uppercase tracking-wider group-hover:text-red-400 transition-colors duration-300">
@@ -50,9 +51,11 @@ const SubscriptionCard = ({
             {/* Price */}
             <div className="mb-6">
               <div className="text-5xl font-extrabold text-white group-hover:scale-110 transition-transform duration-300 drop-shadow-2xl">
-                {price}
+                ${price}
               </div>
-              <p className="text-gray-400 text-sm mt-1">per month</p>
+              <p className="text-gray-400 text-sm mt-1">
+                per {duration.toLowerCase()}
+              </p>
             </div>
             {/* Description */}
             <p className="text-gray-300 text-sm mb-8 leading-relaxed">
@@ -72,14 +75,17 @@ const SubscriptionCard = ({
               ))}
             </div>
           </div>
-          {/* CTA Button - Placed at the bottom */}
+          {/* CTA Button */}
           <div className="mt-auto">
-            {" "}
-            {/* Use mt-auto to push it to the bottom */}
-            <button className="relative w-full py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 border border-red-500/50 group-hover:border-red-400">
+            <button
+              onClick={() => {
+                scrollTo(0, 0), navigate("/my-subscriptions");
+              }}
+              className="relative cursor-pointer w-full py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 border border-red-500/50 group-hover:border-red-400"
+            >
               <span className="relative z-10 flex items-center justify-center gap-2">
                 <Star className="w-4 h-4" />
-                Get Started
+                View
               </span>
 
               {/* Button glow effect */}

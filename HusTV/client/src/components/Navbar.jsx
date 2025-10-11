@@ -84,24 +84,38 @@ const Navbar = () => {
         {!user ? (
           <button
             onClick={openSignIn}
-            className="px-4 py-1 sm:px-7 sm:py-2 bg-primary
-        hover:bg-primary-dull transition rounded-full font-medium
-        cursor-pointer"
+            className="px-4 py-1 sm:px-7 sm:py-2 bg-gradient-to-r from-red-600 to-red-700 
+            hover:from-red-500 hover:to-red-600 text-white transition-all duration-300 
+            rounded-full font-medium cursor-pointer shadow-lg hover:shadow-red-500/50 
+            hover:scale-105 border border-red-500/50"
           >
             Login
           </button>
         ) : (
-          <UserButton>
-            <UserButton.MenuItems>
-              <UserButton.Action
-                label="My Bookings"
-                labelIcon={<TicketPlus width={15} />}
-                onClick={() => navigate("/my-bookings")}
-              />
-            </UserButton.MenuItems>
-          </UserButton>
+          <div className="hover:scale-105 transition-transform duration-300">
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox:
+                    "w-9 h-9 ring-2 ring-red-500 ring-offset-2 ring-offset-transparent",
+                  userButtonPopup: "bg-[#1a1a1a] border border-red-500/30",
+                  userButtonTrigger:
+                    "outline-red-500 hover:scale-105 transition-transform duration-300",
+                },
+              }}
+            >
+              <UserButton.MenuItems>
+                <UserButton.Action
+                  label="My Subscriptions"
+                  labelIcon={<TicketPlus width={15} />}
+                  onClick={() => navigate("/my-bookings")}
+                />
+              </UserButton.MenuItems>
+            </UserButton>
+          </div>
         )}
       </div>
+
       <MenuIcon
         className="max-md:ml-4 md:hidden w-8 h-8 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}

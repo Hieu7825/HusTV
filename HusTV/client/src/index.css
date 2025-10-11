@@ -1,11 +1,69 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 
-@theme {
+/* Color Variables and Theme Setup */
+:root {
+  /* Base Theme Colors */
   --color-primary: #f84565;
   --color-primary-dull: #d63854;
+  --color-accent-orange: #ea580c;
+  --color-accent-yellow: #f97316;
+  --color-accent-red: #dc2626;
+  --color-accent-dark: #7f1d1d;
+
+  /* Light Theme Accent Colors */
+  --color-light-primary: #3b82f6;
+  --color-light-primary-dull: #2563eb;
+
+  /* Dark Theme Colors - Default */
+  --color-bg-base: #09090b;
+  --color-bg-card: #18181b;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #d1d5db;
+  --color-text-muted: #9ca3af;
+  --color-border-primary: #27272a;
+  --color-border-secondary: #3f3f46;
+
+  /* Common Colors */
+  --color-shadow-light: rgba(255, 255, 255, 0.1);
+  --color-shadow-dark: rgba(0, 0, 0, 0.2);
+  --color-overlay: rgba(0, 0, 0, 0.5);
+
+  /* Button & Gradient Colors */
+  --btn-gradient-from: var(--color-primary);
+  --btn-gradient-to: var(--color-primary-dull);
+  --btn-hover-from: var(--color-primary-dull);
+  --btn-hover-to: var(--color-accent-dark);
 }
 
+/* Light Theme Colors */
+[data-theme="light"] {
+  /* Background Colors */
+  --color-bg-base: #ffffff;
+  --color-bg-card: #f8fafc;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748b;
+  --color-border-primary: #e2e8f0;
+  --color-border-secondary: #cbd5e1;
+
+  /* Override primary colors for light theme */
+  --color-primary: var(--color-light-primary);
+  --color-primary-dull: var(--color-light-primary-dull);
+
+  /* Button & Gradient Adjustments */
+  --btn-gradient-from: var(--color-primary);
+  --btn-gradient-to: var(--color-accent-orange);
+  --btn-hover-from: var(--color-primary);
+  --btn-hover-to: var(--color-primary-dull);
+
+  /* Shadow Adjustments */
+  --color-shadow-light: rgba(0, 0, 0, 0.05);
+  --color-shadow-dark: rgba(0, 0, 0, 0.1);
+  --color-overlay: rgba(255, 255, 255, 0.9);
+}
+
+/* Global Styles */
 * {
   font-family: "Outfit", sans-serif;
   scrollbar-width: thin;
@@ -13,9 +71,58 @@
 }
 
 body {
-  color: white;
-  background-color: #09090b;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-base);
 }
+
+/* Card Styles */
+.card {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border-primary);
+  box-shadow: 0 4px 6px var(--color-shadow-light);
+}
+
+/* Button Styles */
+.btn-primary {
+  background: linear-gradient(
+    to right,
+    var(--btn-gradient-from),
+    var(--btn-gradient-to)
+  );
+  color: var(--color-text-primary);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(
+    to right,
+    var(--btn-hover-from),
+    var(--btn-hover-to)
+  );
+}
+
+/* Text Styles */
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+/* Border Styles */
+.border-primary {
+  border-color: var(--color-border-primary);
+}
+
+.border-secondary {
+  border-color: var(--color-border-secondary);
+}
+
+/* Carousel Animations */
 .carousel .list .item:nth-child(1) .content {
   filter: blur(20px);
   opacity: 0;
@@ -733,5 +840,348 @@ body {
   }
   100% {
     opacity: 0.5;
+  }
+}
+/* Phần này là làm cái switch, bao giờ rảnh thì cải thiện cái light mode sau */
+
+/* ============================================
+   THEME SYSTEM - Light Mode Styles
+   ============================================ */
+
+/* Light Mode Theme Variables */
+.light-mode {
+  /* Background Colors */
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #e9ecef;
+  --bg-tertiary: #dee2e6;
+  --bg-dark: #ffffff;
+
+  /* Text Colors */
+  --text-primary: #1a1a1a;
+  --text-secondary: #495057;
+  --text-tertiary: #6c757d;
+  --text-muted: #adb5bd;
+
+  /* Border & Shadow */
+  --border-color: #dee2e6;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+
+  /* Card Colors */
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --card-hover: rgba(248, 249, 250, 0.98);
+}
+
+/* Apply Light Mode Styles */
+.light-mode body {
+  background-color: #f8f9fa !important;
+  color: #1a1a1a !important;
+}
+
+/* ============================================
+   COMPONENT SPECIFIC STYLES
+   ============================================ */
+
+/* Search Input Light Mode */
+.light-mode .search-input {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #1a1a1a !important;
+  border: 2px solid rgba(255, 71, 87, 0.3) !important;
+  box-shadow: inset 0 0 20px rgba(255, 71, 87, 0.05),
+    0 0 30px rgba(255, 71, 87, 0.15), 0 0 0 1px rgba(255, 71, 87, 0.08) !important;
+}
+
+.light-mode .search-input:focus {
+  background: rgba(255, 255, 255, 0.98) !important;
+  box-shadow: inset 0 0 40px rgba(255, 71, 87, 0.1),
+    0 0 50px rgba(255, 71, 87, 0.25), 0 0 0 2px rgba(255, 71, 87, 0.4) !important;
+  border-color: rgba(255, 71, 87, 0.5) !important;
+}
+
+.light-mode .search-input::placeholder {
+  color: #6c757d !important;
+  opacity: 0.8;
+}
+
+/* Search Container Effects - Reduced in Light Mode */
+.light-mode .glow-effect,
+.light-mode .white-effect,
+.light-mode .border-effect,
+.light-mode .dark-border-bg {
+  opacity: 0.2 !important;
+  filter: blur(40px);
+}
+
+.light-mode .input-mask {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4));
+}
+
+.light-mode .pink-mask {
+  opacity: 0.2 !important;
+}
+
+/* Filter Button Light Mode */
+.light-mode .filter-button {
+  background: linear-gradient(180deg, #ffffff, #f8f9fa, #e9ecef) !important;
+  border: 2px solid rgba(255, 71, 87, 0.25) !important;
+  box-shadow: 0 0 20px rgba(255, 71, 87, 0.08) !important;
+}
+
+.light-mode .filter-button:hover {
+  background: linear-gradient(180deg, #f8f9fa, #e9ecef, #dee2e6) !important;
+  border-color: rgba(255, 71, 87, 0.4) !important;
+  box-shadow: 0 0 30px rgba(255, 71, 87, 0.15) !important;
+}
+
+.light-mode .filter-button svg {
+  color: #ef4444 !important;
+}
+
+.light-mode .filter-button span {
+  color: #1a1a1a !important;
+}
+
+/* Filter Dropdown Light Mode */
+.light-mode [class*="bg-gradient-to-br"][class*="from-gray-900"] {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border: 1px solid #dee2e6 !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-mode [class*="bg-gray-900"] {
+  background-color: #ffffff !important;
+  border-color: #dee2e6 !important;
+}
+
+.light-mode [class*="border-gray-700"] {
+  border-color: #dee2e6 !important;
+}
+
+.light-mode [class*="hover:bg-gray-800"]:hover {
+  background-color: #f8f9fa !important;
+}
+
+/* Text Colors in Light Mode */
+.light-mode [class*="text-white"] {
+  color: #1a1a1a !important;
+}
+
+.light-mode [class*="text-gray-300"],
+.light-mode [class*="text-gray-400"] {
+  color: #495057 !important;
+}
+
+.light-mode [class*="text-gray-500"] {
+  color: #6c757d !important;
+}
+
+.light-mode [class*="text-gray-600"] {
+  color: #adb5bd !important;
+}
+
+/* Movie Cards Light Mode */
+.light-mode .movie-card,
+.light-mode [class*="bg-gray-800"],
+.light-mode [class*="bg-black"] {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid #dee2e6 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-mode .movie-card:hover {
+  background: rgba(248, 249, 250, 0.98) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+  transform: translateY(-4px);
+}
+
+/* Pagination Light Mode */
+.light-mode .pagination-button {
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+  border: 1px solid #dee2e6 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-mode .pagination-button:hover {
+  background: #f8f9fa !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15) !important;
+}
+
+.light-mode .pagination-button.active {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+}
+
+/* Blur Circle Effects - Softer in Light Mode */
+.light-mode .blur-circle {
+  opacity: 0.15 !important;
+}
+
+/* Grid Background Light Mode */
+.light-mode .grid-background {
+  background-image: linear-gradient(to right, #e9ecef 1px, transparent 1px),
+    linear-gradient(to bottom, #e9ecef 1px, transparent 1px) !important;
+  opacity: 0.5;
+}
+
+/* Scrollbar Light Mode */
+.light-mode * {
+  scrollbar-color: #adb5bd #f8f9fa;
+}
+
+.light-mode ::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+.light-mode ::-webkit-scrollbar-thumb {
+  background: #adb5bd;
+}
+
+.light-mode ::-webkit-scrollbar-thumb:hover {
+  background: #6c757d;
+}
+
+/* Custom Scrollbar in Dropdown Light Mode */
+.light-mode .custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(233, 236, 239, 0.5);
+}
+
+.light-mode .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(239, 68, 68, 0.4);
+}
+
+.light-mode .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(239, 68, 68, 0.7);
+}
+
+/* Gradient Text - Keep Red in Light Mode */
+.light-mode .gradient-text {
+  background: linear-gradient(135deg, #ef4444, #dc2626, #b91c1c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Icons Light Mode */
+.light-mode [class*="text-red-500"] {
+  color: #ef4444 !important;
+}
+
+.light-mode [class*="text-red-400"] {
+  color: #f87171 !important;
+}
+
+.light-mode [class*="text-red-600"] {
+  color: #dc2626 !important;
+}
+
+/* Loading Animation Light Mode */
+.light-mode .flames::before {
+  background: #f865d8;
+  opacity: 0.3;
+}
+
+.light-mode .eye::before {
+  background: radial-gradient(
+    rgba(26, 26, 26, 1) 44%,
+    #e220b8 50%,
+    transparent 60%
+  );
+}
+
+/* Carousel Light Mode */
+.light-mode .carousel .list .item .content h1,
+.light-mode .carousel .list .item .content h2,
+.light-mode .carousel .list .item .content h3,
+.light-mode .carousel .list .item .content h4 {
+  color: #1a1a1a !important;
+}
+
+.light-mode .carousel .list .item .content p {
+  color: #495057 !important;
+}
+
+/* Header & Navigation Light Mode */
+.light-mode header,
+.light-mode nav {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid #dee2e6;
+  backdrop-filter: blur(10px);
+}
+
+/* Buttons & Interactive Elements Light Mode */
+.light-mode button:not(.pagination-button):not(.filter-button) {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+}
+
+.light-mode button:not(.pagination-button):not(.filter-button):hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  box-shadow: 0 8px 16px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Form Elements Light Mode */
+.light-mode input:not(.search-input),
+.light-mode textarea,
+.light-mode select {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+  border: 1px solid #dee2e6 !important;
+}
+
+.light-mode input:not(.search-input):focus,
+.light-mode textarea:focus,
+.light-mode select:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Checkbox Light Mode */
+.light-mode input[type="checkbox"] {
+  border-color: #adb5bd !important;
+  background-color: #ffffff !important;
+}
+
+.light-mode input[type="checkbox"]:checked {
+  background-color: #ef4444 !important;
+  border-color: #ef4444 !important;
+}
+
+/* ============================================
+   SMOOTH TRANSITIONS
+   ============================================ */
+
+/* Preserve transitions for theme switching */
+body,
+.search-input,
+.filter-button,
+.movie-card,
+[class*="bg-"],
+[class*="text-"],
+[class*="border-"] {
+  transition: background-color 0.4s ease, color 0.4s ease,
+    border-color 0.4s ease, box-shadow 0.4s ease, opacity 0.4s ease !important;
+}
+
+/* Preserve original animations */
+[class*="animate-"],
+.glow-effect,
+.white-effect,
+.border-effect,
+.dark-border-bg {
+  transition-property: transform, opacity, filter !important;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+  .light-mode .search-input {
+    background: rgba(255, 255, 255, 0.98) !important;
+  }
+
+  .light-mode .filter-button {
+    background: #ffffff !important;
   }
 }

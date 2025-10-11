@@ -123,7 +123,11 @@ const SearchBar = ({ onSearch, onFilter, allMovies = [] }) => {
               {/* Button Background Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-              <SlidersHorizontal className="w-5 h-5 text-red-500 relative z-10 transition-transform duration-300 group-hover:rotate-90" />
+              <SlidersHorizontal
+                className={`w-5 h-5 text-red-500 relative z-10 transition-transform duration-300 ${
+                  showFilterDropdown ? "rotate-90" : ""
+                }`}
+              />
               <span className="text-white font-medium relative z-10">
                 Filter
               </span>
@@ -220,23 +224,6 @@ const SearchBar = ({ onSearch, onFilter, allMovies = [] }) => {
           </p>
         </div>
       </div>
-
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(31, 41, 55, 0.5);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(239, 68, 68, 0.5);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(239, 68, 68, 0.8);
-        }
-      `}</style>
     </div>
   );
 };

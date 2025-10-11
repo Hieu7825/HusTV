@@ -1,66 +1,109 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { dummyShowsData } from "../assets/assets";
 import MovieCard from "../components/MovieCard";
 import BlurCircle from "../components/BlurCircle";
-import { Film, Sparkles, Search, Filter, ArrowRight } from "lucide-react";
+import Pagination from "../components/Pagination";
+import SearchBar from "../components/SearchBar";
+import { Film, Sparkles } from "lucide-react";
 
 const Movies = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGenreIds, setSelectedGenreIds] = useState([]);
   const moviesPerPage = 12;
 
-  // Tính toán phân trang
-  const totalPages = Math.ceil(dummyShowsData.length / moviesPerPage);
+  // Lọc phim theo tìm kiếm và thể loại
+  const filteredMovies = useMemo(() => {
+    let filtered = dummyShowsData;
+
+    // Lọc theo search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((movie) => {
+        const title = movie.title?.toLowerCase() || "";
+        const overview = movie.overview?.toLowerCase() || "";
+
+        // Lấy tên thể loại để search
+        const genreNames = movie.genres
+          ? movie.genres.map((g) => g.name.toLowerCase()).join(" ")
+          : "";
+
+        return (
+          title.includes(query) ||
+          overview.includes(query) ||
+          genreNames.includes(query)
+        );
+      });
+    }
+
+    // Lọc theo thể loại (dựa vào genre id)
+    if (selectedGenreIds.length > 0) {
+      filtered = filtered.filter((movie) => {
+        if (!movie.genres || !Array.isArray(movie.genres)) {
+          return false;
+        }
+
+        // Kiểm tra xem movie có ít nhất 1 genre trùng với selectedGenreIds
+        const movieGenreIds = movie.genres.map((g) => g.id);
+        return selectedGenreIds.some((selectedId) =>
+          movieGenreIds.includes(selectedId)
+        );
+      });
+    }
+
+    return filtered;
+  }, [searchQuery, selectedGenreIds]);
+
+  // Tính toán phân trang dựa trên phim đã lọc
+  const totalPages = Math.ceil(filteredMovies.length / moviesPerPage);
   const indexOfLastMovie = currentPage * moviesPerPage;
   const indexOfFirstMovie = indexOfLastMovie - moviesPerPage;
-  const currentMovies = dummyShowsData.slice(
+  const currentMovies = filteredMovies.slice(
     indexOfFirstMovie,
     indexOfLastMovie
   );
 
-  // Hàm chuyển trang
-  const goToPage = (pageNumber) => {
+  // Reset về trang 1 khi tìm kiếm hoặc lọc
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handleFilter = (genreIds) => {
+    setSelectedGenreIds(genreIds);
+    setCurrentPage(1);
+  };
+
+  // Hàm xử lý khi thay đổi trang
+  const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const goToPrevious = () => {
-    if (currentPage > 1) {
-      goToPage(currentPage - 1);
-    }
-  };
+  // Lấy tên thể loại đã chọn để hiển thị
+  const getSelectedGenreNames = () => {
+    if (selectedGenreIds.length === 0) return "";
 
-  const goToNext = () => {
-    if (currentPage < totalPages) {
-      goToPage(currentPage + 1);
-    }
-  };
+    const genreNames = [];
+    const genresMap = new Map();
 
-  // Tạo mảng số trang để hiển thị
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 3;
-
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
+    // Tạo map các genre từ tất cả phim
+    dummyShowsData.forEach((movie) => {
+      if (movie.genres) {
+        movie.genres.forEach((genre) => {
+          genresMap.set(genre.id, genre.name);
+        });
       }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= maxVisiblePages; i++) {
-          pages.push(i);
-        }
-      } else if (currentPage >= totalPages - 2) {
-        for (let i = totalPages - maxVisiblePages + 1; i <= totalPages; i++) {
-          pages.push(i);
-        }
-      } else {
-        for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-          pages.push(i);
-        }
-      }
-    }
+    });
 
-    return pages;
+    // Lấy tên của các genre đã chọn
+    selectedGenreIds.forEach((id) => {
+      if (genresMap.has(id)) {
+        genreNames.push(genresMap.get(id));
+      }
+    });
+
+    return genreNames.join(", ");
   };
 
   return dummyShowsData.length > 0 ? (
@@ -95,174 +138,88 @@ const Movies = () => {
         </div>
       </div>
 
-      {/* Enhanced Search Section - Much More Prominent */}
-      <div className="flex justify-center mb-20">
-        <div className="relative w-full max-w-4xl mx-auto search-container">
-          <div className="relative flex items-center justify-center">
-            {/* Animated Background Effects - Enhanced visibility */}
-            <div className="absolute inset-0 overflow-hidden rounded-2xl">
-              <div className="glow-effect"></div>
-              <div className="dark-border-bg"></div>
-              <div className="dark-border-bg"></div>
-              <div className="dark-border-bg"></div>
-              <div className="white-effect"></div>
-              <div className="border-effect"></div>
-            </div>
+      {/* Search Bar Component */}
+      <SearchBar
+        onSearch={handleSearch}
+        onFilter={handleFilter}
+        allMovies={dummyShowsData}
+      />
 
-            {/* Main Search Container - Much more visible */}
-            <div className="relative z-10 group w-full">
-              <input
-                type="text"
-                placeholder="🔍 Search for movies, actors, directors, genres and more..."
-                className="search-input w-full h-20 px-24 border-none rounded-2xl text-white text-xl placeholder-gray-300 focus:outline-none transition-all duration-300 font-medium focus:placeholder-gray-200"
-              />
-
-              {/* Reduced Input Mask Effect */}
-              <div className="input-mask top-6 left-24" />
-
-              {/* Reduced Pink Glow Effect */}
-              <div className="pink-mask top-4 left-3" />
-
-              {/* Enhanced Search Icon with better visibility */}
-              <div className="absolute left-8 top-1/2 transform -translate-y-1/2 z-20 search-icon-container">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width={32}
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                  height={32}
-                  fill="none"
-                  className="feather feather-search transition-all duration-300 hover:scale-110"
-                >
-                  <circle stroke="url(#search)" r={8} cy={11} cx={11} />
-                  <line
-                    stroke="url(#searchl)"
-                    y2="16.65"
-                    y1={22}
-                    x2="16.65"
-                    x1={22}
-                  />
-                  <defs>
-                    <linearGradient gradientTransform="rotate(50)" id="search">
-                      <stop stopColor="#ff6b6b" offset="0%" />
-                      <stop stopColor="#ee5a24" offset="50%" />
-                    </linearGradient>
-                    <linearGradient id="searchl">
-                      <stop stopColor="#ee5a24" offset="0%" />
-                      <stop stopColor="#ff3838" offset="50%" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-
-                {/* Icon glow effect */}
-                <div className="absolute inset-0 bg-red-500/20 rounded-full blur-lg -z-10"></div>
-              </div>
-
-              {/* Enhanced Filter Button with better visibility */}
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20">
-                <div className="filter-border"></div>
-                <div className="filter-button w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 cursor-pointer group hover:scale-105">
-                  <svg
-                    preserveAspectRatio="none"
-                    height={28}
-                    width={28}
-                    viewBox="4.8 4.56 14.832 15.408"
-                    fill="none"
-                  >
-                    <path
-                      d="M8.16 6.65002H15.83C16.47 6.65002 16.99 7.17002 16.99 7.81002V9.09002C16.99 9.56002 16.7 10.14 16.41 10.43L13.91 12.64C13.56 12.93 13.33 13.51 13.33 13.98V16.48C13.33 16.83 13.1 17.29 12.81 17.47L12 17.98C11.24 18.45 10.2 17.92 10.2 16.99V13.91C10.2 13.5 9.97 12.98 9.73 12.69L7.52 10.36C7.23 10.08 7 9.55002 7 9.20002V7.87002C7 7.17002 7.52 6.65002 8.16 6.65002Z"
-                      stroke="#ff6b6b"
-                      strokeWidth={1.5}
-                      strokeMiterlimit={10}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="group-hover:stroke-red-400 transition-colors duration-300"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Search Tips - Optional Enhancement */}
-          <div className="absolute -bottom-8 left-0 right-0 text-center">
-            <p className="text-gray-400 text-sm">
-              <span className="text-red-400">✨</span> Try searching by movie
-              title, actor, genre, or year
-            </p>
-          </div>
+      {/* Results Info */}
+      {(searchQuery || selectedGenreIds.length > 0) && (
+        <div className="mb-8 text-center animate-fade-in">
+          <p className="text-gray-400 text-lg">
+            Found{" "}
+            <span className="text-red-500 font-bold text-xl">
+              {filteredMovies.length}
+            </span>{" "}
+            {filteredMovies.length === 1 ? "movie" : "movies"}
+            {searchQuery && (
+              <span>
+                {" "}
+                matching "
+                <span className="text-white font-semibold">{searchQuery}</span>"
+              </span>
+            )}
+            {selectedGenreIds.length > 0 && (
+              <span>
+                {searchQuery ? " and" : ""} in{" "}
+                <span className="text-red-400 font-semibold">
+                  {getSelectedGenreNames()}
+                </span>
+              </span>
+            )}
+          </p>
         </div>
-      </div>
+      )}
 
       {/* Movies Grid */}
-      <div className="flex flex-wrap gap-8 max-sm:justify-center">
-        {currentMovies.map((movie, index) => (
-          <div
-            key={movie._id}
-            className="animate-fade-in-up"
-            style={{ animationDelay: `${index * 0.05}s` }}
-          >
-            <MovieCard movie={movie} />
-          </div>
-        ))}
-      </div>
-
-      {/* Enhanced Pagination Section - Chỉ hiển thị khi có > 12 phim */}
-      {dummyShowsData.length > 12 && (
-        <div className="flex justify-center items-center mt-15 gap-4 mb-10">
-          {/* Previous Button */}
-          <button
-            onClick={goToPrevious}
-            disabled={currentPage === 1}
-            className="group flex items-center gap-2 px-6 py-3 text-sm text-gray-400 hover:text-red-400 transition-all duration-300 border border-gray-700 hover:border-red-500/50 rounded-xl backdrop-blur-sm hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-red-500/10"
-          >
-            <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform duration-300" />
-            <span>Previous</span>
-          </button>
-
-          {/* Page Numbers */}
-          <div className="flex gap-3">
-            {getPageNumbers().map((page) => (
-              <button
-                key={page}
-                onClick={() => goToPage(page)}
-                className={`w-12 h-12 rounded-xl font-bold transition-all duration-300 ${
-                  page === currentPage
-                    ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-xl shadow-red-500/30 scale-110 border-2 border-red-400"
-                    : "bg-gray-800/50 text-gray-400 hover:bg-red-500/20 hover:text-red-400 border border-gray-700 hover:border-red-500/50 hover:scale-105 hover:shadow-lg"
-                }`}
+      {currentMovies.length > 0 ? (
+        <>
+          <div className="flex flex-wrap gap-8 max-sm:justify-center">
+            {currentMovies.map((movie, index) => (
+              <div
+                key={movie._id}
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${index * 0.05}s` }}
               >
-                {page}
-              </button>
+                <MovieCard movie={movie} />
+              </div>
             ))}
-
-            {/* Dots - Hiển thị nếu có nhiều trang hơn */}
-            {totalPages > 3 && currentPage < totalPages - 2 && (
-              <>
-                <div className="flex items-center px-3">
-                  <span className="text-gray-500 text-lg">...</span>
-                </div>
-
-                <button
-                  onClick={() => goToPage(totalPages)}
-                  className="w-12 h-12 rounded-xl font-bold bg-gray-800/50 text-gray-400 hover:bg-red-500/20 hover:text-red-400 border border-gray-700 hover:border-red-500/50 transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                >
-                  {totalPages}
-                </button>
-              </>
-            )}
           </div>
 
-          {/* Next Button */}
+          {/* Pagination Component - Chỉ hiển thị khi có > 12 phim */}
+          {filteredMovies.length > 12 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          )}
+        </>
+      ) : (
+        <div className="flex flex-col items-center justify-center min-h-[40vh] animate-fade-in">
+          <div className="relative mb-8">
+            <Film className="w-24 h-24 text-gray-600 animate-pulse" />
+            <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl"></div>
+          </div>
+          <h1 className="text-3xl font-bold text-center gradient-text mb-4">
+            No Movies Found
+          </h1>
+          <p className="text-gray-500 text-center max-w-md mb-6">
+            {searchQuery
+              ? `No results found for "${searchQuery}"`
+              : "No movies match the selected filters"}
+          </p>
           <button
-            onClick={goToNext}
-            disabled={currentPage === totalPages}
-            className="group flex items-center gap-2 px-6 py-3 text-sm text-gray-400 hover:text-red-400 transition-all duration-300 border border-gray-700 hover:border-red-500/50 rounded-xl backdrop-blur-sm hover:bg-red-900/20 hover:shadow-lg hover:shadow-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => {
+              setSearchQuery("");
+              setSelectedGenreIds([]);
+              setCurrentPage(1);
+            }}
+            className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-xl font-semibold hover:scale-105 transition-transform duration-300"
           >
-            <span>Next</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+            Clear All Filters
           </button>
         </div>
       )}

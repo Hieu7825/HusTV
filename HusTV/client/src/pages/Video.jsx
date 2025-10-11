@@ -25,20 +25,20 @@ export const Video = () => {
   }, [id]);
 
   return show ? (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white px-6 md:px-16 lg:px-40 pt-24 md:pt-28">
+    <div className="min-h-screen bg-gradient-to-b from-white via-gray-50 to-white dark:from-black dark:via-gray-900 dark:to-black text-gray-900 dark:text-white px-6 md:px-16 lg:px-40 pt-24 md:pt-28">
       {/* Breadcrumb Header - HusTV >> Movie */}
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => navigate("/")}
           className="gradient cursor-pointer flex items-center gap-2  transition-colors font-bold text-xl drop-shadow-lg"
         >
-          <Home className="text-red-500  w-5 h-5" />
+          <Home className="text-blue-500 dark:text-red-500 w-5 h-5" />
           HusTV
         </button>
         <ChevronRight className="w-5 h-5 text-gray-500" />
         <button
           onClick={() => navigate(`/movies/${id}`)}
-          className="cursor-pointer text-gray-300 font-medium text-lg drop-shadow-md"
+          className="cursor-pointer text-gray-600 dark:text-gray-300 font-medium text-lg drop-shadow-md"
         >
           {show.movie.title}
         </button>
@@ -50,7 +50,7 @@ export const Video = () => {
         <BlurCircle top="50%" left="-200px" />
 
         {/* TV Frame */}
-        <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-black p-8 md:p-12 rounded-3xl shadow-2xl">
+        <div className="relative bg-gradient-to-br from-gray-100 via-gray-200 to-white dark:from-gray-900 dark:via-gray-800 dark:to-black p-8 md:p-12 rounded-3xl shadow-2xl">
           {/* TV Stand/Base */}
           <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-48 h-8 bg-gradient-to-b from-gray-800 to-gray-900 rounded-b-2xl shadow-xl"></div>
           <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-32 h-4 bg-gray-950 rounded-full shadow-2xl"></div>
@@ -113,8 +113,8 @@ export const Video = () => {
       {/* Related Movies Section */}
       <div className="mt-24">
         <div className="flex items-center gap-3 mb-8">
-          <div className="h-1 w-12 bg-gradient-to-r from-red-600 to-transparent rounded-full"></div>
-          <h2 className="text-2xl font-bold text-white drop-shadow-lg">
+          <div className="h-1 w-12 bg-gradient-to-r from-blue-500 dark:from-red-600 to-transparent rounded-full"></div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-lg">
             You May Also Like
           </h2>
         </div>

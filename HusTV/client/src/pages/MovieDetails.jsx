@@ -27,16 +27,16 @@ const MovieDetails = () => {
   }, [id]);
 
   return show ? (
-    <div className="px-6 md:px-16 lg:px-40 pt-30 md:pt-25 min-h-screen bg-gradient-to-b from-black via-gray-900 to-black">
-      {/* Hero Background Backdrop */}
+    <div className="px-6 md:px-16 lg:px-40 pt-30 md:pt-25 min-h-screen bg-gradient-to-b from-white via-gray-50 to-white dark:from-black dark:via-gray-900 dark:to-black">
+      {/* Hero Background */}
       <div className="relative w-full h-96 mb-12 rounded-3xl overflow-hidden">
         <img
           src={show.movie.backdrop_path}
           alt=""
           className="w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/40"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-white/40 dark:from-black dark:via-black/80 dark:to-black/40"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-transparent to-white/60 dark:from-black dark:via-transparent dark:to-black/60"></div>
 
         {/* Floating Info on Backdrop */}
         <div className="absolute bottom-8 left-8 right-8 flex flex-wrap items-end justify-between gap-4">
@@ -68,7 +68,7 @@ const MovieDetails = () => {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto relative p-10 md:p-12 bg-black rounded-3xl border-4 border-red-600 shadow-2xl shadow-red-600/50 hover:shadow-red-600/70 hover:border-red-500 transition-all duration-500">
+      <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto relative p-10 md:p-12 bg-white dark:bg-black rounded-3xl border-4 border-blue-500 dark:border-red-600 shadow-2xl shadow-blue-500/30 dark:shadow-red-600/50 hover:shadow-blue-500/50 dark:hover:shadow-red-600/70 hover:border-blue-400 dark:hover:border-red-500 transition-all duration-500">
         <BlurCircle top="-100px" right="-100px" />
         {/* Movie Poster */}
         <div className="relative max-md:mx-auto group">
@@ -149,8 +149,8 @@ const MovieDetails = () => {
       {/* Related Movies Section */}
       <div className="mt-24">
         <div className="flex items-center gap-3 mb-8">
-          <div className="h-1 w-12 bg-gradient-to-r from-red-600 to-transparent rounded-full"></div>
-          <h2 className="text-2xl font-bold text-white drop-shadow-lg">
+          <div className="h-1 w-12 bg-gradient-to-r from-blue-500 dark:from-red-600 to-transparent rounded-full"></div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-lg">
             You May Also Like
           </h2>
         </div>

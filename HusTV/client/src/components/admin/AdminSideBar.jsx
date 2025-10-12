@@ -142,17 +142,6 @@ const AdminSideBar = () => {
         ))}
       </div>
 
-      <style jsx>{`
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}</style>
-
       {/* Bottom decorative element */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:flex gap-1">
         <div className="w-2 h-2 bg-primary/30 rounded-full animate-pulse"></div>

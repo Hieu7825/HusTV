@@ -5,7 +5,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   // Hàm chuyển trang
   const goToPage = (pageNumber) => {
     onPageChange(pageNumber);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const goToPrevious = () => {

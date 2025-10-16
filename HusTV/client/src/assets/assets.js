@@ -33,6 +33,29 @@ export const dummyTrailers = [
   },
 ];
 
+export const dummyGenreData = [
+  { id: 28, name: "Action" },
+  { id: 12, name: "Adventure" },
+  { id: 16, name: "Animation" },
+  { id: 35, name: "Comedy" },
+  { id: 80, name: "Crime" },
+  { id: 99, name: "Documentary" },
+  { id: 18, name: "Drama" },
+  { id: 10751, name: "Family" },
+  { id: 14, name: "Fantasy" },
+  { id: 36, name: "History" },
+  { id: 27, name: "Horror" },
+  { id: 10402, name: "Music" },
+  { id: 9648, name: "Mystery" },
+  { id: 10749, name: "Romance" },
+  { id: 878, name: "Science Fiction" },
+  { id: 10770, name: "TV Movie" },
+  { id: 53, name: "Thriller" },
+  { id: 10752, name: "War" },
+  { id: 37, name: "Western" },
+  { id: 10759, name: "Action & Adventure" },
+];
+
 const dummyCastsData = [
   {
     name: "Milla Jovovich",
@@ -126,6 +149,10 @@ export const dummyShowsData = [
     _id: "324544",
     id: 324544,
     title: "In the Lost Lands",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A queen sends the powerful and feared sorceress Gray Alys to the ghostly wilderness of the Lost Lands in search of a magical power, where she and her guide, the drifter Boyce, must outwit and outfight both man and demon.",
     poster_path:
@@ -149,6 +176,10 @@ export const dummyShowsData = [
     _id: "1232546",
     id: 1232546,
     title: "Until Dawn",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "One year after her sister Melanie mysteriously disappeared, Clover and her friends head into the remote valley where she vanished in search of answers. Exploring an abandoned visitor center, they find themselves stalked by a masked killer and horrifically murdered one by one...only to wake up and find themselves back at the beginning of the same evening.",
     poster_path:
@@ -171,6 +202,10 @@ export const dummyShowsData = [
     _id: "552524",
     id: 552524,
     title: "Lilo & Stitch",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "The wildly funny and touching story of a lonely Hawaiian girl and the fugitive alien who helps to mend her broken family.",
     poster_path:
@@ -194,6 +229,10 @@ export const dummyShowsData = [
     _id: "668489",
     id: 668489,
     title: "Havoc",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "When a drug heist swerves lethally out of control, a jaded cop fights his way through a corrupt city's criminal underworld to save a politician's son.",
     poster_path:
@@ -217,6 +256,10 @@ export const dummyShowsData = [
     _id: "950387",
     id: 950387,
     title: "A Minecraft Movie",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "Four misfits find themselves struggling with ordinary problems when they are suddenly pulled through a mysterious portal into the Overworld: a bizarre, cubic wonderland that thrives on imagination. To get back home, they'll have to master this world while embarking on a magical quest with an unexpected, expert crafter, Steve.",
     poster_path:
@@ -241,6 +284,10 @@ export const dummyShowsData = [
     _id: "575265",
     id: 575265,
     title: "Mission: Impossible - The Final Reckoning",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "Ethan Hunt and team continue their search for the terrifying AI known as the Entity — which has infiltrated intelligence networks all over the globe — with the world's governments and a mysterious ghost from Hunt's past on their trail. Joined by new allies and armed with the means to shut the Entity down for good, Hunt is in a race against time to prevent the world as we know it from changing forever.",
     poster_path:
@@ -264,6 +311,10 @@ export const dummyShowsData = [
     _id: "986056",
     id: 986056,
     title: "Thunderbolts*",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "After finding themselves ensnared in a death trap, seven disillusioned castoffs must embark on a dangerous mission that will force them to confront the darkest corners of their pasts.",
     poster_path:
@@ -287,6 +338,10 @@ export const dummyShowsData = [
     _id: "986057",
     id: 986057,
     title: "Dummy Movie 1",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 1, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=1",
@@ -308,6 +363,10 @@ export const dummyShowsData = [
     _id: "986058",
     id: 986058,
     title: "Dummy Movie 2",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 2, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=2",
@@ -329,6 +388,10 @@ export const dummyShowsData = [
     _id: "986059",
     id: 986059,
     title: "Dummy Movie 3",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 3, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=3",
@@ -350,6 +413,10 @@ export const dummyShowsData = [
     _id: "986060",
     id: 986060,
     title: "Dummy Movie 4",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 4, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=4",
@@ -371,6 +438,10 @@ export const dummyShowsData = [
     _id: "986061",
     id: 986061,
     title: "Dummy Movie 5",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 5, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=5",
@@ -392,6 +463,10 @@ export const dummyShowsData = [
     _id: "986062",
     id: 986062,
     title: "Dummy Movie 6",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 6, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=6",
@@ -413,6 +488,10 @@ export const dummyShowsData = [
     _id: "986063",
     id: 986063,
     title: "Dummy Movie 7",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 7, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=7",
@@ -434,6 +513,10 @@ export const dummyShowsData = [
     _id: "986064",
     id: 986064,
     title: "Dummy Movie 8",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 8, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=8",
@@ -455,6 +538,10 @@ export const dummyShowsData = [
     _id: "986065",
     id: 986065,
     title: "Dummy Movie 9",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 9, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=9",
@@ -476,6 +563,10 @@ export const dummyShowsData = [
     _id: "986066",
     id: 986066,
     title: "Dummy Movie 10",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 10, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=10",
@@ -497,6 +588,10 @@ export const dummyShowsData = [
     _id: "986067",
     id: 986067,
     title: "Dummy Movie 11",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 11, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=11",
@@ -518,6 +613,10 @@ export const dummyShowsData = [
     _id: "986068",
     id: 986068,
     title: "Dummy Movie 12",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 12, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=12",
@@ -539,6 +638,10 @@ export const dummyShowsData = [
     _id: "986069",
     id: 986069,
     title: "Dummy Movie 13",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 13, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=13",
@@ -560,6 +663,10 @@ export const dummyShowsData = [
     _id: "986070",
     id: 986070,
     title: "Dummy Movie 14",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 14, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=14",
@@ -581,6 +688,10 @@ export const dummyShowsData = [
     _id: "986071",
     id: 986071,
     title: "Dummy Movie 15",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 15, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=15",
@@ -602,6 +713,10 @@ export const dummyShowsData = [
     _id: "986072",
     id: 986072,
     title: "Dummy Movie 16",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 16, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=16",
@@ -623,6 +738,10 @@ export const dummyShowsData = [
     _id: "986073",
     id: 986073,
     title: "Dummy Movie 17",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 17, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=17",
@@ -644,6 +763,10 @@ export const dummyShowsData = [
     _id: "986074",
     id: 986074,
     title: "Dummy Movie 18",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 18, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=18",
@@ -665,6 +788,10 @@ export const dummyShowsData = [
     _id: "986075",
     id: 986075,
     title: "Dummy Movie 19",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 19, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=19",
@@ -686,6 +813,10 @@ export const dummyShowsData = [
     _id: "986076",
     id: 986076,
     title: "Dummy Movie 20",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 20, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=20",
@@ -707,6 +838,10 @@ export const dummyShowsData = [
     _id: "986077",
     id: 986077,
     title: "Dummy Movie 21",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 21, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=21",
@@ -728,6 +863,10 @@ export const dummyShowsData = [
     _id: "986078",
     id: 986078,
     title: "Dummy Movie 22",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 22, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=22",
@@ -749,6 +888,10 @@ export const dummyShowsData = [
     _id: "986079",
     id: 986079,
     title: "Dummy Movie 23",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 23, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=23",
@@ -770,6 +913,10 @@ export const dummyShowsData = [
     _id: "986080",
     id: 986080,
     title: "Dummy Movie 24",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 24, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=24",
@@ -791,6 +938,10 @@ export const dummyShowsData = [
     _id: "986081",
     id: 986081,
     title: "Dummy Movie 25",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 25, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=25",
@@ -812,6 +963,10 @@ export const dummyShowsData = [
     _id: "986082",
     id: 986082,
     title: "Dummy Movie 26",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 26, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=26",
@@ -833,6 +988,10 @@ export const dummyShowsData = [
     _id: "986083",
     id: 986083,
     title: "Dummy Movie 27",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 27, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=27",
@@ -854,6 +1013,10 @@ export const dummyShowsData = [
     _id: "986084",
     id: 986084,
     title: "Dummy Movie 28",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 28, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=28",
@@ -875,6 +1038,10 @@ export const dummyShowsData = [
     _id: "986085",
     id: 986085,
     title: "Dummy Movie 29",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 29, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=29",
@@ -896,6 +1063,10 @@ export const dummyShowsData = [
     _id: "986086",
     id: 986086,
     title: "Dummy Movie 30",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 30, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=30",
@@ -917,6 +1088,10 @@ export const dummyShowsData = [
     _id: "986087",
     id: 986087,
     title: "Dummy Movie 31",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 31, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=31",
@@ -938,6 +1113,10 @@ export const dummyShowsData = [
     _id: "986088",
     id: 986088,
     title: "Dummy Movie 32",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 32, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=32",
@@ -959,6 +1138,10 @@ export const dummyShowsData = [
     _id: "986089",
     id: 986089,
     title: "Dummy Movie 33",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 33, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=33",
@@ -980,6 +1163,10 @@ export const dummyShowsData = [
     _id: "986090",
     id: 986090,
     title: "Dummy Movie 34",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 34, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=34",
@@ -1001,6 +1188,10 @@ export const dummyShowsData = [
     _id: "986091",
     id: 986091,
     title: "Dummy Movie 35",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 35, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=35",
@@ -1022,6 +1213,10 @@ export const dummyShowsData = [
     _id: "986092",
     id: 986092,
     title: "Dummy Movie 36",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 36, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=36",
@@ -1043,6 +1238,10 @@ export const dummyShowsData = [
     _id: "986093",
     id: 986093,
     title: "Dummy Movie 37",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 37, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=37",
@@ -1064,6 +1263,10 @@ export const dummyShowsData = [
     _id: "986094",
     id: 986094,
     title: "Dummy Movie 38",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 38, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=38",
@@ -1085,6 +1288,10 @@ export const dummyShowsData = [
     _id: "986095",
     id: 986095,
     title: "Dummy Movie 39",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 39, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=39",
@@ -1106,6 +1313,10 @@ export const dummyShowsData = [
     _id: "986096",
     id: 986096,
     title: "Dummy Movie 40",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 40, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=40",
@@ -1127,6 +1338,10 @@ export const dummyShowsData = [
     _id: "986097",
     id: 986097,
     title: "Dummy Movie 41",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 41, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=41",
@@ -1148,6 +1363,10 @@ export const dummyShowsData = [
     _id: "986098",
     id: 986098,
     title: "Dummy Movie 42",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 42, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=42",
@@ -1169,6 +1388,10 @@ export const dummyShowsData = [
     _id: "986099",
     id: 986099,
     title: "Dummy Movie 43",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 43, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=43",
@@ -1190,6 +1413,10 @@ export const dummyShowsData = [
     _id: "986100",
     id: 986100,
     title: "Dummy Movie 44",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 44, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=44",
@@ -1211,6 +1438,10 @@ export const dummyShowsData = [
     _id: "986101",
     id: 986101,
     title: "Dummy Movie 45",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 45, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=45",
@@ -1232,6 +1463,10 @@ export const dummyShowsData = [
     _id: "986102",
     id: 986102,
     title: "Dummy Movie 46",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 46, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=46",
@@ -1253,6 +1488,10 @@ export const dummyShowsData = [
     _id: "986103",
     id: 986103,
     title: "Dummy Movie 47",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 47, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=47",
@@ -1274,6 +1513,10 @@ export const dummyShowsData = [
     _id: "986104",
     id: 986104,
     title: "Dummy Movie 48",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 48, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=48",
@@ -1295,6 +1538,10 @@ export const dummyShowsData = [
     _id: "986105",
     id: 986105,
     title: "Dummy Movie 49",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 49, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=49",
@@ -1316,6 +1563,10 @@ export const dummyShowsData = [
     _id: "986106",
     id: 986106,
     title: "Dummy Movie 50",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 50, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=50",
@@ -1337,6 +1588,10 @@ export const dummyShowsData = [
     _id: "986100",
     id: 986100,
     title: "Shadows of the Forgotten City",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A lone archaeologist discovers a conspiracy dating back millennia, hidden beneath the ruins of a metropolis thought to be a myth.",
     poster_path: "https://picsum.photos/300/450?random=100",
@@ -1358,6 +1613,10 @@ export const dummyShowsData = [
     _id: "986101",
     id: 986101,
     title: "The Quantum Echo",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "Two rival physicists race against time to prevent a catastrophic time paradox after a successful but unstable experiment tears a hole in reality.",
     poster_path: "https://picsum.photos/300/450?random=101",
@@ -1378,6 +1637,10 @@ export const dummyShowsData = [
     _id: "986102",
     id: 986102,
     title: "Midnight Laugh Track",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A washed-up stand-up comedian accidentally becomes entangled with a crime syndicate and must use his quick wit to survive the night.",
     poster_path: "https://picsum.photos/300/450?random=102",
@@ -1398,6 +1661,10 @@ export const dummyShowsData = [
     _id: "986103",
     id: 986103,
     title: "A Dragon's Lullaby",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A young village girl discovers a hidden baby dragon and must embark on a perilous journey to return it to its magical homeland before dark forces capture it.",
     poster_path: "https://picsum.photos/300/450?random=103",
@@ -1419,6 +1686,10 @@ export const dummyShowsData = [
     _id: "986104",
     id: 986104,
     title: "The Silent Watcher",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A psychological thriller about a surveillance expert who becomes convinced that a simple domestic disturbance call is actually the prelude to a national disaster.",
     poster_path: "https://picsum.photos/300/450?random=104",
@@ -1439,6 +1710,10 @@ export const dummyShowsData = [
     _id: "986105",
     id: 986105,
     title: "Code Red: Pandemic",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A virologist and a special forces team race across a quarantined city to secure an antidote before a rapidly mutating super-virus wipes out humanity.",
     poster_path: "https://picsum.photos/300/450?random=105",
@@ -1460,6 +1735,10 @@ export const dummyShowsData = [
     _id: "986106",
     id: 986106,
     title: "High School of the Undead",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A group of cynical high school students must put aside their social drama to fight off a sudden, aggressive zombie outbreak during their prom night.",
     poster_path: "https://picsum.photos/300/450?random=106",
@@ -1480,6 +1759,10 @@ export const dummyShowsData = [
     _id: "986107",
     id: 986107,
     title: "Echoes of Atlantis",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "Deep-sea explorers find the lost city of Atlantis, only to awaken its highly advanced and militaristic guardians who have been dormant for millennia.",
     poster_path: "https://picsum.photos/300/450?random=107",
@@ -1501,6 +1784,10 @@ export const dummyShowsData = [
     _id: "986108",
     id: 986108,
     title: "The Heart of the Clockwork Kingdom",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "In a steam-powered fantasy world, a young engineer must repair the colossal Clockwork Heart that powers the entire kingdom before it grinds to a halt.",
     poster_path: "https://picsum.photos/300/450?random=108",
@@ -1521,6 +1808,10 @@ export const dummyShowsData = [
     _id: "986109",
     id: 986109,
     title: "The Last Assignment",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A seasoned assassin, ready for retirement, takes one final, seemingly impossible job: protecting the person he was hired to kill.",
     poster_path: "https://picsum.photos/300/450?random=109",
@@ -1542,6 +1833,10 @@ export const dummyShowsData = [
     _id: "986110",
     id: 986110,
     title: "Cabin 47",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A group of friends on a weekend getaway find themselves trapped in a cabin haunted by the spirits of its previous, violent inhabitants.",
     poster_path: "https://picsum.photos/300/450?random=110",
@@ -1562,6 +1857,10 @@ export const dummyShowsData = [
     _id: "986111",
     id: 986111,
     title: "Stellar Drift",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "Following an engine failure in deep space, a lone astronaut must confront his deepest psychological fears to repair his ship and survive the 5-year journey home.",
     poster_path: "https://picsum.photos/300/450?random=111",
@@ -1582,6 +1881,10 @@ export const dummyShowsData = [
     _id: "986112",
     id: 986112,
     title: "The Wedding Crasher's Revenge",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A professional wedding crasher finds his reputation threatened when a former target seeks revenge by systematically ruining every event he attends.",
     poster_path: "https://picsum.photos/300/450?random=112",
@@ -1602,6 +1905,10 @@ export const dummyShowsData = [
     _id: "986113",
     id: 986113,
     title: "Age of the Warlords",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "An epic historical drama following a young general who unites warring factions to repel a powerful invading empire, changing the course of history.",
     poster_path: "https://picsum.photos/300/450?random=113",
@@ -1623,6 +1930,10 @@ export const dummyShowsData = [
     _id: "986114",
     id: 986114,
     title: "The Cursed Compass",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A band of pirates chases a legendary, enchanted compass said to lead its holder to a fortune, but the treasure demands a terrifying price from those who seek it.",
     poster_path: "https://picsum.photos/300/450?random=114",
@@ -1644,6 +1955,10 @@ export const dummyShowsData = [
     _id: "986115",
     id: 986115,
     title: "Digital Ghost",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A hacker is framed for an international cybercrime and must go into hiding, using his skills to expose the true culprit who operates entirely within the digital realm.",
     poster_path: "https://picsum.photos/300/450?random=115",
@@ -1665,6 +1980,10 @@ export const dummyShowsData = [
     _id: "986116",
     id: 986116,
     title: "The Museum Heist of '89",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A smooth, aging thief plans one last spectacular heist to steal a legendary diamond from a heavily-guarded museum vault during a massive city blackout.",
     poster_path: "https://picsum.photos/300/450?random=116",
@@ -1685,6 +2004,10 @@ export const dummyShowsData = [
     _id: "986117",
     id: 986117,
     title: "My Alien Pet",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A timid boy befriends a highly mischievous but adorable alien creature that crash-lands near his suburban home, leading to chaotic and hilarious adventures.",
     poster_path: "https://picsum.photos/300/450?random=117",
@@ -1706,6 +2029,10 @@ export const dummyShowsData = [
     _id: "986118",
     id: 986118,
     title: "The Witching Hour",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A young historian is lured into a small European town during Halloween, only to discover the town is secretly governed by a coven of immortal witches.",
     poster_path: "https://picsum.photos/300/450?random=118",
@@ -1727,6 +2054,10 @@ export const dummyShowsData = [
     _id: "986119",
     id: 986119,
     title: "Final Destination: Tokyo Drift",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A fast-paced martial arts action film about a disgraced former champion fighting in illegal underground street races to clear his family's debt.",
     poster_path: "https://picsum.photos/300/450?random=119",
@@ -1747,6 +2078,10 @@ export const dummyShowsData = [
     _id: "986120",
     id: 986120,
     title: "The Last Photograph",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A photojournalist revisits the site of her greatest trauma, believing the perfect, unexposed shot can unlock the mystery of a political assassination.",
     poster_path: "https://picsum.photos/300/450?random=120",
@@ -1768,6 +2103,10 @@ export const dummyShowsData = [
     _id: "986121",
     id: 986121,
     title: "The Immortal Cartographer",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "An adventurer hunts for an immortal being who has mapped every corner of the world, rumored to hold the key to a legendary power source.",
     poster_path: "https://picsum.photos/300/450?random=121",
@@ -1788,6 +2127,10 @@ export const dummyShowsData = [
     _id: "986122",
     id: 986122,
     title: "Mars Colony 7",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "The first permanent Mars colony loses all contact with Earth. A small repair crew must risk a trip to the red planet, only to find the colonists have vanished without a trace.",
     poster_path: "https://picsum.photos/300/450?random=122",
@@ -1808,6 +2151,10 @@ export const dummyShowsData = [
     _id: "986123",
     id: 986123,
     title: "Vampire Intern",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A 500-year-old vampire tries to blend in with modern society by taking an internship at a soulless corporate office, struggling with spreadsheets more than sunlight.",
     poster_path: "https://picsum.photos/300/450?random=123",
@@ -1828,6 +2175,10 @@ export const dummyShowsData = [
     _id: "986124",
     id: 986124,
     title: "Battle for the Nexus",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "The highly anticipated sequel where two groups of genetically enhanced warriors clash in a final, brutal battle for control of the planet's core power source.",
     poster_path: "https://picsum.photos/300/450?random=124",
@@ -1849,6 +2200,10 @@ export const dummyShowsData = [
     _id: "986125",
     id: 986125,
     title: "The Vanishing Train",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A detective boards a luxury sleeper train to investigate a series of impossible disappearances, realizing the perpetrator may not be human.",
     poster_path: "https://picsum.photos/300/450?random=125",
@@ -1870,6 +2225,10 @@ export const dummyShowsData = [
     _id: "986126",
     id: 986126,
     title: "Chronicles of the Starship Voyager",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A crew of diverse intergalactic explorers is sent to the far reaches of the galaxy to colonize a new world, but finds a hostile civilization waiting.",
     poster_path: "https://picsum.photos/300/450?random=126",
@@ -1890,6 +2249,10 @@ export const dummyShowsData = [
     _id: "986127",
     id: 986127,
     title: "The Wizard of Wall Street",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A high-stakes finance broker discovers he has magical powers, which he initially uses for personal gain until a rival sorcerer threatens the entire market.",
     poster_path: "https://picsum.photos/300/450?random=127",
@@ -1910,6 +2273,10 @@ export const dummyShowsData = [
     _id: "986128",
     id: 986128,
     title: "Guardian of the Glade",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A fantasy epic where a young woman with a magical connection to the forest must defend her homeland from the iron-willed expansion of a modern empire.",
     poster_path: "https://picsum.photos/300/450?random=128",
@@ -1930,6 +2297,10 @@ export const dummyShowsData = [
     _id: "986129",
     id: 986129,
     title: "The Doppelgänger Protocol",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A secret agent wakes up in a safe house only to discover he has been cloned, and the clone is trying to assume his life and complete his latest mission.",
     poster_path: "https://picsum.photos/300/450?random=129",
@@ -1951,6 +2322,10 @@ export const dummyShowsData = [
     _id: "986130",
     id: 986130,
     title: "Haunted Highway 61",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A road trip horror film where a group of teenagers take a shortcut on a deserted highway and become targets of a relentless supernatural entity.",
     poster_path: "https://picsum.photos/300/450?random=130",
@@ -1971,6 +2346,10 @@ export const dummyShowsData = [
     _id: "986131",
     id: 986131,
     title: "The Grand Illusionist",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A renowned stage magician finds himself accused of a murder that was performed exactly like his final, most dangerous trick, blurring the line between illusion and reality.",
     poster_path: "https://picsum.photos/300/450?random=131",
@@ -1992,6 +2371,10 @@ export const dummyShowsData = [
     _id: "986132",
     id: 986132,
     title: "The Seven Wonders of the Digital Age",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A documentary crew travels the world exploring the most impactful technological creations of the century and their profound effect on human culture.",
     poster_path: "https://picsum.photos/300/450?random=132",
@@ -2012,6 +2395,10 @@ export const dummyShowsData = [
     _id: "986133",
     id: 986133,
     title: "Dating in the Multiverse",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "After a disastrous date, a heartbroken man accidentally discovers a device that allows him to date alternate versions of his crush across infinite parallel realities.",
     poster_path: "https://picsum.photos/300/450?random=133",
@@ -2033,6 +2420,10 @@ export const dummyShowsData = [
     _id: "986134",
     id: 986134,
     title: "Rogue Pilot",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A former military transport pilot must smuggle a brilliant scientist and a dangerous package through a war-torn sector of space controlled by a relentless tyrant.",
     poster_path: "https://picsum.photos/300/450?random=134",
@@ -2054,6 +2445,10 @@ export const dummyShowsData = [
     _id: "986135",
     id: 986135,
     title: "The Whispering Library",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A curator of a forbidden library discovers that the books themselves are alive and communicating a prophecy about an impending magical catastrophe.",
     poster_path: "https://picsum.photos/300/450?random=135",
@@ -2074,6 +2469,10 @@ export const dummyShowsData = [
     _id: "986136",
     id: 986136,
     title: "King of the Concrete Jungle",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A young graffiti artist with a dark past leads a crew of urban adventurers in a race against a powerful real estate mogul to save their neighborhood from demolition.",
     poster_path: "https://picsum.photos/300/450?random=136",
@@ -2095,6 +2494,10 @@ export const dummyShowsData = [
     _id: "986137",
     id: 986137,
     title: "The Puppet Master's Revival",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "Years after a gruesome murder spree, a group of survivors is hunted by a new killer who appears to be an apprentice to the infamous Puppet Master.",
     poster_path: "https://picsum.photos/300/450?random=137",
@@ -2115,6 +2518,10 @@ export const dummyShowsData = [
     _id: "986138",
     id: 986138,
     title: "Beyond the Horizon",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A sweeping epic about two star-crossed lovers separated by a cataclysmic event, fighting for decades to reunite across continents and generations.",
     poster_path: "https://picsum.photos/300/450?random=138",
@@ -2136,6 +2543,10 @@ export const dummyShowsData = [
     _id: "986139",
     id: 986139,
     title: "The Time Traveler's Wallet",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A hapless man discovers his old wallet allows him to travel 5 minutes into the past, leading to hilarious attempts to fix his mundane life.",
     poster_path: "https://picsum.photos/300/450?random=139",
@@ -2156,6 +2567,10 @@ export const dummyShowsData = [
     _id: "986140",
     id: 986140,
     title: "A Quiet Place on Earth",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A young couple retreats to a remote cabin to escape the city noise, only to discover that the silence itself harbors a chilling, primeval evil.",
     poster_path: "https://picsum.photos/300/450?random=140",
@@ -2176,6 +2591,10 @@ export const dummyShowsData = [
     _id: "986141",
     id: 986141,
     title: "Cybernetic Samurai",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "In a futuristic neo-Tokyo, a disgraced samurai warrior, now part-machine, is hired to escort a sentient AI to a secure neutral zone across a hostile cityscape.",
     poster_path: "https://picsum.photos/300/450?random=141",
@@ -2196,6 +2615,10 @@ export const dummyShowsData = [
     _id: "986142",
     id: 986142,
     title: "The Legend of the Sunstone",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A historical fantasy following a forgotten warrior who must retrieve a legendary artifact, the Sunstone, to save his people from an endless winter.",
     poster_path: "https://picsum.photos/300/450?random=142",
@@ -2217,6 +2640,10 @@ export const dummyShowsData = [
     _id: "986143",
     id: 986143,
     title: "The Golden Ticket Caper",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "Two rival con artists, each believing they have the 'golden ticket' to a legendary hidden fortune, must work together to escape a relentless federal agent.",
     poster_path: "https://picsum.photos/300/450?random=143",
@@ -2238,6 +2665,10 @@ export const dummyShowsData = [
     _id: "986144",
     id: 986144,
     title: "Prehistoric Playground",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A family trip to a remote island turns into a desperate struggle for survival when they realize the island is a sanctuary for highly evolved, territorial dinosaurs.",
     poster_path: "https://picsum.photos/300/450?random=144",
@@ -2259,6 +2690,10 @@ export const dummyShowsData = [
     _id: "986145",
     id: 986145,
     title: "The Gilded Cage",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A wealthy heiress is confined to her historic, isolated mansion, believing she is protected, but soon realizes the house itself is a malevolent entity.",
     poster_path: "https://picsum.photos/300/450?random=145",
@@ -2280,6 +2715,10 @@ export const dummyShowsData = [
     _id: "986146",
     id: 986146,
     title: "Speed Run",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A professional gamer is challenged by an old rival to an impossible, live-streamed 'speed run' across the entire globe to prove who is the best strategist.",
     poster_path: "https://picsum.photos/300/450?random=146",
@@ -2301,6 +2740,10 @@ export const dummyShowsData = [
     _id: "986147",
     id: 986147,
     title: "The Fairy Godmother's Union",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A cynical investigative journalist uncovers a secret union of fairy godmothers who are using their magic to manipulate world events for corporate sponsorship.",
     poster_path: "https://picsum.photos/300/450?random=147",
@@ -2321,6 +2764,10 @@ export const dummyShowsData = [
     _id: "986148",
     id: 986148,
     title: "Underground Empire",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "An intense crime drama about a young police officer going deep undercover into a massive, heavily-guarded criminal enterprise operating beneath the city's subway system.",
     poster_path: "https://picsum.photos/300/450?random=148",
@@ -2342,6 +2789,10 @@ export const dummyShowsData = [
     _id: "986149",
     id: 986149,
     title: "The Ghost Fleet",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A team of deep-sea salvagers discovers a mysterious fleet of WWII-era ghost ships, which come to life to defend a priceless treasure hidden on the seabed.",
     poster_path: "https://picsum.photos/300/450?random=149",
@@ -2363,6 +2814,10 @@ export const dummyShowsData = [
     _id: "986150",
     id: 986150,
     title: "Quantum Leap of Faith",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A disgraced quantum physicist develops a method to momentarily jump through time, leading him on a desperate journey to undo a tragic past mistake.",
     poster_path: "https://picsum.photos/300/450?random=150",
@@ -2383,6 +2838,10 @@ export const dummyShowsData = [
     _id: "986151",
     id: 986151,
     title: "The Last Dragon Rider",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A young apprentice discovers a hidden dragon egg and is chosen as the last of the legendary Dragon Riders, tasked with uniting the fractured human kingdoms.",
     poster_path: "https://picsum.photos/300/450?random=151",
@@ -2404,6 +2863,10 @@ export const dummyShowsData = [
     _id: "986152",
     id: 986152,
     title: "Interrogation Room 5",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A tense, single-location psychological thriller where a detective attempts to break the calm demeanor of a suspected serial killer with only one hour left on the clock.",
     poster_path: "https://picsum.photos/300/450?random=152",
@@ -2424,6 +2887,10 @@ export const dummyShowsData = [
     _id: "986153",
     id: 986153,
     title: "The Forgotten Mercenary",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "An elite, aging mercenary living in the wilderness is dragged back into the world of espionage when his former protégé goes rogue with critical national security data.",
     poster_path: "https://picsum.photos/300/450?random=153",
@@ -2444,6 +2911,10 @@ export const dummyShowsData = [
     _id: "986154",
     id: 986154,
     title: "Ghost of the Opera House",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A talented but arrogant young diva dismisses the local legend of a vengeful ghost haunting the old opera house, only to become the star of its terrifying performance.",
     poster_path: "https://picsum.photos/300/450?random=154",
@@ -2465,6 +2936,10 @@ export const dummyShowsData = [
     _id: "986155",
     id: 986155,
     title: "The Starfall Prophecy",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A team of astronomers discovers an ancient alien signal revealing the imminent destruction of Earth and races to complete a counter-device built by a mysterious benefactor.",
     poster_path: "https://picsum.photos/300/450?random=155",
@@ -2485,6 +2960,10 @@ export const dummyShowsData = [
     _id: "986156",
     id: 986156,
     title: "Dinner with the Dictator",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A political satire where a meek, small-town baker accidentally wins a 'dinner with the president' contest, only to discover his country is run by a megalomaniacal dictator.",
     poster_path: "https://picsum.photos/300/450?random=156",
@@ -2505,6 +2984,10 @@ export const dummyShowsData = [
     _id: "986157",
     id: 986157,
     title: "The Serpent's Jewel",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "An expert art thief teams up with a notorious rival to steal the legendary 'Serpent's Jewel' from a heavily fortified private vault in the Swiss Alps.",
     poster_path: "https://picsum.photos/300/450?random=157",
@@ -2526,6 +3009,10 @@ export const dummyShowsData = [
     _id: "986158",
     id: 986158,
     title: "Return to the Lost Lands",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A follow-up adventure where Gray Alys and Boyce must return to the ghostly Lost Lands to contain a malevolent force they previously unleashed.",
     poster_path: "https://picsum.photos/300/450?random=158",
@@ -2547,6 +3034,10 @@ export const dummyShowsData = [
     _id: "986159",
     id: 986159,
     title: "Reckoning Day",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A post-apocalyptic western where a lone wanderer protects a community from a brutal motorcycle gang vying for control of the last remaining water source.",
     poster_path: "https://picsum.photos/300/450?random=159",
@@ -2568,6 +3059,10 @@ export const dummyShowsData = [
     _id: "986160",
     id: 986160,
     title: "The Ghost of New Year's Eve",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A grumpy man is visited by a trio of spirits on New Year's Eve, each showing him the potential catastrophic consequences of his past and future choices.",
     poster_path: "https://picsum.photos/300/450?random=160",
@@ -2589,6 +3084,10 @@ export const dummyShowsData = [
     _id: "986161",
     id: 986161,
     title: "Echoes in the Deep",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "An oceanic research team discovers a sunken city whose ancient technology emits a siren song that drives its listeners mad.",
     poster_path: "https://picsum.photos/300/450?random=161",
@@ -2610,6 +3109,10 @@ export const dummyShowsData = [
     _id: "986162",
     id: 986162,
     title: "The Secret Life of Socks",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A whimsical animated comedy revealing the hidden society of lost socks in a washing machine dimension and their quest to be reunited with their owners.",
     poster_path: "https://picsum.photos/300/450?random=162",
@@ -2631,6 +3134,10 @@ export const dummyShowsData = [
     _id: "986163",
     id: 986163,
     title: "The Fourth Wall",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A meta-comedy about a group of movie characters who realize they are being controlled by the writers and attempt to stage a revolution against the script.",
     poster_path: "https://picsum.photos/300/450?random=163",
@@ -2651,6 +3158,10 @@ export const dummyShowsData = [
     _id: "986164",
     id: 986164,
     title: "Icebound: The Arctic Heist",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A team of international thieves must execute a daring heist on a high-tech facility hidden deep beneath the Arctic ice, battling both the security and the elements.",
     poster_path: "https://picsum.photos/300/450?random=164",
@@ -2672,6 +3183,10 @@ export const dummyShowsData = [
     _id: "986165",
     id: 986165,
     title: "The Alchemist's Apprentice",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A young apprentice to a reclusive alchemist must complete his master's final, dangerous experiment to create the Philosopher's Stone before dark guilds seize it.",
     poster_path: "https://picsum.photos/300/450?random=165",
@@ -2692,6 +3207,10 @@ export const dummyShowsData = [
     _id: "986166",
     id: 986166,
     title: "The 13th Floor",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A journalist investigates an old, abandoned office building said to have a mysterious 13th floor that only appears at midnight, hiding a terrifying history.",
     poster_path: "https://picsum.photos/300/450?random=166",
@@ -2713,6 +3232,10 @@ export const dummyShowsData = [
     _id: "986167",
     id: 986167,
     title: "Starship Troopers: Extermination",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A new squad of Mobile Infantry is deployed to a remote planet to exterminate a newly discovered, highly intelligent breed of Arachnids.",
     poster_path: "https://picsum.photos/300/450?random=167",
@@ -2734,6 +3257,10 @@ export const dummyShowsData = [
     _id: "986168",
     id: 986168,
     title: "The Secret Chord",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A talented but troubled musician discovers an ancient, forgotten musical chord said to unlock pure emotion in all who hear it, which a dark cult seeks to weaponize.",
     poster_path: "https://picsum.photos/300/450?random=168",
@@ -2755,6 +3282,10 @@ export const dummyShowsData = [
     _id: "986169",
     id: 986169,
     title: "The Exchange Student",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A comedy of errors ensues when a small American town welcomes an 'exchange student' who is actually a disguised foreign intelligence agent on a delicate mission.",
     poster_path: "https://picsum.photos/300/450?random=169",
@@ -2775,6 +3306,10 @@ export const dummyShowsData = [
     _id: "986170",
     id: 986170,
     title: "Deep State: The President's Proxy",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A disgraced journalist and a former intelligence analyst uncover a clandestine organization that has been secretly controlling every presidential decision for decades.",
     poster_path: "https://picsum.photos/300/450?random=170",
@@ -2796,6 +3331,10 @@ export const dummyShowsData = [
     _id: "986171",
     id: 986171,
     title: "The Lost Temple of the Jaguar",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "An Indiana Jones-style adventure following a fearless archaeologist deep into the Amazonian jungle in search of a legendary, booby-trapped temple.",
     poster_path: "https://picsum.photos/300/450?random=171",
@@ -2816,6 +3355,10 @@ export const dummyShowsData = [
     _id: "986172",
     id: 986172,
     title: "Eternal Recursion",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A time-loop thriller where a man wakes up every day in a different parallel reality, only to discover the entire multiverse is collapsing into a single, terrifying timeline.",
     poster_path: "https://picsum.photos/300/450?random=172",
@@ -2837,6 +3380,10 @@ export const dummyShowsData = [
     _id: "986173",
     id: 986173,
     title: "The Cheerleader Massacre",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A slasher flick where a high school cheerleading squad is targeted one by one by a masked killer who only strikes during their late-night practice sessions.",
     poster_path: "https://picsum.photos/300/450?random=173",
@@ -2857,6 +3404,10 @@ export const dummyShowsData = [
     _id: "986174",
     id: 986174,
     title: "The Court of the Sun King",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A lavish historical drama chronicling the political and romantic entanglements within the royal court of an 18th-century European monarchy on the brink of revolution.",
     poster_path: "https://picsum.photos/300/450?random=174",
@@ -2878,6 +3429,10 @@ export const dummyShowsData = [
     _id: "986175",
     id: 986175,
     title: "Agent Zero",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A former government black-ops agent, presumed dead, resurfaces to dismantle the very agency that betrayed him, utilizing his superior combat and espionage skills.",
     poster_path: "https://picsum.photos/300/450?random=175",
@@ -2898,6 +3453,10 @@ export const dummyShowsData = [
     _id: "986176",
     id: 986176,
     title: "The Pixie Plunder",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A feel-good animated adventure about a clumsy but kind-hearted young pixie who accidentally steals the Queen's magical scepter and must navigate the human world to return it.",
     poster_path: "https://picsum.photos/300/450?random=176",
@@ -2919,6 +3478,10 @@ export const dummyShowsData = [
     _id: "986177",
     id: 986177,
     title: "Future Shock: Day 1",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A grim sci-fi thriller set in a fully automated society where all human jobs are obsolete, leading to a massive, violent uprising against the ruling AI.",
     poster_path: "https://picsum.photos/300/450?random=177",
@@ -2940,6 +3503,10 @@ export const dummyShowsData = [
     _id: "986178",
     id: 986178,
     title: "The Case of the Missing Moon Rock",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "A classic mystery film about a meticulous private investigator hired to retrieve a piece of the first moon rock stolen from a secure government vault.",
     poster_path: "https://picsum.photos/300/450?random=178",
@@ -2961,6 +3528,10 @@ export const dummyShowsData = [
     _id: "986179",
     id: "986179",
     title: "Dummy Movie 79",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 79, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=79",
@@ -2982,6 +3553,10 @@ export const dummyShowsData = [
     _id: "986180",
     id: "986180",
     title: "Dummy Movie 80",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 80, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=80",
@@ -3003,6 +3578,10 @@ export const dummyShowsData = [
     _id: "986181",
     id: "986181",
     title: "Dummy Movie 81",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 81, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=81",
@@ -3024,6 +3603,10 @@ export const dummyShowsData = [
     _id: "986182",
     id: "986182",
     title: "Dummy Movie 82",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 82, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=82",
@@ -3044,6 +3627,10 @@ export const dummyShowsData = [
     _id: "986183",
     id: "986183",
     title: "Dummy Movie 83",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 83, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=83",
@@ -3065,6 +3652,10 @@ export const dummyShowsData = [
     _id: "986184",
     id: "986184",
     title: "Dummy Movie 84",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 84, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=84",
@@ -3085,6 +3676,10 @@ export const dummyShowsData = [
     _id: "986185",
     id: "986185",
     title: "Dummy Movie 85",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 85, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=85",
@@ -3105,6 +3700,10 @@ export const dummyShowsData = [
     _id: "986186",
     id: "986186",
     title: "Dummy Movie 86",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 86, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=86",
@@ -3125,6 +3724,10 @@ export const dummyShowsData = [
     _id: "986187",
     id: "986187",
     title: "Dummy Movie 87",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 87, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=87",
@@ -3145,6 +3748,10 @@ export const dummyShowsData = [
     _id: "986188",
     id: "986188",
     title: "Dummy Movie 88",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 88, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=88",
@@ -3165,6 +3772,10 @@ export const dummyShowsData = [
     _id: "986189",
     id: "986189",
     title: "Dummy Movie 89",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 89, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=89",
@@ -3185,6 +3796,10 @@ export const dummyShowsData = [
     _id: "986190",
     id: "986190",
     title: "Dummy Movie 90",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 90, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=90",
@@ -3205,6 +3820,10 @@ export const dummyShowsData = [
     _id: "986191",
     id: "986191",
     title: "Dummy Movie 91",
+    video:
+      "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4",
+    trailer: "https://www.youtube.com/watch?v=trailer{id}",
+    view: 0,
     overview:
       "This is a dummy overview for Dummy Movie 91, generated for testing purposes with different genres and details.",
     poster_path: "https://picsum.photos/300/450?random=91",
@@ -3243,76 +3862,6 @@ export const dummyDateTimeData = {
     { time: "2025-07-27T01:00:00.000Z", showId: "68395b407f6329be2bb45bda" },
     { time: "2025-07-27T03:00:00.000Z", showId: "68395b407f6329be2bb45bdb" },
     { time: "2025-07-27T05:00:00.000Z", showId: "68395b407f6329be2bb45bdc" },
-  ],
-};
-
-export const dummyDashboardData = {
-  totalBookings: 14,
-  totalRevenue: 1517,
-  totalUser: 5,
-  activeShows: [
-    {
-      _id: "68352363e96d99513e4221a4",
-      movie: dummyShowsData[0],
-      showDateTime: "2025-06-30T02:30:00.000Z",
-      showPrice: 59,
-      occupiedSeats: {
-        A1: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-        B1: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-        C1: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-      },
-    },
-    {
-      _id: "6835238fe96d99513e4221a8",
-      movie: dummyShowsData[1],
-      showDateTime: "2025-06-30T15:30:00.000Z",
-      showPrice: 81,
-      occupiedSeats: {},
-    },
-    {
-      _id: "6835238fe96d99513e4221a9",
-      movie: dummyShowsData[2],
-      showDateTime: "2025-06-30T03:30:00.000Z",
-      showPrice: 81,
-      occupiedSeats: {},
-    },
-    {
-      _id: "6835238fe96d99513e4221aa",
-      movie: dummyShowsData[3],
-      showDateTime: "2025-07-15T16:30:00.000Z",
-      showPrice: 81,
-      occupiedSeats: {
-        A1: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-        A2: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-        A3: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-        A4: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-      },
-    },
-    {
-      _id: "683682072b5989c29fc6dc0d",
-      movie: dummyShowsData[4],
-      showDateTime: "2025-06-05T15:30:00.000Z",
-      showPrice: 49,
-      occupiedSeats: {
-        A1: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-        A2: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-        A3: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-        B1: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-        B2: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-        B3: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
-      },
-      __v: 0,
-    },
-    {
-      _id: "68380044686d454f2116b39a",
-      movie: dummyShowsData[5],
-      showDateTime: "2025-06-20T16:00:00.000Z",
-      showPrice: 79,
-      occupiedSeats: {
-        A1: "user_2xl7eCSUHddibk5lRxfOtw9RMwX",
-        A2: "user_2xl7eCSUHddibk5lRxfOtw9RMwX",
-      },
-    },
   ],
 };
 
@@ -3421,5 +3970,288 @@ export const dummySubscriptionPlansData = [
     tierRank: 5,
     isPopular: false,
     isActive: true,
+  },
+];
+export const dummyDashboardData = {
+  totalSubscriptions: 14,
+  totalRevenue: 1517,
+  totalUsers: 5,
+  activeSubscriptions: [
+    {
+      _id: "sub_68352363e96d99513e4221a4",
+      plan: dummySubscriptionPlansData[0], // Basic
+      purchaseDate: "2025-06-30T02:30:00.000Z",
+      expiryDate: "2025-07-30T02:30:00.000Z",
+      pricePaid: 9.99,
+      userId: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
+      status: "active",
+    },
+    {
+      _id: "sub_6835238fe96d99513e4221a8",
+      plan: dummySubscriptionPlansData[1], // Standard
+      purchaseDate: "2025-06-30T15:30:00.000Z",
+      expiryDate: "2025-07-30T15:30:00.000Z",
+      pricePaid: 14.99,
+      userId: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
+      status: "active",
+    },
+    {
+      _id: "sub_6835238fe96d99513e4221a9",
+      plan: dummySubscriptionPlansData[2], // Advanced
+      purchaseDate: "2025-06-30T03:30:00.000Z",
+      expiryDate: "2025-07-30T03:30:00.000Z",
+      pricePaid: 17.99,
+      userId: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
+      status: "active",
+    },
+    {
+      _id: "sub_6835238fe96d99513e4221aa",
+      plan: dummySubscriptionPlansData[3], // Premium
+      purchaseDate: "2025-07-15T16:30:00.000Z",
+      expiryDate: "2025-08-15T16:30:00.000Z",
+      pricePaid: 19.99,
+      userId: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
+      status: "active",
+    },
+    {
+      _id: "sub_683682072b5989c29fc6dc0d",
+      plan: dummySubscriptionPlansData[4], // Pro
+      purchaseDate: "2025-06-05T15:30:00.000Z",
+      expiryDate: "2025-07-05T15:30:00.000Z",
+      pricePaid: 24.99,
+      userId: "user_2xO4XPCgWWwWq9EHuQxc5UWqIok",
+      status: "expired",
+    },
+    {
+      _id: "sub_68380044686d454f2116b39a",
+      plan: dummySubscriptionPlansData[5], // Ultra
+      purchaseDate: "2025-06-20T16:00:00.000Z",
+      expiryDate: "2025-07-20T16:00:00.000Z",
+      pricePaid: 29.99,
+      userId: "user_2xl7eCSUHddibk5lRxfOtw9RMwX",
+      status: "active",
+    },
+  ],
+};
+export const dummyBookingData = [
+  {
+    _id: "booking_001",
+    user: {
+      _id: "user_001",
+      name: "John Doe",
+      email: "john.doe@example.com",
+      avatar: "https://i.pravatar.cc/150?img=1",
+    },
+    subscriptionPlan: {
+      _id: "plan_premium_v3",
+      planName: "Premium",
+      price: 19.99,
+      duration: "Monthly",
+      tierRank: 3,
+    },
+    purchaseDate: "2025-01-15T10:30:00Z",
+    expiryDate: "2025-02-15T10:30:00Z",
+    amount: 19.99,
+    status: "Active", // Active, Expired, Cancelled
+    paymentMethod: "Credit Card",
+    transactionId: "TXN_20250115_001",
+  },
+  {
+    _id: "booking_002",
+    user: {
+      _id: "user_002",
+      name: "Jane Smith",
+      email: "jane.smith@example.com",
+      avatar: "https://i.pravatar.cc/150?img=2",
+    },
+    subscriptionPlan: {
+      _id: "plan_ultra_v5",
+      planName: "Ultra",
+      price: 29.99,
+      duration: "Monthly",
+      tierRank: 5,
+    },
+    purchaseDate: "2025-01-10T14:20:00Z",
+    expiryDate: "2025-02-10T14:20:00Z",
+    amount: 29.99,
+    status: "Active",
+    paymentMethod: "PayPal",
+    transactionId: "TXN_20250110_002",
+  },
+  {
+    _id: "booking_003",
+    user: {
+      _id: "user_003",
+      name: "Michael Johnson",
+      email: "michael.j@example.com",
+      avatar: "https://i.pravatar.cc/150?img=3",
+    },
+    subscriptionPlan: {
+      _id: "plan_basic_v1",
+      planName: "Basic",
+      price: 9.99,
+      duration: "Monthly",
+      tierRank: 1,
+    },
+    purchaseDate: "2024-12-20T09:15:00Z",
+    expiryDate: "2025-01-20T09:15:00Z",
+    amount: 9.99,
+    status: "Expired",
+    paymentMethod: "Credit Card",
+    transactionId: "TXN_20241220_003",
+  },
+  {
+    _id: "booking_004",
+    user: {
+      _id: "user_004",
+      name: "Emily Davis",
+      email: "emily.davis@example.com",
+      avatar: "https://i.pravatar.cc/150?img=4",
+    },
+    subscriptionPlan: {
+      _id: "plan_pro_v4",
+      planName: "Pro",
+      price: 24.99,
+      duration: "Monthly",
+      tierRank: 4,
+    },
+    purchaseDate: "2025-01-18T16:45:00Z",
+    expiryDate: "2025-02-18T16:45:00Z",
+    amount: 24.99,
+    status: "Active",
+    paymentMethod: "Debit Card",
+    transactionId: "TXN_20250118_004",
+  },
+  {
+    _id: "booking_005",
+    user: {
+      _id: "user_005",
+      name: "Robert Wilson",
+      email: "robert.w@example.com",
+      avatar: "https://i.pravatar.cc/150?img=5",
+    },
+    subscriptionPlan: {
+      _id: "plan_standard_v2",
+      planName: "Standard",
+      price: 14.99,
+      duration: "Monthly",
+      tierRank: 2,
+    },
+    purchaseDate: "2025-01-05T11:00:00Z",
+    expiryDate: "2025-02-05T11:00:00Z",
+    amount: 14.99,
+    status: "Active",
+    paymentMethod: "Credit Card",
+    transactionId: "TXN_20250105_005",
+  },
+  {
+    _id: "booking_006",
+    user: {
+      _id: "user_006",
+      name: "Sarah Martinez",
+      email: "sarah.m@example.com",
+      avatar: "https://i.pravatar.cc/150?img=6",
+    },
+    subscriptionPlan: {
+      _id: "plan_premium_v3",
+      planName: "Premium",
+      price: 19.99,
+      duration: "Monthly",
+      tierRank: 3,
+    },
+    purchaseDate: "2025-01-12T13:30:00Z",
+    expiryDate: "2025-02-12T13:30:00Z",
+    amount: 19.99,
+    status: "Cancelled",
+    paymentMethod: "PayPal",
+    transactionId: "TXN_20250112_006",
+  },
+  {
+    _id: "booking_007",
+    user: {
+      _id: "user_007",
+      name: "David Brown",
+      email: "david.brown@example.com",
+      avatar: "https://i.pravatar.cc/150?img=7",
+    },
+    subscriptionPlan: {
+      _id: "plan_advanced_v2_5",
+      planName: "Advanced",
+      price: 17.99,
+      duration: "Monthly",
+      tierRank: 2.5,
+    },
+    purchaseDate: "2025-01-08T08:20:00Z",
+    expiryDate: "2025-02-08T08:20:00Z",
+    amount: 17.99,
+    status: "Active",
+    paymentMethod: "Credit Card",
+    transactionId: "TXN_20250108_007",
+  },
+  {
+    _id: "booking_008",
+    user: {
+      _id: "user_008",
+      name: "Lisa Anderson",
+      email: "lisa.a@example.com",
+      avatar: "https://i.pravatar.cc/150?img=8",
+    },
+    subscriptionPlan: {
+      _id: "plan_ultra_v5",
+      planName: "Ultra",
+      price: 29.99,
+      duration: "Monthly",
+      tierRank: 5,
+    },
+    purchaseDate: "2025-01-16T15:10:00Z",
+    expiryDate: "2025-02-16T15:10:00Z",
+    amount: 29.99,
+    status: "Active",
+    paymentMethod: "Credit Card",
+    transactionId: "TXN_20250116_008",
+  },
+  {
+    _id: "booking_009",
+    user: {
+      _id: "user_009",
+      name: "James Taylor",
+      email: "james.t@example.com",
+      avatar: "https://i.pravatar.cc/150?img=9",
+    },
+    subscriptionPlan: {
+      _id: "plan_basic_v1",
+      planName: "Basic",
+      price: 9.99,
+      duration: "Monthly",
+      tierRank: 1,
+    },
+    purchaseDate: "2024-12-25T12:00:00Z",
+    expiryDate: "2025-01-25T12:00:00Z",
+    amount: 9.99,
+    status: "Expired",
+    paymentMethod: "Debit Card",
+    transactionId: "TXN_20241225_009",
+  },
+  {
+    _id: "booking_010",
+    user: {
+      _id: "user_010",
+      name: "Jennifer White",
+      email: "jennifer.w@example.com",
+      avatar: "https://i.pravatar.cc/150?img=10",
+    },
+    subscriptionPlan: {
+      _id: "plan_pro_v4",
+      planName: "Pro",
+      price: 24.99,
+      duration: "Monthly",
+      tierRank: 4,
+    },
+    purchaseDate: "2025-01-14T10:45:00Z",
+    expiryDate: "2025-02-14T10:45:00Z",
+    amount: 24.99,
+    status: "Active",
+    paymentMethod: "PayPal",
+    transactionId: "TXN_20250114_010",
   },
 ];

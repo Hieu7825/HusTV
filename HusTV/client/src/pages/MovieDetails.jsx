@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { dummyShowsData } from "../assets/assets";
 import timeFormat from "../lib/timeFormat";
@@ -10,8 +10,8 @@ import Loading from "../components/Loading";
 const MovieDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [show, setShow] = React.useState(null);
-  const [isLiked, setIsLiked] = React.useState(false);
+  const [show, setShow] = useState(null);
+  const [isLiked, setIsLiked] = useState(false);
 
   const getShow = async () => {
     const show = dummyShowsData.find((show) => show._id === id);
@@ -22,8 +22,51 @@ const MovieDetails = () => {
     }
   };
 
+  // Kiểm tra xem phim có trong favorites không
+  const checkIfLiked = () => {
+    const favorites = JSON.parse(
+      localStorage.getItem("favoriteMovies") || "[]"
+    );
+    setIsLiked(favorites.includes(id));
+  };
+
+  // Toggle favorite
+  const toggleFavorite = () => {
+    const favorites = JSON.parse(
+      localStorage.getItem("favoriteMovies") || "[]"
+    );
+
+    if (favorites.includes(id)) {
+      // Xóa khỏi favorites
+      const newFavorites = favorites.filter((movieId) => movieId !== id);
+      localStorage.setItem("favoriteMovies", JSON.stringify(newFavorites));
+      setIsLiked(false);
+    } else {
+      // Thêm vào favorites
+      const newFavorites = [...favorites, id];
+      localStorage.setItem("favoriteMovies", JSON.stringify(newFavorites));
+      setIsLiked(true);
+    }
+
+    // Dispatch custom event để các component khác update
+    window.dispatchEvent(new Event("favoriteChanged"));
+  };
+
   useEffect(() => {
     getShow();
+    checkIfLiked();
+  }, [id]);
+
+  // Listen for favorite changes từ components khác
+  useEffect(() => {
+    const handleFavoriteChange = () => {
+      checkIfLiked();
+    };
+
+    window.addEventListener("favoriteChanged", handleFavoriteChange);
+    return () => {
+      window.removeEventListener("favoriteChanged", handleFavoriteChange);
+    };
   }, [id]);
 
   return show ? (
@@ -129,12 +172,13 @@ const MovieDetails = () => {
             </button>
 
             <button
-              onClick={() => setIsLiked(!isLiked)}
+              onClick={toggleFavorite}
               className={`p-3 rounded-full transition-all duration-300 cursor-pointer border-2 shadow-lg hover:scale-110 active:scale-95 ${
                 isLiked
                   ? "bg-red-600 border-red-500 shadow-red-600/50 hover:shadow-red-600/70"
                   : "bg-gray-900 border-red-600 shadow-red-600/30 hover:bg-red-900 hover:shadow-red-600/50"
               }`}
+              title={isLiked ? "Remove from Favorites" : "Add to Favorites"}
             >
               <Heart
                 className={`w-5 h-5 transition-all duration-300 ${

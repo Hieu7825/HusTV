@@ -1,3 +1,4 @@
+//  client/src/components/SubscriptionCard.jsx
 import React from "react";
 import { CheckCircle, Star, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";

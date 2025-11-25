@@ -1,3 +1,4 @@
+// client/src/pages/Favorite.jsx
 import React, { useState, useMemo } from "react";
 import { dummyShowsData } from "../assets/assets";
 import MovieCard from "../components/MovieCard";

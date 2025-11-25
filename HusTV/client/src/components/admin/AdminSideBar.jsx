@@ -1,3 +1,4 @@
+// client/src/components/admin/AdminSideBar.jsx
 import React from "react";
 import {
   ClapperboardIcon,

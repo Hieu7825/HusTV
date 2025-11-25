@@ -1,3 +1,4 @@
+// client/src/components/MovieCard.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { StarIcon } from "lucide-react";

@@ -1,3 +1,4 @@
+// client/src/components/admin/PlanDetailsModal.jsx
 import React from "react";
 import { X, Star, Sparkles, CheckCircle, Crown } from "lucide-react";
 

@@ -1,3 +1,4 @@
+// client/src/components/admin/MovieDetailsModal.jsx
 import React from "react";
 import { X, Star, Youtube, Play } from "lucide-react";
 

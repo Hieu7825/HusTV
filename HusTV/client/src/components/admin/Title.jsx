@@ -1,3 +1,4 @@
+// client/src/components/admin/Title.jsx
 import React from "react";
 
 const Title = ({ text1, text2 }) => {

@@ -1,3 +1,4 @@
+// client/src/lib/dateFormat.js
 export const dateFormat = (date) => {
   return new Date(date).toLocaleString("en-US", {
     weekday: "short",

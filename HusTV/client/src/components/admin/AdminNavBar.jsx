@@ -1,3 +1,4 @@
+// client/src/components/admin/AdminNavBar.jsx
 import React from "react";
 import { assets } from "../../assets/assets";
 import { Link } from "react-router-dom";

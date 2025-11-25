@@ -1,3 +1,4 @@
+// client/src/components/FeaturedSection.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import BlurCircle from "./BlurCircle";

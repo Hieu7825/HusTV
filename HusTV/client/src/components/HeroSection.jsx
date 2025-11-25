@@ -1,3 +1,4 @@
+// client/src/components/HeroSection.jsx
 import React, { useState, useRef } from "react";
 import { Play, Film } from "lucide-react";
 

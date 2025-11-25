@@ -1,3 +1,4 @@
+// client/src/components/SubscriptionPlans.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import BlurCircle from "./BlurCircle";

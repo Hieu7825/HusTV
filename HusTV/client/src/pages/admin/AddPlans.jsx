@@ -1,3 +1,4 @@
+// client/src/pages/admin/AddPlans.jsx
 import React, { useState } from "react";
 import {
   Plus,

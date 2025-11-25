@@ -1,3 +1,4 @@
+// client/src/components/SearchBar.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 

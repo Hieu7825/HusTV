@@ -1,3 +1,4 @@
+// client/src/pages/admin/DashBoard.jsx
 import React, { useEffect, useState } from "react";
 import { dummyDashboardData } from "../../assets/assets";
 import {

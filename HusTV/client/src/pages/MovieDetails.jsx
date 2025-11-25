@@ -1,3 +1,4 @@
+//  client/src/pages/MovieDetails.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { dummyShowsData } from "../assets/assets";

@@ -1,3 +1,4 @@
+// client/src/pages/admin/Layout.jsx
 import React from "react";
 import AdminNavBar from "../../components/admin/AdminNavBar";
 import AdminSidebar from "../../components/admin/AdminSidebar";

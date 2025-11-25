@@ -1,3 +1,4 @@
+// client/src/pages/Video.jsx
 import React, { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { dummyShowsData, assets } from "../assets/assets";

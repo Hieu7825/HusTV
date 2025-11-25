@@ -1,3 +1,4 @@
+// client/src/pages/MySubscriptions.jsx
 import React, { useEffect, useState } from "react";
 import { dummySubscriptionPlansData } from "../assets/assets";
 import Loading from "../components/Loading";

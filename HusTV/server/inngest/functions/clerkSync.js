@@ -1,5 +1,5 @@
 // inngest/functions/clerkSync.js
-import { inngest } from "../index.js";
+import { inngest } from "../client.js"; // Thay đổi từ ../index.js sang ../client.js
 import User from "../../models/User.js";
 import Subscription from "../../models/Subscription.js";
 

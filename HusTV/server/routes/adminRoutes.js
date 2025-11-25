@@ -2,28 +2,36 @@
 import express from "express";
 import { protectAdmin } from "../middleware/index.js";
 import {
-  getDashboardStats,
+  isAdmin,
+  getDashboardData,
   getAllUsers,
-  getUserDetails,
-  updateUserRole,
-  getAllSubscriptionsAdmin,
+  getAllSubscriptions,
+  getAllVideos,
+  toggleUserBan,
+  updateVideoStatus,
   getRevenueStats,
-  getTopVideos,
-  getRecentActivities,
 } from "../controllers/adminController.js";
 
 const router = express.Router();
 
-// All routes require admin
-router.use(protectAdmin);
+// Check if user is admin
+router.get("/check", protectAdmin, isAdmin);
 
-router.get("/dashboard/stats", getDashboardStats);
-router.get("/users", getAllUsers);
-router.get("/users/:userId", getUserDetails);
-router.patch("/users/:userId/role", updateUserRole);
-router.get("/subscriptions", getAllSubscriptionsAdmin);
-router.get("/revenue", getRevenueStats);
-router.get("/videos/top", getTopVideos);
-router.get("/activities", getRecentActivities);
+// Dashboard
+router.get("/dashboard", protectAdmin, getDashboardData);
+
+// Users management
+router.get("/users", protectAdmin, getAllUsers);
+router.patch("/users/:userId/ban", protectAdmin, toggleUserBan);
+
+// Subscriptions
+router.get("/subscriptions", protectAdmin, getAllSubscriptions);
+
+// Videos management
+router.get("/videos", protectAdmin, getAllVideos);
+router.patch("/videos/:videoId/status", protectAdmin, updateVideoStatus);
+
+// Revenue stats
+router.get("/revenue", protectAdmin, getRevenueStats);
 
 export default router;

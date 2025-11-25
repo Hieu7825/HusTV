@@ -1,5 +1,5 @@
 // inngest/index.js
-import { Inngest } from "inngest";
+import { inngest } from "./client.js";
 
 // Import all function modules
 import {
@@ -29,12 +29,8 @@ import {
   cleanupDraftVideos,
 } from "./functions/videoProcessing.js";
 
-// Initialize Inngest client
-export const inngest = new Inngest({
-  id: "hustv",
-  name: "HusTV",
-  eventKey: process.env.INNGEST_EVENT_KEY,
-});
+// Export inngest client
+export { inngest };
 
 // Export all functions as array
 export const functions = [

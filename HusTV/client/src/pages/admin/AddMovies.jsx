@@ -1,4 +1,4 @@
-//  client/src/pages/admin/AddMovies.jsx
+// client/src/pages/admin/AddMovies.jsx
 import React, { useState, useEffect } from "react";
 import {
   Film,
@@ -19,27 +19,83 @@ import {
 } from "lucide-react";
 import Title from "../../components/admin/Title";
 import BlurCircle from "../../components/BlurCircle";
-import { dummyShowsData } from "../../assets/assets";
 import AddNewMovie from "../../components/admin/AddNewMovie";
 import MovieDetailsModal from "../../components/admin/MovieDetailsModal";
 import Pagination from "../../components/Pagination";
+import Loading from "../../components/Loading";
+import { videoService } from "../../services";
+import toast from "react-hot-toast";
 
 const AddMovies = () => {
-  const [movies, setMovies] = useState(dummyShowsData);
+  const [movies, setMovies] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingMovie, setEditingMovie] = useState(null);
   const [selectedMovie, setSelectedMovie] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const moviesPerPage = 9; // 9 phim mỗi trang (3x3 grid)
+  const moviesPerPage = 9;
+
+  // Fetch movies from API
+  useEffect(() => {
+    fetchMovies();
+  }, []);
+
+  // Thay thế hàm fetchMovies trong AddMovies.jsx (từ dòng 42-56)
+
+  const fetchMovies = async () => {
+    try {
+      setLoading(true);
+      const response = await videoService.getAllVideos({
+        limit: 1000, // Get all for admin
+      });
+
+      console.log("📥 Fetch movies response:", response);
+
+      // ✅ Handle different response formats
+      let moviesData = [];
+
+      if (Array.isArray(response)) {
+        // Direct array
+        moviesData = response;
+      } else if (response.data) {
+        // Response has data property
+        if (Array.isArray(response.data)) {
+          // data is array
+          moviesData = response.data;
+        } else if (
+          response.data.videos &&
+          Array.isArray(response.data.videos)
+        ) {
+          // data.videos is array
+          moviesData = response.data.videos;
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+          // data.data is array (nested)
+          moviesData = response.data.data;
+        }
+      } else if (response.videos && Array.isArray(response.videos)) {
+        // Direct videos property
+        moviesData = response.videos;
+      }
+
+      console.log("✅ Parsed movies:", moviesData.length, "movies");
+      setMovies(moviesData);
+    } catch (error) {
+      console.error("❌ Failed to fetch movies:", error);
+      toast.error("Failed to load movies");
+      setMovies([]); // ✅ Always set empty array on error
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter movies based on search
-  const filteredMovies = movies.filter(
+  const filteredMovies = (Array.isArray(movies) ? movies : []).filter(
     (movie) =>
-      movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      movie.overview.toLowerCase().includes(searchTerm.toLowerCase())
+      movie.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      movie.overview?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Calculate pagination
@@ -51,14 +107,22 @@ const AddMovies = () => {
     indexOfLastMovie
   );
 
-  // Reset về trang 1 khi search thay đổi
+  // Reset to page 1 when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  const handleDelete = (id) => {
-    if (confirm("Are you sure you want to delete this movie?")) {
-      setMovies(movies.filter((movie) => movie._id !== id));
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this movie?")) return;
+
+    try {
+      await videoService.deleteVideo(id);
+      toast.success("Movie deleted successfully");
+      // Refresh movies list
+      fetchMovies();
+    } catch (error) {
+      console.error("Failed to delete movie:", error);
+      toast.error(error.response?.data?.message || "Failed to delete movie");
     }
   };
 
@@ -67,22 +131,36 @@ const AddMovies = () => {
     setShowAddModal(true);
   };
 
-  const handleSaveMovie = (movieData) => {
-    if (editingMovie) {
-      // Update existing movie
-      setMovies(movies.map((m) => (m._id === movieData._id ? movieData : m)));
-    } else {
-      // Add new movie
-      setMovies([movieData, ...movies]);
+  const handleSaveMovie = async (movieData) => {
+    try {
+      if (editingMovie) {
+        // Update existing movie
+        await videoService.updateVideo(editingMovie._id, movieData);
+        toast.success("Movie updated successfully");
+      } else {
+        // Add new movie - Note: This needs FormData for file upload
+        // The actual upload should be handled in AddNewMovie component
+        toast.success("Movie added successfully");
+      }
+
+      // Refresh movies list
+      fetchMovies();
+      setShowAddModal(false);
+      setEditingMovie(null);
+    } catch (error) {
+      console.error("Failed to save movie:", error);
+      toast.error(error.response?.data?.message || "Failed to save movie");
     }
-    setShowAddModal(false);
-    setEditingMovie(null);
   };
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <div className="min-h-screen bg-black text-white p-6 relative overflow-hidden">
@@ -414,7 +492,7 @@ const AddMovies = () => {
           </div>
         )}
 
-        {/* Pagination - chỉ hiển thị khi có nhiều hơn 1 trang */}
+        {/* Pagination */}
         {filteredMovies.length > 0 && totalPages > 1 && (
           <Pagination
             currentPage={currentPage}
@@ -433,10 +511,11 @@ const AddMovies = () => {
             setEditingMovie(null);
           }}
           onSave={handleSaveMovie}
+          onRefresh={fetchMovies}
         />
       )}
 
-      {/* Detail Modal - Sử dụng component MovieDetailsModal */}
+      {/* Detail Modal */}
       {selectedMovie && (
         <MovieDetailsModal
           movie={selectedMovie}

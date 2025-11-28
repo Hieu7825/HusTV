@@ -1,37 +1,154 @@
 // client/src/pages/Video.jsx
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { dummyShowsData, assets } from "../assets/assets";
-import { Heart, ChevronRight, Home, Star } from "lucide-react";
+import { videoService, userService } from "../services";
+import { assets } from "../assets/assets";
+import { ChevronRight, Home } from "lucide-react";
 import MovieCard from "../components/MovieCard";
 import Loading from "../components/Loading";
 import BlurCircle from "../components/BlurCircle";
+import toast from "react-hot-toast";
 
 export const Video = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [show, setShow] = React.useState(null);
+  const [movie, setMovie] = useState(null);
+  const [relatedMovies, setRelatedMovies] = useState([]);
+  const [streamingUrl, setStreamingUrl] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const getShow = async () => {
-    const show = dummyShowsData.find((show) => show._id === id);
-    if (show) {
-      setShow({
-        movie: show,
-      });
+  useEffect(() => {
+    const fetchVideo = async () => {
+      try {
+        setLoading(true);
+
+        // ✅ FIX 1: Fetch movie details
+        const movieResponse = await videoService.getVideoById(id);
+        console.log("📥 Video page - movie response:", movieResponse);
+
+        // Parse: { success: true, video: {...} }
+        const movieData = movieResponse.data?.video || movieResponse.data;
+        console.log("✅ Parsed movie:", movieData);
+        setMovie(movieData);
+
+        // ✅ FIX 2: Get streaming URL (protected endpoint)
+        try {
+          const streamResponse = await videoService.getStreamingUrl(id);
+          console.log("📥 Streaming URL response:", streamResponse);
+
+          // Parse: { success: true, streamUrl: "...", video: {...} }
+          const url =
+            streamResponse.data?.streamUrl ||
+            streamResponse.data?.streamingUrl ||
+            streamResponse.streamUrl ||
+            movieData.video || // Fallback to video URL from movie data
+            "";
+
+          console.log("✅ Streaming URL:", url);
+          setStreamingUrl(url);
+        } catch (streamError) {
+          console.warn(
+            "⚠️ Streaming URL fetch failed, using fallback:",
+            streamError
+          );
+          // Fallback to direct video URL
+          setStreamingUrl(movieData.video || "");
+        }
+
+        // Update watch progress on mount
+        try {
+          await userService.updateWatchProgress(id, {
+            watchedDuration: 0,
+            totalDuration: movieData.runtime * 60, // Convert to seconds
+          });
+        } catch (progressError) {
+          console.warn(
+            "⚠️ Watch progress update failed (non-critical):",
+            progressError
+          );
+          // Don't fail the whole page if watch progress fails
+        }
+      } catch (error) {
+        console.error("❌ Failed to fetch video:", error);
+        toast.error("Failed to load video");
+        navigate("/movies");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVideo();
+  }, [id, navigate]);
+
+  // Fetch related movies
+  useEffect(() => {
+    const fetchRelatedMovies = async () => {
+      if (!movie?.genres?.length) return;
+
+      try {
+        const genreId = movie.genres[0].id;
+        const response = await videoService.getVideosByGenre(genreId);
+
+        console.log("📥 Related movies response:", response);
+
+        // ✅ FIX 3: Parse response.data.videos
+        const movies = response.data?.videos || [];
+
+        const related = movies.filter((m) => m._id !== id).slice(0, 3);
+
+        console.log("✅ Parsed related movies:", related.length);
+        setRelatedMovies(related);
+      } catch (error) {
+        console.error("❌ Failed to fetch related movies:", error);
+        // Don't show error - related movies are optional
+      }
+    };
+
+    fetchRelatedMovies();
+  }, [movie, id]);
+
+  // Track watch progress
+  const handleTimeUpdate = async (event) => {
+    const video = event.target;
+    const watchedDuration = Math.floor(video.currentTime);
+    const totalDuration = Math.floor(video.duration);
+
+    // Update every 30 seconds
+    if (watchedDuration % 30 === 0 && watchedDuration > 0) {
+      try {
+        await userService.updateWatchProgress(id, {
+          watchedDuration,
+          totalDuration,
+        });
+        console.log(
+          `⏱️ Watch progress updated: ${watchedDuration}/${totalDuration}s`
+        );
+      } catch (error) {
+        console.error("Failed to update watch progress:", error);
+        // Don't show error - this is background tracking
+      }
     }
   };
 
-  useEffect(() => {
-    getShow();
-  }, [id]);
+  if (loading) {
+    return <Loading />;
+  }
 
-  return show ? (
+  if (!movie) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-white text-xl">Video not found</p>
+      </div>
+    );
+  }
+
+  return (
     <div className="min-h-screen bg-gradient-to-b from-white via-gray-50 to-white dark:from-black dark:via-gray-900 dark:to-black text-gray-900 dark:text-white px-6 md:px-16 lg:px-40 pt-24 md:pt-28">
-      {/* Breadcrumb Header - HusTV >> Movie */}
+      {/* Breadcrumb Header */}
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => navigate("/")}
-          className="gradient cursor-pointer flex items-center gap-2  transition-colors font-bold text-xl drop-shadow-lg"
+          className="gradient cursor-pointer flex items-center gap-2 transition-colors font-bold text-xl drop-shadow-lg"
         >
           <Home className="text-blue-500 dark:text-red-500 w-5 h-5" />
           HusTV
@@ -41,7 +158,7 @@ export const Video = () => {
           onClick={() => navigate(`/movies/${id}`)}
           className="cursor-pointer text-gray-600 dark:text-gray-300 font-medium text-lg drop-shadow-md"
         >
-          {show.movie.title}
+          {movie.title}
         </button>
       </div>
 
@@ -67,15 +184,52 @@ export const Video = () => {
               style={{ paddingBottom: "56.25%" }}
             >
               <div className="absolute inset-0">
-                {/* Video iframe - Thay YOUR_VIDEO_URL bằng link video thực */}
-                <iframe
-                  className="w-full h-full"
-                  src={`https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0`}
-                  title={show.movie.title}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
+                {streamingUrl ? (
+                  <video
+                    className="w-full h-full"
+                    src={streamingUrl}
+                    controls
+                    autoPlay
+                    onTimeUpdate={handleTimeUpdate}
+                    poster={movie.backdrop_path}
+                    onError={(e) => {
+                      console.error("❌ Video playback error:", e);
+                      toast.error(
+                        "Failed to load video. Please try again later."
+                      );
+                    }}
+                  >
+                    <source src={streamingUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : movie.trailer ? (
+                  // Fallback to trailer if no video URL
+                  <video
+                    className="w-full h-full"
+                    src={movie.trailer}
+                    controls
+                    autoPlay
+                    poster={movie.backdrop_path}
+                  >
+                    <source src={movie.trailer} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  // Last resort: YouTube embed or placeholder
+                  <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                    <div className="text-center">
+                      <p className="text-white text-xl mb-4">
+                        Video not available
+                      </p>
+                      <button
+                        onClick={() => navigate(`/movies/${id}`)}
+                        className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
+                      >
+                        Back to Details
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Screen Reflection Effect */}
@@ -111,21 +265,34 @@ export const Video = () => {
         </div>
       </div>
 
-      {/* Related Movies Section */}
-      <div className="mt-24">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="h-1 w-12 bg-gradient-to-r from-blue-500 dark:from-red-600 to-transparent rounded-full"></div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-lg">
-            You May Also Like
-          </h2>
-        </div>
-
-        <div className="flex flex-wrap max-sm:justify-center gap-8">
-          {dummyShowsData.slice(0, 3).map((movie, index) => (
-            <MovieCard key={index} movie={movie} />
-          ))}
-        </div>
+      {/* Movie Info Below Video */}
+      <div className="mt-12 max-w-7xl mx-auto">
+        <h1 className="text-3xl md:text-4xl font-bold mb-4">{movie.title}</h1>
+        {movie.tagline && (
+          <p className="text-red-400 italic text-lg mb-4">"{movie.tagline}"</p>
+        )}
+        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+          {movie.overview}
+        </p>
       </div>
+
+      {/* Related Movies Section */}
+      {relatedMovies.length > 0 && (
+        <div className="mt-24">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="h-1 w-12 bg-gradient-to-r from-blue-500 dark:from-red-600 to-transparent rounded-full"></div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-lg">
+              You May Also Like
+            </h2>
+          </div>
+
+          <div className="flex flex-wrap max-sm:justify-center gap-8">
+            {relatedMovies.map((relatedMovie) => (
+              <MovieCard key={relatedMovie._id} movie={relatedMovie} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Show More Button */}
       <div className="flex justify-center mt-20 pb-20">
@@ -140,7 +307,5 @@ export const Video = () => {
         </button>
       </div>
     </div>
-  ) : (
-    <Loading />
   );
 };

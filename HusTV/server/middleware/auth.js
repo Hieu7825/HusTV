@@ -6,8 +6,9 @@ import { clerkClient } from "@clerk/express";
  */
 export const protectAdmin = async (req, res, next) => {
   try {
-    // Get userId from Clerk auth (set by Clerk middleware)
-    const { userId } = req.auth;
+    // Get userId from Clerk auth - use req.auth() as function (not property)
+    const auth = req.auth();
+    const { userId } = auth || {};
 
     if (!userId) {
       return res.status(401).json({
@@ -54,7 +55,8 @@ export const protectAdmin = async (req, res, next) => {
  */
 export const protectUser = async (req, res, next) => {
   try {
-    const { userId } = req.auth;
+    const auth = req.auth();
+    const { userId } = auth || {};
 
     if (!userId) {
       return res.status(401).json({
@@ -92,7 +94,8 @@ export const protectUser = async (req, res, next) => {
  */
 export const optionalAuth = async (req, res, next) => {
   try {
-    const { userId } = req.auth;
+    const auth = req.auth();
+    const { userId } = auth || {};
 
     if (userId) {
       const user = await clerkClient.users.getUser(userId);

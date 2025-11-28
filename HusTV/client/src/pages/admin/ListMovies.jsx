@@ -1,4 +1,4 @@
-//  client/src/pages/admin/ListMovies.jsx
+// client/src/pages/admin/ListMovies.jsx
 import React, { useState, useEffect } from "react";
 import {
   Search,
@@ -11,12 +11,17 @@ import {
   Star,
   Calendar,
   Clock,
+  Edit,
+  Trash2,
+  Loader2,
 } from "lucide-react";
-import { dummyShowsData } from "../../assets/assets";
 import Title from "../../components/admin/Title";
 import BlurCircle from "../../components/BlurCircle";
 import Loading from "../../components/Loading";
 import Pagination from "../../components/Pagination";
+import { videoService } from "../../services";
+import toast from "react-hot-toast";
+import MovieDetailsModal from "../../components/admin/MovieDetailsModal";
 
 const ListMovies = () => {
   const [movies, setMovies] = useState([]);
@@ -26,24 +31,38 @@ const ListMovies = () => {
     key: null,
     direction: "asc",
   });
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const moviesPerPage = 10;
 
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setMovies(dummyShowsData);
+  // Fetch movies from API
+  const fetchMovies = async () => {
+    try {
+      setLoading(true);
+      const response = await videoService.getAllVideos();
+      setMovies(response.data.videos || []);
+    } catch (error) {
+      console.error("Error fetching movies:", error);
+      toast.error("Failed to load movies");
+      setMovies([]);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
+  };
+
+  useEffect(() => {
+    fetchMovies();
   }, []);
 
   // Filter movies based on search
   const filteredMovies = movies.filter(
     (movie) =>
       movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      movie.genres.some((genre) =>
+      movie.genres?.some((genre) =>
         genre.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
   );
@@ -55,7 +74,6 @@ const ListMovies = () => {
     let aValue = a[sortConfig.key];
     let bValue = b[sortConfig.key];
 
-    // Handle nested properties
     if (sortConfig.key === "title") {
       aValue = a.title.toLowerCase();
       bValue = b.title.toLowerCase();
@@ -76,7 +94,7 @@ const ListMovies = () => {
   const indexOfFirstMovie = indexOfLastMovie - moviesPerPage;
   const currentMovies = sortedMovies.slice(indexOfFirstMovie, indexOfLastMovie);
 
-  // Reset về trang 1 khi search hoặc sort thay đổi
+  // Reset to page 1 when search or sort changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, sortConfig]);
@@ -92,6 +110,29 @@ const ListMovies = () => {
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleViewDetails = (movie) => {
+    setSelectedMovie(movie);
+    setShowModal(true);
+  };
+
+  const handleDeleteMovie = async (movieId) => {
+    if (!window.confirm("Are you sure you want to delete this movie?")) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(movieId);
+      await videoService.deleteVideo(movieId);
+      toast.success("Movie deleted successfully");
+      fetchMovies(); // Refresh list
+    } catch (error) {
+      console.error("Error deleting movie:", error);
+      toast.error("Failed to delete movie");
+    } finally {
+      setDeleteLoading(null);
+    }
   };
 
   const SortIcon = ({ columnKey }) => {
@@ -159,10 +200,14 @@ const ListMovies = () => {
                   Avg Rating
                 </p>
                 <p className="text-2xl font-black text-yellow-400">
-                  {(
-                    movies.reduce((sum, m) => sum + m.vote_average, 0) /
-                    movies.length
-                  ).toFixed(1)}
+                  {movies.length > 0
+                    ? (
+                        movies.reduce(
+                          (sum, m) => sum + (m.vote_average || 0),
+                          0
+                        ) / movies.length
+                      ).toFixed(1)
+                    : "0.0"}
                 </p>
               </div>
             </div>
@@ -264,6 +309,11 @@ const ListMovies = () => {
                         Genres
                       </span>
                     </th>
+                    <th className="p-4 text-left">
+                      <span className="font-black uppercase text-sm tracking-wider text-gray-300">
+                        Actions
+                      </span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -281,6 +331,9 @@ const ListMovies = () => {
                             src={movie.poster_path}
                             alt={movie.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            onError={(e) => {
+                              e.target.src = "/placeholder-movie.jpg";
+                            }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         </div>
@@ -299,18 +352,20 @@ const ListMovies = () => {
                         <div className="flex items-center gap-2 bg-black/50 px-3 py-1.5 rounded-full w-fit border border-red-900/30">
                           <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                           <span className="text-white font-bold text-sm">
-                            {movie.vote_average.toFixed(1)}
+                            {(movie.vote_average || 0).toFixed(1)}
                           </span>
                         </div>
                       </td>
                       <td className="p-4">
                         <span className="text-gray-300 font-medium">
-                          {movie.release_date.split("-")[0]}
+                          {movie.release_date
+                            ? new Date(movie.release_date).getFullYear()
+                            : "N/A"}
                         </span>
                       </td>
                       <td className="p-4">
                         <span className="text-gray-300 font-medium">
-                          {movie.runtime} min
+                          {movie.runtime || 0} min
                         </span>
                       </td>
                       <td className="p-4">
@@ -323,7 +378,7 @@ const ListMovies = () => {
                       </td>
                       <td className="p-4">
                         <div className="flex flex-wrap gap-1 max-w-xs">
-                          {movie.genres.slice(0, 2).map((genre) => (
+                          {movie.genres?.slice(0, 2).map((genre) => (
                             <span
                               key={genre.id}
                               className="px-2 py-1 bg-red-900/30 text-red-400 text-xs font-bold rounded-full border border-red-800/50"
@@ -331,11 +386,34 @@ const ListMovies = () => {
                               {genre.name}
                             </span>
                           ))}
-                          {movie.genres.length > 2 && (
+                          {movie.genres?.length > 2 && (
                             <span className="px-2 py-1 bg-gray-900/50 text-gray-400 text-xs font-bold rounded-full">
                               +{movie.genres.length - 2}
                             </span>
                           )}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleViewDetails(movie)}
+                            className="p-2 bg-blue-900/30 hover:bg-blue-700/50 rounded-lg transition-colors group/btn"
+                            title="View Details"
+                          >
+                            <Edit className="w-4 h-4 text-blue-400 group-hover/btn:text-blue-300" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMovie(movie._id)}
+                            disabled={deleteLoading === movie._id}
+                            className="p-2 bg-red-900/30 hover:bg-red-700/50 rounded-lg transition-colors group/btn disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Delete Movie"
+                          >
+                            {deleteLoading === movie._id ? (
+                              <Loader2 className="w-4 h-4 text-red-400 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4 text-red-400 group-hover/btn:text-red-300" />
+                            )}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -385,7 +463,7 @@ const ListMovies = () => {
           )}
         </div>
 
-        {/* Pagination - chỉ hiển thị khi có nhiều hơn 1 trang */}
+        {/* Pagination */}
         {sortedMovies.length > 0 && totalPages > 1 && (
           <Pagination
             currentPage={currentPage}
@@ -394,6 +472,17 @@ const ListMovies = () => {
           />
         )}
       </div>
+
+      {/* Movie Details Modal */}
+      {showModal && selectedMovie && (
+        <MovieDetailsModal
+          movie={selectedMovie}
+          onClose={() => {
+            setShowModal(false);
+            setSelectedMovie(null);
+          }}
+        />
+      )}
 
       <style jsx>{`
         @keyframes fadeIn {

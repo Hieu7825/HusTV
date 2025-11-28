@@ -1,6 +1,6 @@
 // client/src/pages/MySubscriptions.jsx
 import React, { useEffect, useState } from "react";
-import { dummySubscriptionPlansData } from "../assets/assets";
+import { subscriptionService } from "../services";
 import Loading from "../components/Loading";
 import BlurCircle from "../components/BlurCircle";
 import {
@@ -11,43 +11,57 @@ import {
   Check,
   TrendingUp,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const MySubscriptions = () => {
-  const currency = import.meta.env.VITE_CURRENCY;
+  const currency = import.meta.env.VITE_CURRENCY || "$";
 
   const [plans, setPlans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserPlan, setCurrentUserPlan] = useState(null);
 
-  const getUserSubscriptions = async () => {
-    // Giả sử user đã đăng ký gói "Basic" (có thể lấy từ API)
-    const userCurrentPlan = "Premium";
+  useEffect(() => {
+    const getUserSubscriptions = async () => {
+      try {
+        setIsLoading(true);
 
-    const currentPlan = dummySubscriptionPlansData.find(
-      (plan) => plan.planName === userCurrentPlan
-    );
+        // Fetch all plans
+        const plansResponse = await subscriptionService.getAllPlans();
 
-    setCurrentUserPlan(currentPlan);
+        // Fetch current subscription
+        const currentResponse =
+          await subscriptionService.getCurrentSubscription();
+        const currentPlan = currentResponse.data?.plan || null;
 
-    // Sắp xếp plans: chưa mua trước, đã mua sau cùng
-    const sortedPlans = [...dummySubscriptionPlansData].sort((a, b) => {
-      const aIsSubscribed = a.planName === userCurrentPlan;
-      const bIsSubscribed = b.planName === userCurrentPlan;
+        setCurrentUserPlan(currentPlan);
 
-      if (aIsSubscribed && !bIsSubscribed) return 1;
-      if (!aIsSubscribed && bIsSubscribed) return -1;
-      return a.tierRank - b.tierRank;
-    });
+        // Sort plans: available first, subscribed last
+        const sortedPlans = [...(plansResponse.data || [])].sort((a, b) => {
+          const aIsSubscribed = currentPlan && a._id === currentPlan._id;
+          const bIsSubscribed = currentPlan && b._id === currentPlan._id;
 
-    setPlans(sortedPlans);
-    setIsLoading(false);
-  };
+          if (aIsSubscribed && !bIsSubscribed) return 1;
+          if (!aIsSubscribed && bIsSubscribed) return -1;
+          return a.tierRank - b.tierRank;
+        });
 
-  // Tính giá nâng cấp
+        setPlans(sortedPlans);
+      } catch (error) {
+        console.error("Failed to fetch subscriptions:", error);
+        toast.error("Failed to load subscription plans");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getUserSubscriptions();
+  }, []);
+
+  // Calculate upgrade price
   const getUpgradePrice = (plan) => {
     if (!currentUserPlan) return plan.price;
 
-    if (currentUserPlan.planName === plan.planName) {
+    if (currentUserPlan._id === plan._id) {
       return 0;
     }
 
@@ -60,7 +74,7 @@ const MySubscriptions = () => {
   };
 
   const isSubscribed = (plan) => {
-    return currentUserPlan && currentUserPlan.planName === plan.planName;
+    return currentUserPlan && currentUserPlan._id === plan._id;
   };
 
   const canUpgrade = (plan) => {
@@ -90,12 +104,40 @@ const MySubscriptions = () => {
     return "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 border-red-500/50";
   };
 
-  useEffect(() => {
-    getUserSubscriptions();
-  }, []);
+  const handleSubscribe = async (plan) => {
+    if (isSubscribed(plan) || isLowerTier(plan)) return;
 
-  return !isLoading ? (
-    <div className="relative px-4 sm:px-6 md:px-12 lg:px-24 xl:px-32 py-16 md:py-24 min-h-screen ">
+    try {
+      let response;
+
+      if (canUpgrade(plan) && currentUserPlan) {
+        // Upgrade flow
+        response = await subscriptionService.upgradeSubscription(plan._id);
+        toast.success("Redirecting to checkout...");
+      } else {
+        // New subscription flow
+        response = await subscriptionService.createSubscription(plan._id);
+        toast.success("Redirecting to checkout...");
+      }
+
+      // Redirect to Stripe checkout
+      if (response.data?.paymentLink) {
+        window.location.href = response.data.paymentLink;
+      }
+    } catch (error) {
+      console.error("Failed to subscribe:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to process subscription"
+      );
+    }
+  };
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  return (
+    <div className="relative px-4 sm:px-6 md:px-12 lg:px-24 xl:px-32 py-16 md:py-24 min-h-screen">
       <BlurCircle top="100px" right="0" />
       <BlurCircle bottom="0px" left="300px" />
       <BlurCircle top="150px" left="-80px" />
@@ -275,7 +317,8 @@ const MySubscriptions = () => {
 
                   <div className="mt-auto pt-6 border-t border-gray-800">
                     <button
-                      disabled={subscribed}
+                      disabled={subscribed || lowerTier}
+                      onClick={() => handleSubscribe(plan)}
                       className={`relative w-full py-4 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl overflow-hidden ${getButtonStyle(
                         plan
                       )} ${
@@ -329,8 +372,6 @@ const MySubscriptions = () => {
         </div>
       </div>
     </div>
-  ) : (
-    <Loading />
   );
 };
 

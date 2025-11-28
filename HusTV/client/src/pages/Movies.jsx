@@ -1,30 +1,64 @@
 // client/src/pages/Movies.jsx
-import React, { useState, useMemo } from "react";
-import { dummyShowsData } from "../assets/assets";
+import React, { useState, useEffect, useMemo } from "react";
+import { videoService } from "../services";
 import MovieCard from "../components/MovieCard";
 import BlurCircle from "../components/BlurCircle";
 import Pagination from "../components/Pagination";
 import SearchBar from "../components/SearchBar";
+import Loading from "../components/Loading";
 import { Film, Sparkles } from "lucide-react";
+import toast from "react-hot-toast";
 
 const Movies = () => {
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenreIds, setSelectedGenreIds] = useState([]);
   const moviesPerPage = 12;
 
-  // Lọc phim theo tìm kiếm và thể loại
-  const filteredMovies = useMemo(() => {
-    let filtered = dummyShowsData;
+  // Fetch movies from API
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        setLoading(true);
 
-    // Lọc theo search query
+        // ✅ GIỐNG HEROSECTION & FEATUREDSECTION
+        const response = await videoService.getAllVideos({
+          status: "published",
+          limit: 100, // Get all published movies
+        });
+
+        console.log("📥 Movies page response:", response);
+        console.log("📥 response.data.videos:", response.data?.videos);
+
+        // ✅ PARSE ĐÚNG: response.data.videos
+        const moviesData = response.data?.videos || [];
+
+        console.log("✅ Parsed movies:", moviesData.length);
+        setMovies(moviesData);
+      } catch (error) {
+        console.error("❌ Failed to fetch movies:", error);
+        toast.error("Failed to load movies");
+        setMovies([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMovies();
+  }, []);
+
+  // Filter movies
+  const filteredMovies = useMemo(() => {
+    let filtered = movies;
+
+    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((movie) => {
         const title = movie.title?.toLowerCase() || "";
         const overview = movie.overview?.toLowerCase() || "";
-
-        // Lấy tên thể loại để search
         const genreNames = movie.genres
           ? movie.genres.map((g) => g.name.toLowerCase()).join(" ")
           : "";
@@ -37,14 +71,12 @@ const Movies = () => {
       });
     }
 
-    // Lọc theo thể loại (dựa vào genre id)
+    // Filter by genres
     if (selectedGenreIds.length > 0) {
       filtered = filtered.filter((movie) => {
         if (!movie.genres || !Array.isArray(movie.genres)) {
           return false;
         }
-
-        // Kiểm tra xem movie có ít nhất 1 genre trùng với selectedGenreIds
         const movieGenreIds = movie.genres.map((g) => g.id);
         return selectedGenreIds.some((selectedId) =>
           movieGenreIds.includes(selectedId)
@@ -53,9 +85,9 @@ const Movies = () => {
     }
 
     return filtered;
-  }, [searchQuery, selectedGenreIds]);
+  }, [movies, searchQuery, selectedGenreIds]);
 
-  // Tính toán phân trang dựa trên phim đã lọc
+  // Pagination
   const totalPages = Math.ceil(filteredMovies.length / moviesPerPage);
   const indexOfLastMovie = currentPage * moviesPerPage;
   const indexOfFirstMovie = indexOfLastMovie - moviesPerPage;
@@ -64,7 +96,6 @@ const Movies = () => {
     indexOfLastMovie
   );
 
-  // Reset về trang 1 khi tìm kiếm hoặc lọc
   const handleSearch = (query) => {
     setSearchQuery(query);
     setCurrentPage(1);
@@ -75,21 +106,18 @@ const Movies = () => {
     setCurrentPage(1);
   };
 
-  // Hàm xử lý khi thay đổi trang
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Lấy tên thể loại đã chọn để hiển thị
   const getSelectedGenreNames = () => {
     if (selectedGenreIds.length === 0) return "";
 
     const genreNames = [];
     const genresMap = new Map();
 
-    // Tạo map các genre từ tất cả phim
-    dummyShowsData.forEach((movie) => {
+    movies.forEach((movie) => {
       if (movie.genres) {
         movie.genres.forEach((genre) => {
           genresMap.set(genre.id, genre.name);
@@ -97,7 +125,6 @@ const Movies = () => {
       }
     });
 
-    // Lấy tên của các genre đã chọn
     selectedGenreIds.forEach((id) => {
       if (genresMap.has(id)) {
         genreNames.push(genresMap.get(id));
@@ -107,18 +134,19 @@ const Movies = () => {
     return genreNames.join(", ");
   };
 
-  return dummyShowsData.length > 0 ? (
+  if (loading) {
+    return <Loading />;
+  }
+
+  return movies.length > 0 ? (
     <div className="relative my-20 mb-60 px-6 md:px-16 lg:px-24 xl:px-44 overflow-hidden min-h-[80vh]">
-      {/* Background Effects */}
       <BlurCircle top="150px" left="-80px" />
       <BlurCircle bottom="50px" right="50px" />
 
-      {/* Grid Background */}
       <div className="absolute inset-0 opacity-20">
         <div className="w-full h-full grid-background" />
       </div>
 
-      {/* Enhanced Header Section - Centered Title */}
       <div className="relative flex justify-center pt-20 pb-10">
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -139,14 +167,12 @@ const Movies = () => {
         </div>
       </div>
 
-      {/* Search Bar Component */}
       <SearchBar
         onSearch={handleSearch}
         onFilter={handleFilter}
-        allMovies={dummyShowsData}
+        allMovies={movies}
       />
 
-      {/* Results Info */}
       {(searchQuery || selectedGenreIds.length > 0) && (
         <div className="mb-8 text-center animate-fade-in">
           <p className="text-gray-400 text-lg">
@@ -174,7 +200,6 @@ const Movies = () => {
         </div>
       )}
 
-      {/* Movies Grid */}
       {currentMovies.length > 0 ? (
         <>
           <div className="flex flex-wrap gap-8 max-sm:justify-center">
@@ -189,7 +214,6 @@ const Movies = () => {
             ))}
           </div>
 
-          {/* Pagination Component - Chỉ hiển thị khi có > 12 phim */}
           {filteredMovies.length > 12 && (
             <Pagination
               currentPage={currentPage}

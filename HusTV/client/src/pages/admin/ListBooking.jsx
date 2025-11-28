@@ -16,11 +16,12 @@ import {
   XCircle,
   Clock,
 } from "lucide-react";
-import { dummyBookingData } from "../../assets/assets";
 import Title from "../../components/admin/Title";
 import BlurCircle from "../../components/BlurCircle";
 import Loading from "../../components/Loading";
 import Pagination from "../../components/Pagination";
+import { adminService } from "../../services";
+import toast from "react-hot-toast";
 
 const ListBooking = () => {
   const currency = "$";
@@ -36,24 +37,38 @@ const ListBooking = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const bookingsPerPage = 10;
 
+  // Fetch bookings from API
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setBookings(dummyBookingData);
-      setLoading(false);
-    }, 500);
+    fetchBookings();
   }, []);
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getAllSubscriptions({
+        page: 1,
+        limit: 1000, // Get all for admin sorting
+      });
+      setBookings(response.data?.subscriptions || []);
+    } catch (error) {
+      console.error("Failed to fetch bookings:", error);
+      toast.error("Failed to load bookings");
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter bookings based on search
   const filteredBookings = bookings.filter(
     (booking) =>
-      booking.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.subscriptionPlan.planName
-        .toLowerCase()
+      booking.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.plan?.planName
+        ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      booking.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.paymentMethod.toLowerCase().includes(searchTerm.toLowerCase())
+      booking.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.paymentMethod?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Sort bookings
@@ -64,12 +79,12 @@ const ListBooking = () => {
 
     switch (sortConfig.key) {
       case "userName":
-        aValue = a.user.name.toLowerCase();
-        bValue = b.user.name.toLowerCase();
+        aValue = a.userName?.toLowerCase() || "";
+        bValue = b.userName?.toLowerCase() || "";
         break;
       case "planName":
-        aValue = a.subscriptionPlan.planName.toLowerCase();
-        bValue = b.subscriptionPlan.planName.toLowerCase();
+        aValue = a.plan?.planName?.toLowerCase() || "";
+        bValue = b.plan?.planName?.toLowerCase() || "";
         break;
       case "purchaseDate":
         aValue = new Date(a.purchaseDate).getTime();
@@ -84,8 +99,8 @@ const ListBooking = () => {
         bValue = b.amount;
         break;
       case "status":
-        aValue = a.status.toLowerCase();
-        bValue = b.status.toLowerCase();
+        aValue = a.status?.toLowerCase() || "";
+        bValue = b.status?.toLowerCase() || "";
         break;
       default:
         return 0;
@@ -109,7 +124,7 @@ const ListBooking = () => {
     indexOfLastBooking
   );
 
-  // Reset về trang 1 khi search hoặc sort thay đổi
+  // Reset to page 1 when search or sort changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, sortConfig]);
@@ -181,13 +196,15 @@ const ListBooking = () => {
     return "text-gray-400";
   };
 
-  const totalRevenue = bookings.reduce((sum, b) => sum + b.amount, 0);
+  const totalRevenue = bookings.reduce((sum, b) => sum + (b.amount || 0), 0);
   const activeBookings = bookings.filter((b) => b.status === "Active").length;
   const expiredBookings = bookings.filter((b) => b.status === "Expired").length;
 
-  return loading ? (
-    <Loading />
-  ) : (
+  if (loading) {
+    return <Loading />;
+  }
+
+  return (
     <div className="min-h-screen bg-black text-white p-6 relative overflow-hidden">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none">
@@ -380,25 +397,17 @@ const ListBooking = () => {
                       {/* User */}
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center border-2 border-red-500/50 overflow-hidden">
-                            {booking.user.avatar ? (
-                              <img
-                                src={booking.user.avatar}
-                                alt={booking.user.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-white font-bold text-sm">
-                                {booking.user.name.charAt(0).toUpperCase()}
-                              </span>
-                            )}
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center border-2 border-red-500/50">
+                            <span className="text-white font-bold text-sm">
+                              {booking.userName?.charAt(0).toUpperCase() || "U"}
+                            </span>
                           </div>
                           <div>
                             <p className="font-bold text-white text-sm group-hover:text-red-400 transition-colors">
-                              {booking.user.name}
+                              {booking.userName || "Unknown"}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {booking.user.email}
+                              {booking.userEmail || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -409,15 +418,15 @@ const ListBooking = () => {
                         <div className="flex items-center gap-2">
                           <Crown
                             className={`w-4 h-4 ${getTierColor(
-                              booking.subscriptionPlan.tierRank
+                              booking.plan?.tierRank || 1
                             )}`}
                           />
                           <div>
                             <p className="font-bold text-white text-sm">
-                              {booking.subscriptionPlan.planName}
+                              {booking.plan?.planName || "Unknown Plan"}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {booking.subscriptionPlan.duration}
+                              {booking.plan?.duration || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -442,7 +451,7 @@ const ListBooking = () => {
                         <div className="flex items-center gap-2 bg-gradient-to-r from-green-950/50 to-transparent px-3 py-1.5 rounded-full w-fit border border-green-900/30">
                           <DollarSign className="w-4 h-4 text-green-500" />
                           <span className="text-white font-bold text-sm">
-                            {booking.amount.toFixed(2)}
+                            {(booking.amount || 0).toFixed(2)}
                           </span>
                         </div>
                       </td>
@@ -464,7 +473,7 @@ const ListBooking = () => {
                         <div className="flex items-center gap-2">
                           <CreditCard className="w-4 h-4 text-gray-400" />
                           <span className="text-gray-300 font-medium text-sm">
-                            {booking.paymentMethod}
+                            {booking.paymentMethod || "N/A"}
                           </span>
                         </div>
                       </td>
@@ -523,7 +532,7 @@ const ListBooking = () => {
           )}
         </div>
 
-        {/* Pagination - chỉ hiển thị khi có nhiều hơn 1 trang */}
+        {/* Pagination */}
         {sortedBookings.length > 0 && totalPages > 1 && (
           <Pagination
             currentPage={currentPage}

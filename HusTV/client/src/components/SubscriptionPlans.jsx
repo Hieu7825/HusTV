@@ -1,21 +1,77 @@
 // client/src/components/SubscriptionPlans.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BlurCircle from "./BlurCircle";
 import SubscriptionCard from "./SubscriptionCard";
-import { dummySubscriptionPlansData } from "../assets/assets";
+import { subscriptionService } from "../services";
 import { ArrowRight, Crown, Sparkles } from "lucide-react";
+import toast from "react-hot-toast";
 
 const SubscriptionPlans = () => {
   const navigate = useNavigate();
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Lấy 3 gói đầu tiên và set gói giữa là popular
-  const displayPlans = dummySubscriptionPlansData
-    .slice(0, 3)
-    .map((plan, index) => ({
-      ...plan,
-      isPopular: index === 1, // Gói giữa luôn là popular
-    }));
+  useEffect(() => {
+    // Tìm hàm fetchPlans trong SubscriptionPlans.jsx và thay thế:
+
+    const fetchPlans = async () => {
+      try {
+        setLoading(true);
+        const response = await subscriptionService.getAllPlans(); // hoặc API call tương tự
+
+        console.log("📥 Subscription plans response:", response);
+
+        // ✅ Handle different response formats
+        let plansData = [];
+
+        if (Array.isArray(response)) {
+          plansData = response;
+        } else if (response.data) {
+          if (Array.isArray(response.data)) {
+            plansData = response.data;
+          } else if (
+            response.data.plans &&
+            Array.isArray(response.data.plans)
+          ) {
+            plansData = response.data.plans;
+          } else if (response.data.data && Array.isArray(response.data.data)) {
+            plansData = response.data.data;
+          }
+        } else if (response.plans && Array.isArray(response.plans)) {
+          plansData = response.plans;
+        }
+
+        console.log("✅ Parsed plans:", plansData.length);
+
+        // Filter active plans
+        const activePlans = plansData.filter((plan) => plan.active !== false);
+        setPlans(activePlans);
+      } catch (error) {
+        console.error("Failed to fetch plans:", error);
+        toast.error("Failed to load subscription plans");
+        setPlans([]); // ✅ Set empty array on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="px-6 md:px-16 lg:px-24 xl:px-44 py-20 overflow-hidden">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (plans.length === 0) {
+    return null; // Don't show section if no plans
+  }
 
   return (
     <div className="px-6 md:px-16 lg:px-24 xl:px-44 py-20 overflow-hidden">
@@ -58,7 +114,7 @@ const SubscriptionPlans = () => {
         <BlurCircle top="300px" left="-150px" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-16 lg:gap-20 justify-items-center">
-          {displayPlans.map((plan, index) => (
+          {plans.map((plan, index) => (
             <div
               key={plan._id}
               className="animate-fade-in-up"

@@ -1,92 +1,125 @@
 // utils/cloudinary.js
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-import path from "path";
 
-// Configure Cloudinary
+// Configure Cloudinary từ environment variables
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+console.log("☁️ Cloudinary configured:", {
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? "✅" : "❌",
+  api_key: process.env.CLOUDINARY_API_KEY ? "✅" : "❌",
+  api_secret: process.env.CLOUDINARY_API_SECRET ? "✅" : "❌",
+});
+
 /**
- * Upload video to Cloudinary
- * @param {string} filePath - Local file path
- * @param {string} folder - Cloudinary folder name
- * @returns {Promise<Object>} Upload result
+ * Upload video to Cloudinary from file path
  */
+// server/utils/cloudinary.js - Thay thế hàm uploadVideo
+
 export const uploadVideo = async (filePath, folder = "hustv/videos") => {
   try {
-    console.log("Starting video upload to Cloudinary...");
+    console.log("📹 Uploading video to Cloudinary:", filePath);
 
+    // ✅ Check file size
+    const stats = fs.statSync(filePath);
+    const fileSizeMB = stats.size / (1024 * 1024);
+    console.log(`📦 Video size: ${fileSizeMB.toFixed(2)}MB`);
+
+    // ✅ Cloudinary Free Plan limit: 100MB
+    const MAX_SIZE_MB = 100;
+    if (fileSizeMB > MAX_SIZE_MB) {
+      console.error(
+        `❌ File too large: ${fileSizeMB.toFixed(2)}MB (max: ${MAX_SIZE_MB}MB)`
+      );
+
+      // Cleanup temp file
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      throw new Error(
+        `Video file too large (${fileSizeMB.toFixed(
+          2
+        )}MB). Maximum size is ${MAX_SIZE_MB}MB. Please compress your video or upgrade Cloudinary plan.`
+      );
+    }
+
+    // ✅ Upload with optimized settings
     const result = await cloudinary.uploader.upload(filePath, {
       resource_type: "video",
       folder: folder,
-      type: "upload",
-      // Video optimization settings
+      chunk_size: 6000000, // 6MB chunks for large files
+      timeout: 600000, // 10 minutes timeout (was 60 seconds - too short!)
+
+      // ✅ Optimize video quality
       eager: [
         {
-          streaming_profile: "hd",
-          format: "m3u8", // HLS streaming format
+          quality: "auto:good", // Balanced quality
+          format: "mp4",
         },
       ],
-      eager_async: true, // Process in background
-      // Notification URL for processing completion (optional)
-      // notification_url: `${process.env.WEBSITE_URL}/api/webhooks/cloudinary`
+      eager_async: true, // Process transformations in background
+
+      // ✅ Generate HLS streaming URL
+      eager_notification_url: undefined, // Add webhook if needed
     });
 
-    console.log("Video uploaded successfully:", result.secure_url);
+    console.log("✅ Video uploaded:", result.secure_url);
+    console.log(
+      `📊 Video info: ${result.duration}s, ${result.format}, ${result.width}x${result.height}`
+    );
 
-    // Delete temporary file after upload
+    // Delete temp file after successful upload
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
-      console.log("Temporary file deleted:", filePath);
+      console.log("🗑️ Temp file deleted");
     }
 
     return {
       success: true,
       url: result.secure_url,
+      playbackUrl: result.playback_url || result.secure_url, // HLS URL if available
       publicId: result.public_id,
-      duration: result.duration, // in seconds
+      duration: result.duration,
       format: result.format,
-      resourceType: result.resource_type,
       width: result.width,
       height: result.height,
-      bytes: result.bytes,
-      playbackUrl: result.playback_url || result.secure_url,
     };
   } catch (error) {
-    console.error("Cloudinary upload error:", error);
+    console.error("❌ Cloudinary video upload error:", {
+      message: error.message,
+      http_code: error.http_code,
+      name: error.name,
+    });
 
-    // Clean up temp file on error
+    // Cleanup temp file on error
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
+      console.log("🗑️ Temp file deleted after error");
     }
 
-    throw new Error(`Video upload failed: ${error.message}`);
+    throw error;
   }
 };
 
 /**
- * Upload image (poster/backdrop) to Cloudinary
- * @param {string} filePath - Local file path
- * @param {string} folder - Cloudinary folder name
- * @returns {Promise<Object>} Upload result
+ * Upload image to Cloudinary
  */
 export const uploadImage = async (filePath, folder = "hustv/images") => {
   try {
+    console.log("🖼️ Uploading image to Cloudinary:", filePath);
+
     const result = await cloudinary.uploader.upload(filePath, {
       resource_type: "image",
-      folder: folder,
-      transformation: [
-        { width: 1920, height: 1080, crop: "limit" }, // Max size
-        { quality: "auto" },
-        { fetch_format: "auto" },
-      ],
+      folder,
     });
 
-    // Delete temporary file
+    console.log("✅ Image uploaded:", result.secure_url);
+
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
@@ -95,66 +128,52 @@ export const uploadImage = async (filePath, folder = "hustv/images") => {
       success: true,
       url: result.secure_url,
       publicId: result.public_id,
-      width: result.width,
-      height: result.height,
     };
   } catch (error) {
-    console.error("Image upload error:", error);
-
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    throw new Error(`Image upload failed: ${error.message}`);
+    console.error("❌ Cloudinary image upload error:", error);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    throw error;
   }
 };
 
 /**
- * Delete video from Cloudinary
- * @param {string} publicId - Cloudinary public ID
- * @returns {Promise<Object>} Deletion result
+ * Delete file from Cloudinary
  */
 export const deleteVideo = async (publicId) => {
   try {
     const result = await cloudinary.uploader.destroy(publicId, {
       resource_type: "video",
     });
-
-    return {
-      success: result.result === "ok",
-      result: result.result,
-    };
+    return { success: result.result === "ok" };
   } catch (error) {
-    console.error("Video deletion error:", error);
-    throw new Error(`Video deletion failed: ${error.message}`);
+    console.error("❌ Cloudinary delete error:", error);
+    throw error;
+  }
+};
+
+export const deleteImage = async (publicId) => {
+  try {
+    const result = await cloudinary.uploader.destroy(publicId);
+    return { success: result.result === "ok" };
+  } catch (error) {
+    console.error("❌ Cloudinary delete error:", error);
+    throw error;
   }
 };
 
 /**
- * Delete image from Cloudinary
- * @param {string} publicId - Cloudinary public ID
- * @returns {Promise<Object>} Deletion result
+ * Get streaming URL
  */
-export const deleteImage = async (publicId) => {
-  try {
-    const result = await cloudinary.uploader.destroy(publicId, {
-      resource_type: "image",
-    });
-
-    return {
-      success: result.result === "ok",
-      result: result.result,
-    };
-  } catch (error) {
-    console.error("Image deletion error:", error);
-    throw new Error(`Image deletion failed: ${error.message}`);
-  }
+export const getStreamingUrl = (publicId, quality = "auto") => {
+  return cloudinary.url(publicId, {
+    resource_type: "video",
+    streaming_profile: "hd",
+    format: "m3u8",
+  });
 };
 
 /**
  * Generate video thumbnail from Cloudinary
- * @param {string} publicId - Video public ID
- * @returns {string} Thumbnail URL
  */
 export const generateThumbnail = (publicId) => {
   return cloudinary.url(publicId, {
@@ -164,78 +183,8 @@ export const generateThumbnail = (publicId) => {
       { quality: "auto" },
       { fetch_format: "jpg" },
     ],
-    // Get frame at 5 seconds
     start_offset: "5",
   });
-};
-
-/**
- * Get video streaming URL with quality options
- * @param {string} publicId - Video public ID
- * @param {string} quality - '720p' | '1080p' | '4k' | 'auto'
- * @returns {string} Streaming URL
- */
-export const getStreamingUrl = (publicId, quality = "auto") => {
-  const qualityMap = {
-    "720p": { width: 1280, height: 720 },
-    "1080p": { width: 1920, height: 1080 },
-    "4k": { width: 3840, height: 2160 },
-    auto: { quality: "auto" },
-  };
-
-  const transformation = qualityMap[quality] || qualityMap["auto"];
-
-  return cloudinary.url(publicId, {
-    resource_type: "video",
-    streaming_profile: "hd",
-    format: "m3u8", // HLS streaming
-    transformation: [transformation],
-  });
-};
-
-/**
- * Get video info from Cloudinary
- * @param {string} publicId - Video public ID
- * @returns {Promise<Object>} Video information
- */
-export const getVideoInfo = async (publicId) => {
-  try {
-    const result = await cloudinary.api.resource(publicId, {
-      resource_type: "video",
-    });
-
-    return {
-      publicId: result.public_id,
-      format: result.format,
-      duration: result.duration,
-      width: result.width,
-      height: result.height,
-      bytes: result.bytes,
-      url: result.secure_url,
-      createdAt: result.created_at,
-    };
-  } catch (error) {
-    console.error("Get video info error:", error);
-    throw new Error(`Failed to get video info: ${error.message}`);
-  }
-};
-
-/**
- * Delete entire folder from Cloudinary
- * @param {string} folderPath - Folder path
- * @returns {Promise<Object>} Deletion result
- */
-export const deleteFolder = async (folderPath) => {
-  try {
-    const result = await cloudinary.api.delete_folder(folderPath);
-    return {
-      success: true,
-      result,
-    };
-  } catch (error) {
-    console.error("Folder deletion error:", error);
-    throw new Error(`Folder deletion failed: ${error.message}`);
-  }
 };
 
 export default {
@@ -243,8 +192,6 @@ export default {
   uploadImage,
   deleteVideo,
   deleteImage,
-  generateThumbnail,
   getStreamingUrl,
-  getVideoInfo,
-  deleteFolder,
+  generateThumbnail,
 };

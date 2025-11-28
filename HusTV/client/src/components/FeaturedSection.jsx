@@ -1,19 +1,68 @@
 // client/src/components/FeaturedSection.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BlurCircle from "./BlurCircle";
-import { dummyShowsData } from "../assets/assets";
+import { videoService } from "../services";
 import { ArrowRight, Film, Sparkles } from "lucide-react";
 import MovieCard from "./MovieCard";
+import toast from "react-hot-toast";
 
 const FeaturedSection = () => {
   const navigate = useNavigate();
+  const [featuredMovies, setFeaturedMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedMovies = async () => {
+      try {
+        setLoading(true);
+
+        // ✅ GIỐNG Y CHANG HEROSECTION
+        const response = await videoService.getAllVideos({
+          featured: true,
+          limit: 6,
+          status: "published",
+        });
+
+        console.log("📥 FeaturedSection response:", response);
+        console.log("📥 response.data.videos:", response.data?.videos);
+
+        // ✅ PARSE GIỐNG HEROSECTION
+        const movies = response.data?.videos || [];
+
+        console.log("✅ Parsed featured movies:", movies.length);
+        setFeaturedMovies(movies);
+      } catch (error) {
+        console.error("❌ Failed to fetch featured movies:", error);
+        toast.error("Failed to load featured movies");
+        setFeaturedMovies([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedMovies();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="px-6 md:px-16 lg:px-24 xl:px-44 overflow-hidden py-20">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // if (featuredMovies.length === 0) {
+  //   return null; // Don't show section if no featured movies
+  // }
+
   return (
     <div className="px-6 md:px-16 lg:px-24 xl:px-44 overflow-hidden">
       <div className="relative flex items-center justify-between pt-20 pb-10">
         <BlurCircle top="0" right="-80px" />
 
-        {/* Enhanced "Now Showing" Section */}
         <div className="flex items-center gap-4">
           <div className="relative">
             <Film className="w-6 h-6 text-red-500 animate-pulse" />
@@ -42,7 +91,7 @@ const FeaturedSection = () => {
       </div>
 
       <div className="flex flex-wrap max-sm:justify-center gap-8 mt-8">
-        {dummyShowsData.slice(0, 6).map((show, index) => (
+        {featuredMovies.map((show, index) => (
           <div
             key={show._id}
             className="animate-fade-in-up"
@@ -56,7 +105,8 @@ const FeaturedSection = () => {
       <div className="flex justify-center mt-20">
         <button
           onClick={() => {
-            navigate("/movies"), scrollTo(0, 0);
+            navigate("/movies");
+            scrollTo(0, 0);
           }}
           className="group relative px-12 py-4 text-sm bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white transition-all duration-300 rounded-lg font-medium cursor-pointer shadow-lg hover:shadow-red-500/50 hover:scale-105 border border-red-500/50"
         >

@@ -1,20 +1,12 @@
 // server/routes/videoRoutes.js
 import express from "express";
+import { protectUser, protectAdmin, optionalAuth } from "../middleware/auth.js";
 import {
-  protectUser,
-  protectAdmin,
-  optionalAuth,
-  requireActiveSubscription,
-  canWatchVideo,
-  uploadSingleVideo,
+  uploadVideoComplete, // ← import multer middleware object (has .fields() method)
   handleUploadError,
-  validateCreateVideo,
-  validateUpdateVideo,
-  validatePagination,
-  validateSearch,
-  uploadLimiter,
-  searchLimiter,
-} from "../middleware/index.js";
+  validateVideoFile,
+  validateFileSizes,
+} from "../middleware/uploadVideo.js";
 import {
   getAllVideos,
   getVideoById,
@@ -23,6 +15,7 @@ import {
   getTrendingVideos,
   getVideosByGenre,
   streamVideo,
+  getTrailerUrl, // NEW - Get trailer URL
   uploadVideo,
   updateVideo,
   deleteVideo,
@@ -33,48 +26,84 @@ import {
 
 const router = express.Router();
 
-// Public routes (optional auth for favorites check)
-router.get("/", optionalAuth, validatePagination, getAllVideos);
+// ==================== PUBLIC ROUTES ====================
+// No authentication required
+
+// Get all videos with filters
+router.get("/", optionalAuth, getAllVideos);
+
+// Get featured videos (for homepage carousel)
 router.get("/featured", optionalAuth, getFeaturedVideos);
+
+// Get trending videos
 router.get("/trending", optionalAuth, getTrendingVideos);
-router.get("/search", searchLimiter, validateSearch, searchVideos);
-router.get(
-  "/genre/:genreId",
-  optionalAuth,
-  validatePagination,
-  getVideosByGenre
-);
+
+// Search videos
+router.get("/search", searchVideos);
+
+// Get videos by genre
+router.get("/genre/:genreId", optionalAuth, getVideosByGenre);
+
+// Get single video by ID
 router.get("/:id", optionalAuth, getVideoById);
 
-// Protected routes (require subscription)
-router.get(
-  "/:id/stream",
-  protectUser,
-  requireActiveSubscription,
-  canWatchVideo,
-  streamVideo
-);
+// ⭐ NEW: Get trailer URL (public - no subscription required)
+router.get("/:id/trailer", getTrailerUrl);
+
+// ==================== PROTECTED ROUTES ====================
+// Require authentication
+
+// Get streaming URL (requires active subscription)
+router.get("/:id/stream", protectUser, streamVideo);
+
+// Increment view count
 router.post("/:id/view", protectUser, incrementView);
 
-// Admin routes
+// ==================== ADMIN ROUTES ====================
+// Require admin role
+
+// Debug middleware to log incoming request AFTER upload parsing
+const debugUpload = (req, res, next) => {
+  console.log("DEBUG ROUTE - req.body keys:", Object.keys(req.body || {}));
+  console.log("DEBUG ROUTE - req.body:", req.body);
+  console.log(
+    "DEBUG ROUTE - req.files keys:",
+    req.files ? Object.keys(req.files) : "(no files)"
+  );
+  console.log("DEBUG ROUTE - Full req.files:", req.files);
+  next();
+};
+
+// Upload video with trailer, poster, backdrop
 router.post(
   "/",
   protectAdmin,
-  uploadLimiter,
-  (req, res, next) => {
-    uploadSingleVideo(req, res, (err) => {
-      if (err) {
-        return handleUploadError(err, req, res, next);
-      }
-      next();
-    });
-  },
-  validateCreateVideo,
+  uploadVideoComplete, // ← multer parses FormData FIRST
+  debugUpload, // ← then log parsed data
+  handleUploadError,
+  validateVideoFile,
+  validateFileSizes,
   uploadVideo
 );
-router.put("/:id", protectAdmin, validateUpdateVideo, updateVideo);
+
+// Update video
+router.put(
+  "/:id",
+  protectAdmin,
+  uploadVideoComplete, // ← multer parses FormData FIRST
+  handleUploadError,
+  validateVideoFile,
+  validateFileSizes,
+  updateVideo
+);
+
+// Delete video
 router.delete("/:id", protectAdmin, deleteVideo);
+
+// Toggle featured status
 router.patch("/:id/featured", protectAdmin, toggleFeatured);
+
+// Toggle trending status
 router.patch("/:id/trending", protectAdmin, toggleTrending);
 
 export default router;

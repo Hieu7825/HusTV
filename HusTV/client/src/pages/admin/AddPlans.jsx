@@ -1,5 +1,5 @@
 // client/src/pages/admin/AddPlans.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Edit,
@@ -14,18 +14,40 @@ import {
   Info,
   Users,
 } from "lucide-react";
-import { dummySubscriptionPlansData } from "../../assets/assets";
 import Title from "../../components/admin/Title";
 import BlurCircle from "../../components/BlurCircle";
 import AddNewPlan from "../../components/admin/AddNewPlan";
 import PlanDetailsModal from "../../components/admin/PlanDetailsModal";
+import Loading from "../../components/Loading";
+import { subscriptionService } from "../../services";
+import toast from "react-hot-toast";
 
 const AddPlans = () => {
-  const [plans, setPlans] = useState(dummySubscriptionPlansData);
+  const [plans, setPlans] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch plans from API
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const fetchPlans = async () => {
+    try {
+      setLoading(true);
+      const response = await subscriptionService.getAllPlans();
+      setPlans(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch plans:", error);
+      toast.error("Failed to load subscription plans");
+      setPlans([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredPlans = plans.filter(
     (plan) =>
@@ -33,9 +55,20 @@ const AddPlans = () => {
       plan.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = (id) => {
-    if (confirm("Are you sure you want to delete this plan?")) {
-      setPlans(plans.filter((plan) => plan._id !== id));
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this plan?")) return;
+
+    try {
+      await subscriptionService.deletePlan(id);
+      toast.success("Plan deleted successfully");
+      // Refresh plans list
+      fetchPlans();
+    } catch (error) {
+      console.error("Failed to delete plan:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete plan. It may have active subscriptions."
+      );
     }
   };
 
@@ -44,14 +77,26 @@ const AddPlans = () => {
     setShowAddModal(true);
   };
 
-  const handleSavePlan = (planData) => {
-    if (editingPlan) {
-      setPlans(plans.map((p) => (p._id === planData._id ? planData : p)));
-    } else {
-      setPlans([planData, ...plans]);
+  const handleSavePlan = async (planData) => {
+    try {
+      if (editingPlan) {
+        // Update existing plan
+        await subscriptionService.createOrUpdatePlan(editingPlan._id, planData);
+        toast.success("Plan updated successfully");
+      } else {
+        // Create new plan
+        await subscriptionService.createOrUpdatePlan("new", planData);
+        toast.success("Plan created successfully");
+      }
+
+      // Refresh plans list
+      fetchPlans();
+      setShowAddModal(false);
+      setEditingPlan(null);
+    } catch (error) {
+      console.error("Failed to save plan:", error);
+      toast.error(error.response?.data?.message || "Failed to save plan");
     }
-    setShowAddModal(false);
-    setEditingPlan(null);
   };
 
   const getPlanGradient = (tierRank) => {
@@ -69,6 +114,10 @@ const AddPlans = () => {
     if (tierRank >= 2) return "border-red-800/70 hover:border-red-700";
     return "border-gray-700 hover:border-gray-600";
   };
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <div className="min-h-screen bg-black text-white p-6 relative overflow-hidden">

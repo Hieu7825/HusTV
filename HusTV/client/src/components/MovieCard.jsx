@@ -14,7 +14,7 @@ const MovieCard = ({ movie }) => {
             navigate(`/movies/${movie._id}`);
             scrollTo(0, 0);
           }}
-          src={movie.backdrop_path}
+          src={movie.poster_path}
           alt=""
           className="rounded-lg h-52 w-full object-cover object-right-bottom cursor-pointer transition-transform duration-300 hover:scale-110 filter brightness-90"
         />

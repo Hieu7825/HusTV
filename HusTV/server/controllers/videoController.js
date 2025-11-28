@@ -1,87 +1,334 @@
-// controllers/videoController.js
+// server/controllers/videoController.js
 import Video from "../models/Video.js";
 import User from "../models/User.js";
 import WatchHistory from "../models/WatchHistory.js";
 import {
   uploadVideo as uploadToCloudinary,
+  uploadImage,
   deleteVideo as deleteFromCloudinary,
+  deleteImage,
+  getStreamingUrl,
 } from "../utils/index.js";
 import { inngest } from "../inngest/index.js";
 import { clerkClient } from "@clerk/express";
+import fs from "fs";
 
-// API to upload video
+// ==================== UPLOAD & CREATE ====================
+
+/**
+ * Upload video with trailer, poster, backdrop
+ * Supports both file uploads and base64 strings
+ */
+// server/controllers/videoController.js
 export const uploadVideo = async (req, res) => {
   try {
-    const { userId } = req.auth;
+    const auth = req.auth();
+    const { userId } = auth || {};
+
     const {
       title,
       overview,
       tagline,
-      trailer,
-      poster_path,
-      backdrop_path,
       runtime,
       release_date,
       original_language,
       genres,
       casts,
+      adult,
+      vote_average,
+      vote_count,
     } = req.body;
 
-    // Check if video file exists
-    if (!req.file) {
+    // Validate required fields
+    if (!title || !overview) {
       return res.status(400).json({
         success: false,
-        message: "No video file provided",
+        message: "Title and overview are required",
       });
     }
 
-    console.log("📤 Uploading video to Cloudinary...");
-
-    // Upload to Cloudinary using utility function
-    const uploadResult = await uploadToCloudinary(
-      req.file.path,
-      "hustv/videos"
+    console.log("📤 Processing video upload...");
+    console.log("📋 Request body fields:", Object.keys(req.body));
+    console.log(
+      "📁 Request files:",
+      req.files ? Object.keys(req.files) : "none"
     );
 
-    console.log("✅ Video uploaded:", uploadResult.url);
+    let videoUrl = null;
+    let trailerUrl = null;
+    let posterUrl = null;
+    let backdropUrl = null;
+    let cloudinaryPublicId = null;
+    // ⭐ CHỈNH SỬA TẠI ĐÂY: Thêm logic kiểm tra poster_path cũ
+    if (req.body.poster_path && !req.files?.poster) {
+      posterUrl = req.body.poster_path; // Gán URL cũ nếu không có file mới
+      console.log("ℹ️ Keeping existing poster URL:", posterUrl);
+    }
+    if (req.body.backdrop_path && !req.files?.backdrop) {
+      backdropUrl = req.body.backdrop_path;
+      console.log("ℹ️ Keeping existing backdrop URL:", backdropUrl);
+    }
+    if (req.body.trailer_url && !req.files?.trailer) {
+      trailerUrl = req.body.trailer_url;
+      console.log("ℹ️ Keeping existing trailer URL:", trailerUrl);
+    }
+    if (req.body.video_url && !req.files?.video) {
+      videoUrl = req.body.video_url;
+      console.log("ℹ️ Keeping existing video URL:", videoUrl);
+    }
+    // ===== UPLOAD POSTER TO CLOUDINARY =====
+    if (req.files?.poster && req.files.poster.length > 0) {
+      console.log("🖼️ Uploading poster to Cloudinary...");
+      const posterFile = req.files.poster[0];
+
+      console.log("📂 Poster file details:", {
+        fieldname: posterFile.fieldname,
+        originalname: posterFile.originalname,
+        mimetype: posterFile.mimetype,
+        size: posterFile.size,
+        path: posterFile.path,
+      });
+
+      try {
+        const posterResult = await uploadImage(
+          posterFile.path,
+          "hustv/posters"
+        );
+        posterUrl = posterResult.url;
+        console.log("✅ Poster uploaded to Cloudinary:", posterUrl);
+
+        // ✅ Cleanup temp file
+        if (fs.existsSync(posterFile.path)) {
+          fs.unlinkSync(posterFile.path);
+          console.log("🗑️ Cleaned up temp poster file");
+        }
+      } catch (error) {
+        console.error("❌ Poster upload failed:", error);
+
+        // Cleanup any uploaded files
+        if (req.files) {
+          Object.values(req.files).forEach((fileArray) => {
+            fileArray.forEach((file) => {
+              if (fs.existsSync(file.path)) {
+                fs.unlinkSync(file.path);
+              }
+            });
+          });
+        }
+
+        return res.status(500).json({
+          success: false,
+          message: "Failed to upload poster to Cloudinary",
+          error: error.message,
+        });
+      }
+    } else {
+      console.log("⚠️ No poster file in request");
+    }
+
+    // ===== UPLOAD BACKDROP TO CLOUDINARY =====
+    if (req.files?.backdrop && req.files.backdrop.length > 0) {
+      console.log("🖼️ Uploading backdrop to Cloudinary...");
+      const backdropFile = req.files.backdrop[0];
+
+      console.log("📂 Backdrop file details:", {
+        fieldname: backdropFile.fieldname,
+        originalname: backdropFile.originalname,
+        mimetype: backdropFile.mimetype,
+        size: backdropFile.size,
+        path: backdropFile.path,
+      });
+
+      try {
+        const backdropResult = await uploadImage(
+          backdropFile.path,
+          "hustv/backdrops"
+        );
+        backdropUrl = backdropResult.url;
+        console.log("✅ Backdrop uploaded to Cloudinary:", backdropUrl);
+
+        // ✅ Cleanup temp file
+        if (fs.existsSync(backdropFile.path)) {
+          fs.unlinkSync(backdropFile.path);
+          console.log("🗑️ Cleaned up temp backdrop file");
+        }
+      } catch (error) {
+        console.error("❌ Backdrop upload failed:", error);
+        // Backdrop is optional, so continue
+        if (fs.existsSync(backdropFile.path)) {
+          fs.unlinkSync(backdropFile.path);
+        }
+      }
+    } else {
+      console.log("ℹ️ No backdrop file in request");
+    }
+
+    // ===== UPLOAD TRAILER TO CLOUDINARY =====
+    if (req.files?.trailer && req.files.trailer.length > 0) {
+      console.log("🎬 Uploading trailer to Cloudinary...");
+      const trailerFile = req.files.trailer[0];
+
+      console.log("📂 Trailer file details:", {
+        fieldname: trailerFile.fieldname,
+        originalname: trailerFile.originalname,
+        mimetype: trailerFile.mimetype,
+        size: trailerFile.size,
+        path: trailerFile.path,
+      });
+
+      try {
+        const trailerResult = await uploadToCloudinary(
+          trailerFile.path,
+          "hustv/trailers"
+        );
+        trailerUrl = trailerResult.playbackUrl || trailerResult.url;
+        console.log("✅ Trailer uploaded to Cloudinary:", trailerUrl);
+
+        // ✅ Cleanup temp file
+        if (fs.existsSync(trailerFile.path)) {
+          fs.unlinkSync(trailerFile.path);
+          console.log("🗑️ Cleaned up temp trailer file");
+        }
+      } catch (error) {
+        console.error("❌ Trailer upload failed:", error);
+        // Trailer is optional, so continue
+        if (fs.existsSync(trailerFile.path)) {
+          fs.unlinkSync(trailerFile.path);
+        }
+      }
+    } else {
+      console.log("ℹ️ No trailer file in request");
+    }
+
+    // ===== UPLOAD VIDEO TO CLOUDINARY =====
+    if (req.files?.video && req.files.video.length > 0) {
+      console.log("📹 Uploading video to Cloudinary...");
+      const videoFile = req.files.video[0];
+
+      console.log("📂 Video file details:", {
+        fieldname: videoFile.fieldname,
+        originalname: videoFile.originalname,
+        mimetype: videoFile.mimetype,
+        size: videoFile.size,
+        path: videoFile.path,
+      });
+
+      try {
+        const videoResult = await uploadToCloudinary(
+          videoFile.path,
+          "hustv/videos"
+        );
+        videoUrl = videoResult.playbackUrl || videoResult.url;
+        cloudinaryPublicId = videoResult.publicId;
+        console.log("✅ Video uploaded to Cloudinary:", videoUrl);
+
+        // ✅ Cleanup temp file
+        if (fs.existsSync(videoFile.path)) {
+          fs.unlinkSync(videoFile.path);
+          console.log("🗑️ Cleaned up temp video file");
+        }
+      } catch (error) {
+        console.error("❌ Video upload failed:", error);
+        // Video is optional for now
+        if (fs.existsSync(videoFile.path)) {
+          fs.unlinkSync(videoFile.path);
+        }
+      }
+    } else {
+      console.log("ℹ️ No video file in request");
+    }
+
+    // ===== VALIDATE REQUIRED FIELDS =====
+    if (!posterUrl) {
+      console.error("❌ VALIDATION: Poster URL is required");
+
+      // ✅ Cleanup all uploaded files if validation fails
+      if (req.files) {
+        Object.values(req.files).forEach((fileArray) => {
+          fileArray.forEach((file) => {
+            if (fs.existsSync(file.path)) {
+              fs.unlinkSync(file.path);
+            }
+          });
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: "Poster image is required",
+      });
+    }
 
     // Generate unique video ID
     const videoId = `video_${Date.now()}`;
+    const numericId = Date.now();
 
-    // Create video document
+    // Parse JSON fields
+    const parsedGenres =
+      typeof genres === "string" ? JSON.parse(genres) : genres || [];
+    const parsedCasts =
+      typeof casts === "string" ? JSON.parse(casts) : casts || [];
+
+    // ===== CREATE VIDEO DOCUMENT IN DATABASE =====
     const video = await Video.create({
       _id: videoId,
+      id: numericId,
       title,
       overview,
-      tagline,
-      video: uploadResult.playbackUrl || uploadResult.url,
-      trailer,
-      poster_path,
-      backdrop_path,
-      cloudinaryPublicId: uploadResult.publicId,
+      tagline: tagline || "",
+      video: videoUrl || "",
+      trailer: trailerUrl || "",
+      poster_path: posterUrl, // ✅ Cloudinary URL
+      backdrop_path: backdropUrl || posterUrl,
+      cloudinaryPublicId: cloudinaryPublicId || "",
       cloudinaryFolder: "hustv/videos",
       runtime: parseInt(runtime) || 0,
-      release_date,
-      original_language,
-      genres: typeof genres === "string" ? JSON.parse(genres) : genres || [],
-      casts: typeof casts === "string" ? JSON.parse(casts) : casts || [],
-      status: "processing",
+      release_date: release_date || new Date().toISOString().split("T")[0],
+      original_language: original_language || "en",
+      adult: adult === "true" || adult === true,
+      genres: parsedGenres,
+      casts: parsedCasts,
+      vote_average: parseFloat(vote_average) || 0,
+      vote_count: parseInt(vote_count) || 0,
+      status: "published",
       uploadedBy: userId,
+      featured: false,
+      trending: false,
     });
+
+    console.log("✅ Video document created in database:", videoId);
 
     // Trigger Inngest video processing
-    await inngest.send({
-      name: "video/processing.started",
-      data: { videoId: video._id },
-    });
+    try {
+      await inngest.send({
+        name: "video/processing.started",
+        data: { videoId: video._id },
+      });
+      console.log("✅ Inngest processing event triggered");
+    } catch (inngestError) {
+      console.error("⚠️ Inngest trigger failed:", inngestError);
+      // Don't fail the upload if Inngest fails
+    }
 
-    res.json({
+    res.status(201).json({
       success: true,
       message: "Video uploaded successfully and processing started",
       video,
     });
   } catch (error) {
     console.error("❌ Video upload error:", error);
+
+    // Cleanup any uploaded temp files on error
+    if (req.files) {
+      Object.values(req.files).forEach((fileArray) => {
+        fileArray.forEach((file) => {
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+          }
+        });
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -89,7 +336,11 @@ export const uploadVideo = async (req, res) => {
   }
 };
 
-// API to get all videos (public - with filters)
+// ==================== READ OPERATIONS ====================
+
+/**
+ * Get all videos with filters and pagination
+ */
 export const getAllVideos = async (req, res) => {
   try {
     const {
@@ -97,6 +348,7 @@ export const getAllVideos = async (req, res) => {
       genre,
       featured,
       trending,
+      status,
       page = 1,
       limit = 20,
       sortBy = "createdAt",
@@ -104,7 +356,14 @@ export const getAllVideos = async (req, res) => {
     } = req.query;
 
     // Build filter
-    const filter = { status: "published" };
+    const filter = {};
+
+    // Only show published videos to non-admin users
+    if (status) {
+      filter.status = status;
+    } else {
+      filter.status = "published";
+    }
 
     if (search) {
       filter.$or = [
@@ -156,7 +415,9 @@ export const getAllVideos = async (req, res) => {
   }
 };
 
-// API to get single video by ID
+/**
+ * Get single video by ID
+ */
 export const getVideoById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -201,198 +462,19 @@ export const getVideoById = async (req, res) => {
   }
 };
 
-// API to stream video (protected)
-export const streamVideo = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { userId } = req.auth;
-
-    const video = await Video.findById(id);
-
-    if (!video) {
-      return res.status(404).json({
-        success: false,
-        message: "Video not found",
-      });
-    }
-
-    if (video.status !== "published") {
-      return res.status(403).json({
-        success: false,
-        message: "Video not available for streaming",
-      });
-    }
-
-    // Return streaming URL
-    res.json({
-      success: true,
-      streamUrl: video.video,
-      video: {
-        _id: video._id,
-        title: video.title,
-        runtime: video.runtime,
-        poster_path: video.poster_path,
-      },
-    });
-  } catch (error) {
-    console.error("Error streaming video:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// API to update video
-export const updateVideo = async (req, res) => {
-  try {
-    const { userId } = req.auth;
-    const { id } = req.params;
-    const updateData = req.body;
-
-    // Find video
-    const video = await Video.findById(id);
-    if (!video) {
-      return res.status(404).json({
-        success: false,
-        message: "Video not found",
-      });
-    }
-
-    // Check permission (only uploader or admin can update)
-    const clerkUser = await clerkClient.users.getUser(userId);
-    const isAdmin = clerkUser.privateMetadata?.role === "admin";
-
-    if (video.uploadedBy !== userId && !isAdmin) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to update this video",
-      });
-    }
-
-    // Parse JSON fields if they exist
-    if (updateData.genres && typeof updateData.genres === "string") {
-      updateData.genres = JSON.parse(updateData.genres);
-    }
-    if (updateData.casts && typeof updateData.casts === "string") {
-      updateData.casts = JSON.parse(updateData.casts);
-    }
-
-    // Update video
-    const updatedVideo = await Video.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    res.json({
-      success: true,
-      message: "Video updated successfully",
-      video: updatedVideo,
-    });
-  } catch (error) {
-    console.error("Error updating video:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// API to delete video
-export const deleteVideo = async (req, res) => {
-  try {
-    const { userId } = req.auth;
-    const { id } = req.params;
-
-    // Find video
-    const video = await Video.findById(id);
-    if (!video) {
-      return res.status(404).json({
-        success: false,
-        message: "Video not found",
-      });
-    }
-
-    // Check permission
-    const clerkUser = await clerkClient.users.getUser(userId);
-    const isAdmin = clerkUser.privateMetadata?.role === "admin";
-
-    if (video.uploadedBy !== userId && !isAdmin) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to delete this video",
-      });
-    }
-
-    // Delete from Cloudinary using utility function
-    if (video.cloudinaryPublicId) {
-      await deleteFromCloudinary(video.cloudinaryPublicId);
-      console.log("✅ Video deleted from Cloudinary");
-    }
-
-    // Delete from database
-    await Video.findByIdAndDelete(id);
-
-    // Delete watch history
-    await WatchHistory.deleteMany({ video: id });
-
-    // Remove from user favorites
-    await User.updateMany({ favorites: id }, { $pull: { favorites: id } });
-
-    res.json({
-      success: true,
-      message: "Video deleted successfully",
-    });
-  } catch (error) {
-    console.error("Error deleting video:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// API to increment view count
-export const incrementView = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const video = await Video.findByIdAndUpdate(
-      id,
-      { $inc: { view: 1 } },
-      { new: true }
-    );
-
-    if (!video) {
-      return res.status(404).json({
-        success: false,
-        message: "Video not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "View count updated",
-      views: video.view,
-    });
-  } catch (error) {
-    console.error("Error incrementing view:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// API to get featured videos
+/**
+ * Get featured videos
+ */
 export const getFeaturedVideos = async (req, res) => {
   try {
+    const { limit = 10 } = req.query;
+
     const videos = await Video.find({
       status: "published",
       featured: true,
     })
       .sort({ createdAt: -1 })
-      .limit(10);
+      .limit(parseInt(limit));
 
     res.json({ success: true, videos });
   } catch (error) {
@@ -404,15 +486,19 @@ export const getFeaturedVideos = async (req, res) => {
   }
 };
 
-// API to get trending videos
+/**
+ * Get trending videos
+ */
 export const getTrendingVideos = async (req, res) => {
   try {
+    const { limit = 10 } = req.query;
+
     const videos = await Video.find({
       status: "published",
       trending: true,
     })
       .sort({ view: -1 })
-      .limit(10);
+      .limit(parseInt(limit));
 
     res.json({ success: true, videos });
   } catch (error) {
@@ -424,7 +510,9 @@ export const getTrendingVideos = async (req, res) => {
   }
 };
 
-// API to get videos by genre
+/**
+ * Get videos by genre
+ */
 export const getVideosByGenre = async (req, res) => {
   try {
     const { genreId } = req.params;
@@ -462,7 +550,9 @@ export const getVideosByGenre = async (req, res) => {
   }
 };
 
-// API to search videos
+/**
+ * Search videos
+ */
 export const searchVideos = async (req, res) => {
   try {
     const { q, page = 1, limit = 20 } = req.query;
@@ -514,7 +604,316 @@ export const searchVideos = async (req, res) => {
   }
 };
 
-// API to toggle featured status (admin only)
+// ==================== STREAMING ====================
+
+/**
+ * Get full movie streaming URL (requires subscription)
+ */
+export const streamVideo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.auth;
+
+    const video = await Video.findById(id);
+
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        message: "Video not found",
+      });
+    }
+
+    if (video.status !== "published") {
+      return res.status(403).json({
+        success: false,
+        message: "Video not available for streaming",
+      });
+    }
+
+    // Generate streaming URL if it's a Cloudinary public ID
+    let streamUrl = video.video;
+    if (video.cloudinaryPublicId && !video.video.startsWith("http")) {
+      streamUrl = getStreamingUrl(video.cloudinaryPublicId);
+    }
+
+    // Return streaming URL
+    res.json({
+      success: true,
+      streamUrl,
+      video: {
+        _id: video._id,
+        title: video.title,
+        runtime: video.runtime,
+        poster_path: video.poster_path,
+      },
+    });
+  } catch (error) {
+    console.error("Error streaming video:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * Get trailer URL (public - no subscription required)
+ */
+export const getTrailerUrl = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const video = await Video.findById(id);
+
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        message: "Video not found",
+      });
+    }
+
+    if (!video.trailer) {
+      return res.status(404).json({
+        success: false,
+        message: "Trailer not available for this video",
+      });
+    }
+
+    // If trailer is already a URL, return it directly
+    let trailerUrl = video.trailer;
+
+    // If it's a Cloudinary public ID, generate streaming URL
+    if (!trailerUrl.startsWith("http")) {
+      try {
+        trailerUrl = getStreamingUrl(trailerUrl);
+      } catch (error) {
+        console.error("Error generating trailer URL:", error);
+        // Fallback to original value
+      }
+    }
+
+    res.json({
+      success: true,
+      trailerUrl,
+      video: {
+        _id: video._id,
+        title: video.title,
+        poster_path: video.poster_path,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching trailer URL:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get trailer URL",
+      error: error.message,
+    });
+  }
+};
+
+// ==================== UPDATE & DELETE ====================
+
+/**
+ * Update video
+ */
+export const updateVideo = async (req, res) => {
+  try {
+    const { userId } = req.auth;
+    const { id } = req.params;
+    const updateData = { ...req.body };
+
+    // Find video
+    const video = await Video.findById(id);
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        message: "Video not found",
+      });
+    }
+
+    // Check permission (only uploader or admin can update)
+    const clerkUser = await clerkClient.users.getUser(userId);
+    const isAdmin = clerkUser.privateMetadata?.role === "admin";
+
+    if (video.uploadedBy !== userId && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this video",
+      });
+    }
+
+    // Upload new files if provided
+    if (req.files?.video) {
+      console.log("📹 Uploading new video...");
+      const videoResult = await uploadToCloudinary(
+        req.files.video[0].path,
+        "hustv/videos"
+      );
+      updateData.video = videoResult.playbackUrl || videoResult.url;
+      updateData.cloudinaryPublicId = videoResult.publicId;
+
+      // Delete old video from Cloudinary
+      if (video.cloudinaryPublicId) {
+        await deleteFromCloudinary(video.cloudinaryPublicId);
+      }
+    }
+
+    if (req.files?.trailer) {
+      console.log("🎬 Uploading new trailer...");
+      const trailerResult = await uploadToCloudinary(
+        req.files.trailer[0].path,
+        "hustv/trailers"
+      );
+      updateData.trailer = trailerResult.playbackUrl || trailerResult.url;
+    }
+
+    if (req.files?.poster) {
+      console.log("🖼️ Uploading new poster...");
+      const posterResult = await uploadImage(
+        req.files.poster[0].path,
+        "hustv/posters"
+      );
+      updateData.poster_path = posterResult.url;
+    }
+
+    if (req.files?.backdrop) {
+      console.log("🖼️ Uploading new backdrop...");
+      const backdropResult = await uploadImage(
+        req.files.backdrop[0].path,
+        "hustv/backdrops"
+      );
+      updateData.backdrop_path = backdropResult.url;
+    }
+
+    // Parse JSON fields if they exist
+    if (updateData.genres && typeof updateData.genres === "string") {
+      updateData.genres = JSON.parse(updateData.genres);
+    }
+    if (updateData.casts && typeof updateData.casts === "string") {
+      updateData.casts = JSON.parse(updateData.casts);
+    }
+
+    // Parse boolean fields
+    if (updateData.adult !== undefined) {
+      updateData.adult =
+        updateData.adult === "true" || updateData.adult === true;
+    }
+
+    // Update video
+    const updatedVideo = await Video.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.json({
+      success: true,
+      message: "Video updated successfully",
+      video: updatedVideo,
+    });
+  } catch (error) {
+    console.error("Error updating video:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * Delete video
+ */
+export const deleteVideo = async (req, res) => {
+  try {
+    const { userId } = req.auth;
+    const { id } = req.params;
+
+    // Find video
+    const video = await Video.findById(id);
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        message: "Video not found",
+      });
+    }
+
+    // Check permission
+    const clerkUser = await clerkClient.users.getUser(userId);
+    const isAdmin = clerkUser.privateMetadata?.role === "admin";
+
+    if (video.uploadedBy !== userId && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete this video",
+      });
+    }
+
+    // Delete from Cloudinary
+    if (video.cloudinaryPublicId) {
+      await deleteFromCloudinary(video.cloudinaryPublicId);
+      console.log("✅ Video deleted from Cloudinary");
+    }
+
+    // Delete from database
+    await Video.findByIdAndDelete(id);
+
+    // Delete watch history
+    await WatchHistory.deleteMany({ video: id });
+
+    // Remove from user favorites
+    await User.updateMany({ favorites: id }, { $pull: { favorites: id } });
+
+    res.json({
+      success: true,
+      message: "Video deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting video:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ==================== ADMIN ACTIONS ====================
+
+/**
+ * Increment view count
+ */
+export const incrementView = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const video = await Video.findByIdAndUpdate(
+      id,
+      { $inc: { view: 1 } },
+      { new: true }
+    );
+
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        message: "Video not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "View count updated",
+      views: video.view,
+    });
+  } catch (error) {
+    console.error("Error incrementing view:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * Toggle featured status (admin only)
+ */
 export const toggleFeatured = async (req, res) => {
   try {
     const { id } = req.params;
@@ -544,7 +943,9 @@ export const toggleFeatured = async (req, res) => {
   }
 };
 
-// API to toggle trending status (admin only)
+/**
+ * Toggle trending status (admin only)
+ */
 export const toggleTrending = async (req, res) => {
   try {
     const { id } = req.params;

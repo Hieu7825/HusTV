@@ -1,41 +1,90 @@
 // client/src/pages/Favorite.jsx
-import React, { useState, useMemo } from "react";
-import { dummyShowsData } from "../assets/assets";
+import React, { useState, useEffect, useMemo } from "react";
+import { userService } from "../services";
 import MovieCard from "../components/MovieCard";
 import BlurCircle from "../components/BlurCircle";
 import Pagination from "../components/Pagination";
 import SearchBar from "../components/SearchBar";
+import Loading from "../components/Loading";
 import { Heart, Sparkles, Film } from "lucide-react";
+import toast from "react-hot-toast";
 
 const Favorite = () => {
-  // Lấy favorite movies từ localStorage
-  const [favoriteIds, setFavoriteIds] = useState(() => {
-    const saved = localStorage.getItem("favoriteMovies");
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [favoriteMovies, setFavoriteMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenreIds, setSelectedGenreIds] = useState([]);
   const moviesPerPage = 12;
 
-  // Lọc movies từ dummyShowsData dựa trên favoriteIds
-  const favoriteMovies = useMemo(() => {
-    return dummyShowsData.filter((movie) => favoriteIds.includes(movie._id));
-  }, [favoriteIds]);
+  // Fetch favorites from API
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        setLoading(true);
+        const response = await userService.getFavorites();
 
-  // Lọc favorite movies theo tìm kiếm và thể loại
+        console.log("📥 Favorites response:", response);
+
+        // ✅ Parse response - Handle different formats
+        let moviesData = [];
+
+        if (Array.isArray(response)) {
+          moviesData = response;
+        } else if (response.data) {
+          if (Array.isArray(response.data)) {
+            moviesData = response.data;
+          } else if (
+            response.data.favorites &&
+            Array.isArray(response.data.favorites)
+          ) {
+            moviesData = response.data.favorites;
+          } else if (
+            response.data.videos &&
+            Array.isArray(response.data.videos)
+          ) {
+            moviesData = response.data.videos;
+          } else if (
+            response.data.movies &&
+            Array.isArray(response.data.movies)
+          ) {
+            moviesData = response.data.movies;
+          }
+        } else if (response.favorites && Array.isArray(response.favorites)) {
+          moviesData = response.favorites;
+        }
+
+        console.log("✅ Parsed favorites:", moviesData.length);
+        setFavoriteMovies(moviesData);
+      } catch (error) {
+        console.error("❌ Failed to fetch favorites:", error);
+
+        // Check if it's an auth error
+        if (error.response?.status === 401) {
+          toast.error("Please login to view favorites");
+        } else {
+          toast.error("Failed to load favorites");
+        }
+
+        setFavoriteMovies([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFavorites();
+  }, []);
+
+  // Filter movies
   const filteredMovies = useMemo(() => {
     let filtered = favoriteMovies;
 
-    // Lọc theo search query
+    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((movie) => {
         const title = movie.title?.toLowerCase() || "";
         const overview = movie.overview?.toLowerCase() || "";
-
-        // Lấy tên thể loại để search
         const genreNames = movie.genres
           ? movie.genres.map((g) => g.name.toLowerCase()).join(" ")
           : "";
@@ -48,14 +97,12 @@ const Favorite = () => {
       });
     }
 
-    // Lọc theo thể loại (dựa vào genre id)
+    // Filter by genres
     if (selectedGenreIds.length > 0) {
       filtered = filtered.filter((movie) => {
         if (!movie.genres || !Array.isArray(movie.genres)) {
           return false;
         }
-
-        // Kiểm tra xem movie có ít nhất 1 genre trùng với selectedGenreIds
         const movieGenreIds = movie.genres.map((g) => g.id);
         return selectedGenreIds.some((selectedId) =>
           movieGenreIds.includes(selectedId)
@@ -66,7 +113,7 @@ const Favorite = () => {
     return filtered;
   }, [favoriteMovies, searchQuery, selectedGenreIds]);
 
-  // Tính toán phân trang dựa trên phim đã lọc
+  // Pagination
   const totalPages = Math.ceil(filteredMovies.length / moviesPerPage);
   const indexOfLastMovie = currentPage * moviesPerPage;
   const indexOfFirstMovie = indexOfLastMovie - moviesPerPage;
@@ -75,7 +122,6 @@ const Favorite = () => {
     indexOfLastMovie
   );
 
-  // Reset về trang 1 khi tìm kiếm hoặc lọc
   const handleSearch = (query) => {
     setSearchQuery(query);
     setCurrentPage(1);
@@ -86,20 +132,17 @@ const Favorite = () => {
     setCurrentPage(1);
   };
 
-  // Hàm xử lý khi thay đổi trang
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Lấy tên thể loại đã chọn để hiển thị
   const getSelectedGenreNames = () => {
     if (selectedGenreIds.length === 0) return "";
 
     const genreNames = [];
     const genresMap = new Map();
 
-    // Tạo map các genre từ tất cả favorite movies
     favoriteMovies.forEach((movie) => {
       if (movie.genres) {
         movie.genres.forEach((genre) => {
@@ -108,7 +151,6 @@ const Favorite = () => {
       }
     });
 
-    // Lấy tên của các genre đã chọn
     selectedGenreIds.forEach((id) => {
       if (genresMap.has(id)) {
         genreNames.push(genresMap.get(id));
@@ -118,18 +160,19 @@ const Favorite = () => {
     return genreNames.join(", ");
   };
 
+  if (loading) {
+    return <Loading />;
+  }
+
   return favoriteMovies.length > 0 ? (
     <div className="relative my-20 mb-60 px-6 md:px-16 lg:px-24 xl:px-44 overflow-hidden min-h-[80vh]">
-      {/* Background Effects */}
       <BlurCircle top="150px" left="-80px" />
       <BlurCircle bottom="50px" right="50px" />
 
-      {/* Grid Background */}
       <div className="absolute inset-0 opacity-20">
         <div className="w-full h-full grid-background" />
       </div>
 
-      {/* Enhanced Header Section - Centered Title */}
       <div className="relative flex justify-center pt-20 pb-10">
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -150,7 +193,6 @@ const Favorite = () => {
         </div>
       </div>
 
-      {/* Stats Badge */}
       <div className="flex justify-center mb-8">
         <div className="bg-gradient-to-r from-red-950/50 via-pink-950/50 to-red-950/50 border-2 border-red-600/30 rounded-full px-6 py-3 backdrop-blur-sm">
           <p className="text-gray-300 text-sm flex items-center gap-2">
@@ -164,14 +206,12 @@ const Favorite = () => {
         </div>
       </div>
 
-      {/* Search Bar Component */}
       <SearchBar
         onSearch={handleSearch}
         onFilter={handleFilter}
         allMovies={favoriteMovies}
       />
 
-      {/* Results Info */}
       {(searchQuery || selectedGenreIds.length > 0) && (
         <div className="mb-8 text-center animate-fade-in">
           <p className="text-gray-400 text-lg">
@@ -199,7 +239,6 @@ const Favorite = () => {
         </div>
       )}
 
-      {/* Movies Grid */}
       {currentMovies.length > 0 ? (
         <>
           <div className="flex flex-wrap gap-8 max-sm:justify-center">
@@ -214,7 +253,6 @@ const Favorite = () => {
             ))}
           </div>
 
-          {/* Pagination Component - Chỉ hiển thị khi có > 12 phim */}
           {filteredMovies.length > 12 && (
             <Pagination
               currentPage={currentPage}

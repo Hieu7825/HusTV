@@ -1,4 +1,4 @@
-//  client/src/pages/admin/AddGenre.jsx
+// client/src/pages/admin/AddGenre.jsx
 import React, { useState, useEffect } from "react";
 import {
   Tag,
@@ -12,21 +12,43 @@ import {
 } from "lucide-react";
 import Title from "../../components/admin/Title";
 import BlurCircle from "../../components/BlurCircle";
-import { dummyGenreData } from "../../assets/assets";
+import { genreService } from "../../services";
 import Pagination from "../../components/Pagination";
+import Loading from "../../components/Loading";
+import toast from "react-hot-toast";
 
 const AddGenre = () => {
-  const [genres, setGenres] = useState(dummyGenreData);
+  const [genres, setGenres] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingGenre, setEditingGenre] = useState(null);
+  const [genreId, setGenreId] = useState("");
   const [genreName, setGenreName] = useState("");
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const genresPerPage = 12;
 
-  // Filter genres by name or ID
+  // Fetch genres from API
+  const fetchGenres = async () => {
+    try {
+      setLoading(true);
+      const response = await genreService.getAllGenres();
+      setGenres(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch genres:", error);
+      toast.error("Failed to load genres");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGenres();
+  }, []);
+
+  // Filter genres
   const filteredGenres = genres
     .filter((genre) => {
       const searchLower = searchTerm.toLowerCase();
@@ -34,67 +56,87 @@ const AddGenre = () => {
       const matchesId = genre.id.toString().includes(searchTerm);
       return matchesName || matchesId;
     })
-    .sort((a, b) => a.name.localeCompare(b.name)); // Sắp xếp theo bảng chữ cái
+    .sort((a, b) => a.name.localeCompare(b.name));
 
-  // Pagination calculation
+  // Pagination
   const totalPages = Math.ceil(filteredGenres.length / genresPerPage);
   const indexOfLast = currentPage * genresPerPage;
   const indexOfFirst = indexOfLast - genresPerPage;
   const currentGenres = filteredGenres.slice(indexOfFirst, indexOfLast);
 
-  // Reset page when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  // Scroll when page changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
 
-  const handleDelete = (id) => {
-    if (confirm("Are you sure you want to delete this genre?")) {
-      setGenres(genres.filter((genre) => genre.id !== id));
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this genre?")) return;
+
+    try {
+      await genreService.deleteGenre(id);
+      toast.success("Genre deleted successfully");
+      fetchGenres(); // Refresh list
+    } catch (error) {
+      console.error("Failed to delete genre:", error);
+      toast.error(error.response?.data?.message || "Failed to delete genre");
     }
   };
 
   const handleEdit = (genre) => {
     setEditingGenre(genre);
+    setGenreId(genre.id.toString());
     setGenreName(genre.name);
     setShowModal(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
+
     if (!genreName.trim()) {
-      alert("Please enter a genre name!");
+      toast.error("Please enter a genre name!");
       return;
     }
 
-    if (editingGenre) {
-      // Update existing genre
-      setGenres(
-        genres.map((g) =>
-          g.id === editingGenre.id ? { ...g, name: genreName } : g
-        )
-      );
-    } else {
-      // Add new genre
-      const newGenre = {
-        id: Math.max(...genres.map((g) => g.id)) + 1,
-        name: genreName,
-      };
-      setGenres([newGenre, ...genres]);
+    if (!editingGenre && !genreId.trim()) {
+      toast.error("Please enter a genre ID!");
+      return;
     }
 
-    setShowModal(false);
-    setEditingGenre(null);
-    setGenreName("");
+    try {
+      if (editingGenre) {
+        // Update existing genre
+        await genreService.updateGenre(editingGenre.id, { name: genreName });
+        toast.success("Genre updated successfully");
+      } else {
+        // Add new genre
+        await genreService.createGenre({
+          id: parseInt(genreId),
+          name: genreName,
+        });
+        toast.success("Genre created successfully");
+      }
+
+      setShowModal(false);
+      setEditingGenre(null);
+      setGenreId("");
+      setGenreName("");
+      fetchGenres(); // Refresh list
+    } catch (error) {
+      console.error("Failed to save genre:", error);
+      toast.error(error.response?.data?.message || "Failed to save genre");
+    }
   };
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <div className="min-h-screen bg-black text-white p-6 relative overflow-hidden">
@@ -134,6 +176,7 @@ const AddGenre = () => {
           <button
             onClick={() => {
               setEditingGenre(null);
+              setGenreId("");
               setGenreName("");
               setShowModal(true);
             }}
@@ -264,6 +307,7 @@ const AddGenre = () => {
                 onClick={() => {
                   setShowModal(false);
                   setEditingGenre(null);
+                  setGenreId("");
                   setGenreName("");
                 }}
                 className="p-2 hover:bg-red-900/30 rounded-lg transition-colors group"
@@ -274,6 +318,22 @@ const AddGenre = () => {
 
             {/* Modal Form */}
             <form onSubmit={handleSave} className="p-6 space-y-6">
+              {!editingGenre && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-400 mb-2">
+                    Genre ID <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={genreId}
+                    onChange={(e) => setGenreId(e.target.value)}
+                    className="w-full px-4 py-3 bg-black/50 border-2 border-red-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors"
+                    placeholder="Enter genre ID (e.g., 28)"
+                    autoFocus
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-bold text-gray-400 mb-2">
                   Genre Name <span className="text-red-500">*</span>
@@ -284,7 +344,7 @@ const AddGenre = () => {
                   onChange={(e) => setGenreName(e.target.value)}
                   className="w-full px-4 py-3 bg-black/50 border-2 border-red-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors"
                   placeholder="Enter genre name"
-                  autoFocus
+                  autoFocus={!!editingGenre}
                 />
               </div>
 
@@ -295,6 +355,7 @@ const AddGenre = () => {
                   onClick={() => {
                     setShowModal(false);
                     setEditingGenre(null);
+                    setGenreId("");
                     setGenreName("");
                   }}
                   className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg font-bold text-white transition-colors"

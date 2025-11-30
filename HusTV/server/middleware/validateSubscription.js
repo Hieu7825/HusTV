@@ -11,7 +11,7 @@ export const requireActiveSubscription = async (req, res, next) => {
     const userId = req.user.id;
 
     // Get user with current subscription
-    const user = await User.findById(userId).populate("currentSubscription");
+    const user = await User.findByClerkId(userId).populate("currentSubscription");
 
     if (!user) {
       return res.status(404).json({
@@ -71,7 +71,7 @@ export const canWatchVideo = async (req, res, next) => {
       });
     }
 
-    const user = await User.findById(userId).populate("currentSubscription");
+    const user = await User.findByClerkId(userId).populate("currentSubscription");
 
     if (!user) {
       return res.status(404).json({
@@ -134,7 +134,7 @@ export const validateUpgrade = async (req, res, next) => {
       });
     }
 
-    const user = await User.findById(userId).populate({
+    const user = await User.findByClerkId(userId).populate({
       path: "currentSubscription",
       populate: { path: "plan" },
     });

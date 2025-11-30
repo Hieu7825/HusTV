@@ -29,10 +29,9 @@ import {
   cleanupDraftVideos,
 } from "./functions/videoProcessing.js";
 
-// Export inngest client
+// Export inngest client and functions
 export { inngest };
 
-// Export all functions as array
 export const functions = [
   // Clerk sync functions
   clerkUserCreated,
@@ -58,28 +57,4 @@ export const functions = [
   cleanupDraftVideos,
 ];
 
-// Export individual functions for testing
-export {
-  // Clerk sync
-  clerkUserCreated,
-  clerkUserUpdated,
-  clerkUserDeleted,
-
-  // Subscription jobs
-  checkExpiredSubscriptions,
-  sendExpiryReminders,
-  cleanupOldSubscriptions,
-  checkSubscriptionStatus,
-
-  // Email automation
-  sendSubscriptionConfirmedEmail,
-  sendSubscriptionUpgradedEmail,
-  sendWelcomeEmail,
-  sendNewContentNotification,
-
-  // Video processing
-  processVideoAfterUpload,
-  notifyVideoUploaded,
-  updateVideoStatistics,
-  cleanupDraftVideos,
-};
+export default { inngest, functions };

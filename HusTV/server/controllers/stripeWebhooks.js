@@ -79,7 +79,7 @@ export const stripeWebhookHandler = async (request, response) => {
         }
 
         // Update user subscription status
-        const user = await User.findById(userId);
+        const user = await User.findByClerkId(userId);
         if (user) {
           user.subscriptionStatus = "active";
           user.currentSubscription = subscriptionId;

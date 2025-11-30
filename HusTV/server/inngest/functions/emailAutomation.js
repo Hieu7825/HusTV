@@ -1,5 +1,5 @@
 // inngest/functions/emailAutomation.js
-import { inngest } from "../index.js";
+import { inngest } from "../client.js";
 import Subscription from "../../models/Subscription.js";
 import SubscriptionPlan from "../../models/SubscriptionPlan.js";
 import User from "../../models/User.js";

@@ -9,7 +9,7 @@ export const getUserProfile = async (req, res) => {
   try {
     const { userId } = req.auth;
 
-    const user = await User.findById(userId).populate({
+    const user = await User.findByClerkId(userId).populate({
       path: "currentSubscription",
       populate: { path: "plan" },
     });
@@ -41,7 +41,7 @@ export const toggleFavorite = async (req, res) => {
         .json({ success: false, message: "Video not found" });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findByClerkId(userId);
 
     // Check if already in favorites
     const isFavorite = user.favorites.includes(videoId);
@@ -78,7 +78,7 @@ export const getFavorites = async (req, res) => {
   try {
     const { userId } = req.auth;
 
-    const user = await User.findById(userId).populate("favorites");
+    const user = await User.findByClerkId(userId).populate("favorites");
 
     res.json({ success: true, favorites: user.favorites || [] });
   } catch (error) {
@@ -93,7 +93,7 @@ export const checkFavorite = async (req, res) => {
     const { userId } = req.auth;
     const { videoId } = req.params;
 
-    const user = await User.findById(userId);
+    const user = await User.findByClerkId(userId);
     const isFavorite = user.favorites.includes(videoId);
 
     res.json({ success: true, isFavorite });
@@ -171,7 +171,7 @@ export const updateWatchProgress = async (req, res) => {
     }
 
     // Update user stats
-    const user = await User.findById(userId);
+    const user = await User.findByClerkId(userId);
     if (completed && !watchHistory.completed) {
       // Only increment if newly completed
       user.stats.totalVideosWatched += 1;
@@ -270,7 +270,7 @@ export const updatePreferences = async (req, res) => {
     const { userId } = req.auth;
     const preferences = req.body;
 
-    const user = await User.findById(userId);
+    const user = await User.findByClerkId(userId);
 
     // Merge new preferences with existing
     user.preferences = {
@@ -296,7 +296,7 @@ export const getPreferences = async (req, res) => {
   try {
     const { userId } = req.auth;
 
-    const user = await User.findById(userId).select("preferences");
+    const user = await User.findByClerkId(userId).select("preferences");
 
     res.json({
       success: true,
@@ -313,7 +313,7 @@ export const getDevices = async (req, res) => {
   try {
     const { userId } = req.auth;
 
-    const user = await User.findById(userId).select("connectedDevices");
+    const user = await User.findByClerkId(userId).select("connectedDevices");
 
     res.json({
       success: true,
@@ -338,7 +338,7 @@ export const updateDevice = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId).populate("currentSubscription");
+    const user = await User.findByClerkId(userId).populate("currentSubscription");
 
     // Check device limit
     const maxDevices = user.currentSubscription?.plan?.connectedDevices || 1;
@@ -399,7 +399,7 @@ export const removeDevice = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findByClerkId(userId);
 
     // Remove device
     user.connectedDevices = user.connectedDevices.filter(
@@ -424,7 +424,7 @@ export const getUserStats = async (req, res) => {
   try {
     const { userId } = req.auth;
 
-    const user = await User.findById(userId).select("stats favorites");
+    const user = await User.findByClerkId(userId).select("stats favorites");
 
     // Get additional stats
     const totalFavorites = user.favorites?.length || 0;

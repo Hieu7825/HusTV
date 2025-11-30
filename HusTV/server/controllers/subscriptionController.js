@@ -50,7 +50,7 @@ export const createSubscription = async (req, res) => {
     const { planId } = req.body;
 
     // Get user and plan
-    const user = await User.findById(userId);
+    const user = await User.findByClerkId(userId);
     const plan = await SubscriptionPlan.findById(planId);
 
     if (!plan) {
@@ -149,7 +149,7 @@ export const getCurrentSubscription = async (req, res) => {
   try {
     const { userId } = req.auth;
 
-    const user = await User.findById(userId).populate({
+    const user = await User.findByClerkId(userId).populate({
       path: "currentSubscription",
       populate: { path: "plan" },
     });
@@ -205,7 +205,7 @@ export const cancelSubscription = async (req, res) => {
     await subscription.save();
 
     // Update user subscription status
-    const user = await User.findById(userId);
+    const user = await User.findByClerkId(userId);
     if (user.currentSubscription?.toString() === id) {
       user.subscriptionStatus = "cancelled";
       user.currentSubscription = null;
@@ -228,7 +228,7 @@ export const checkSubscriptionStatus = async (req, res) => {
   try {
     const { userId } = req.auth;
 
-    const user = await User.findById(userId);
+    const user = await User.findByClerkId(userId);
 
     res.json({
       success: true,
@@ -249,7 +249,7 @@ export const upgradeSubscription = async (req, res) => {
     const { newPlanId } = req.body;
 
     // Get user's current subscription
-    const user = await User.findById(userId).populate({
+    const user = await User.findByClerkId(userId).populate({
       path: "currentSubscription",
       populate: { path: "plan" },
     });
@@ -369,7 +369,7 @@ export const getUpgradeOptions = async (req, res) => {
     const { userId } = req.auth;
 
     // Get user's current subscription
-    const user = await User.findById(userId).populate({
+    const user = await User.findByClerkId(userId).populate({
       path: "currentSubscription",
       populate: { path: "plan" },
     });
@@ -423,7 +423,7 @@ export const canUpgrade = async (req, res) => {
   try {
     const { userId } = req.auth;
 
-    const user = await User.findById(userId).populate({
+    const user = await User.findByClerkId(userId).populate({
       path: "currentSubscription",
       populate: { path: "plan" },
     });

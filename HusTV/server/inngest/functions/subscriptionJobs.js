@@ -1,5 +1,5 @@
 // inngest/functions/subscriptionJobs.js
-import { inngest } from "../index.js";
+import { inngest } from "../client.js";
 import Subscription from "../../models/Subscription.js";
 import User from "../../models/User.js";
 import { sendExpiryReminder } from "../../utils/index.js";
@@ -32,7 +32,7 @@ export const checkExpiredSubscriptions = inngest.createFunction(
           await subscription.save();
 
           // Update user status
-          const user = await User.findById(subscription.user);
+          const user = await User.findByClerkId(subscription.user);
           if (
             user &&
             user.currentSubscription?.toString() === subscription._id.toString()
@@ -163,7 +163,7 @@ export const checkSubscriptionStatus = inngest.createFunction(
     const { userId } = event.data;
 
     await step.run("verify-subscription-status", async () => {
-      const user = await User.findById(userId).populate({
+      const user = await User.findByClerkId(userId).populate({
         path: "currentSubscription",
         populate: { path: "plan" },
       });

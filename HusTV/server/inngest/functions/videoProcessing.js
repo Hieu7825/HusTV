@@ -1,5 +1,5 @@
 // inngest/functions/videoProcessing.js
-import { inngest } from "../index.js";
+import { inngest } from "../client.js";
 import Video from "../../models/Video.js";
 import { generateThumbnail } from "../../utils/index.js";
 

@@ -205,7 +205,7 @@ export const toggleUserBan = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const user = await User.findById(userId);
+    const user = await User.findByClerkId(userId);
     if (!user) {
       return res.json({ success: false, message: "User not found" });
     }

@@ -3,17 +3,34 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    // Clerk User ID (primary key)
-    _id: { type: String, required: true },
+    // Clerk User ID (as regular field, not as _id)
+    clerkId: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
 
     // Basic Info (synced from Clerk)
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    image: { type: String, required: true },
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      index: true,
+    },
+    image: {
+      type: String,
+      default: "",
+    },
 
     // Subscription Info
     currentSubscription: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Subscription",
       default: null,
     },
@@ -21,6 +38,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["none", "active", "expired", "cancelled"],
       default: "none",
+      index: true,
     },
     subscriptionTier: {
       type: String,
@@ -28,56 +46,98 @@ const userSchema = new mongoose.Schema(
     },
 
     // Account Status
-    isActive: { type: Boolean, default: true },
-    isBanned: { type: Boolean, default: false },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
 
     // Profile Settings
     preferences: {
-      language: { type: String, default: "en" },
-      autoplay: { type: Boolean, default: true },
+      language: {
+        type: String,
+        default: "en",
+      },
+      autoplay: {
+        type: Boolean,
+        default: true,
+      },
       quality: {
         type: String,
         enum: ["auto", "720p", "1080p", "4K"],
         default: "auto",
       },
       notifications: {
-        email: { type: Boolean, default: true },
-        newReleases: { type: Boolean, default: true },
-        recommendations: { type: Boolean, default: true },
+        email: {
+          type: Boolean,
+          default: true,
+        },
+        newReleases: {
+          type: Boolean,
+          default: true,
+        },
+        recommendations: {
+          type: Boolean,
+          default: true,
+        },
       },
     },
 
     // Favorites (array of video IDs)
-    favorites: [{ type: String, ref: "Video" }],
+    favorites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Video",
+      },
+    ],
 
     // Watch Stats
     stats: {
-      totalWatchTime: { type: Number, default: 0 }, // in minutes
-      totalVideosWatched: { type: Number, default: 0 },
-      lastActive: { type: Date, default: Date.now },
+      totalWatchTime: {
+        type: Number,
+        default: 0,
+      }, // in minutes
+      totalVideosWatched: {
+        type: Number,
+        default: 0,
+      },
+      lastActive: {
+        type: Date,
+        default: Date.now,
+        index: true,
+      },
     },
 
     // Devices
     connectedDevices: [
       {
-        deviceId: { type: String },
-        deviceName: { type: String },
-        deviceType: { type: String }, // "mobile", "desktop", "tv", "tablet"
-        lastUsed: { type: Date, default: Date.now },
+        deviceId: {
+          type: String,
+          required: true,
+        },
+        deviceName: {
+          type: String,
+          required: true,
+        },
+        deviceType: {
+          type: String,
+          enum: ["mobile", "desktop", "tv", "tablet"],
+          required: true,
+        },
+        lastUsed: {
+          type: Date,
+          default: Date.now,
+        },
       },
     ],
   },
   {
     timestamps: true,
-    // Disable _id auto-generation since we use Clerk ID
-    _id: false,
   }
 );
-
-// Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ subscriptionStatus: 1 });
-userSchema.index({ "stats.lastActive": -1 });
 
 // Virtual for active subscription check
 userSchema.virtual("hasActiveSubscription").get(function () {
@@ -99,7 +159,9 @@ userSchema.methods.addFavorite = async function (videoId) {
 
 // Method to remove favorite
 userSchema.methods.removeFavorite = async function (videoId) {
-  this.favorites = this.favorites.filter((id) => id !== videoId);
+  this.favorites = this.favorites.filter(
+    (id) => id.toString() !== videoId.toString()
+  );
   await this.save();
 };
 
@@ -134,7 +196,9 @@ userSchema.methods.updateDevice = async function (deviceInfo) {
   );
 
   if (existingDevice) {
-    // Update last used time
+    // Update existing device
+    existingDevice.deviceName = deviceName;
+    existingDevice.deviceType = deviceType;
     existingDevice.lastUsed = new Date();
   } else {
     // Check if can add new device
@@ -163,6 +227,11 @@ userSchema.methods.removeDevice = async function (deviceId) {
   await this.save();
 };
 
+// Method to get device by ID
+userSchema.methods.getDevice = function (deviceId) {
+  return this.connectedDevices.find((d) => d.deviceId === deviceId);
+};
+
 // Static method to update subscription status (called by cron job)
 userSchema.statics.updateExpiredSubscriptions = async function () {
   const Subscription = mongoose.model("Subscription");
@@ -179,21 +248,35 @@ userSchema.statics.updateExpiredSubscriptions = async function () {
     await sub.save();
 
     // Update user subscription status
-    await this.findByIdAndUpdate(sub.user, {
-      subscriptionStatus: "expired",
-    });
+    await this.updateOne(
+      { _id: sub.user },
+      {
+        subscriptionStatus: "expired",
+        currentSubscription: null,
+        subscriptionTier: null,
+      }
+    );
   }
 
   console.log(`✅ Updated ${expiredSubs.length} expired subscriptions`);
 };
 
-// Pre-save middleware to update stats
+// Static method to find user by Clerk ID
+userSchema.statics.findByClerkId = function (clerkId) {
+  return this.findOne({ clerkId });
+};
+
+// Pre-save middleware
 userSchema.pre("save", function (next) {
-  if (this.isModified("stats.lastActive")) {
-    // Auto-update last active timestamp
+  // Update lastActive if stats are modified
+  if (this.isModified("stats")) {
+    this.stats.lastActive = new Date();
   }
   next();
 });
+
+// Enable virtuals in JSON output
+userSchema.set("toJSON", { virtuals: true });
 
 const User = mongoose.model("User", userSchema);
 

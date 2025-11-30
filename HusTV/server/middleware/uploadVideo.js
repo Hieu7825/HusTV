@@ -32,7 +32,7 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB for images
 // ==================== DIRECTORY SETUP ====================
 
 // Ensure temp directory exists
-const TEMP_DIR = "temp/uploads/";
+const TEMP_DIR = process.env.VERCEL ? "/tmp/uploads/" : "temp/uploads/";
 if (!fs.existsSync(TEMP_DIR)) {
   fs.mkdirSync(TEMP_DIR, { recursive: true });
   console.log("📁 Created temp uploads directory:", TEMP_DIR);

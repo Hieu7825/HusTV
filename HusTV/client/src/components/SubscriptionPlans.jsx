@@ -1,4 +1,6 @@
+// ============================================
 // client/src/components/SubscriptionPlans.jsx
+// ============================================
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BlurCircle from "./BlurCircle";
@@ -13,44 +15,47 @@ const SubscriptionPlans = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Tìm hàm fetchPlans trong SubscriptionPlans.jsx và thay thế:
-
     const fetchPlans = async () => {
       try {
         setLoading(true);
-        const response = await subscriptionService.getAllPlans(); // hoặc API call tương tự
+        const response = await subscriptionService.getAllPlans();
 
-        console.log("📥 Subscription plans response:", response);
+        console.log("📥 API Response:", response);
 
-        // ✅ Handle different response formats
+        // ✅ Extract plans from response.data
         let plansData = [];
 
-        if (Array.isArray(response)) {
-          plansData = response;
-        } else if (response.data) {
-          if (Array.isArray(response.data)) {
-            plansData = response.data;
-          } else if (
-            response.data.plans &&
-            Array.isArray(response.data.plans)
-          ) {
-            plansData = response.data.plans;
-          } else if (response.data.data && Array.isArray(response.data.data)) {
-            plansData = response.data.data;
-          }
-        } else if (response.plans && Array.isArray(response.plans)) {
+        if (response?.data?.plans) {
+          // Case: { data: { plans: [...] } }
+          plansData = response.data.plans;
+        } else if (response?.data) {
+          // Case: { data: [...] }
+          plansData = response.data;
+        } else if (response?.plans) {
+          // Case: { plans: [...] }
           plansData = response.plans;
+        } else if (Array.isArray(response)) {
+          // Case: [...]
+          plansData = response;
         }
 
-        console.log("✅ Parsed plans:", plansData.length);
+        console.log("✅ Extracted plans:", plansData);
 
-        // Filter active plans
-        const activePlans = plansData.filter((plan) => plan.active !== false);
-        setPlans(activePlans);
+        // Filter active plans only
+        const activePlans = plansData.filter((plan) => plan.isActive === true);
+
+        // Sort by tierRank
+        const sortedPlans = activePlans.sort((a, b) => a.tierRank - b.tierRank);
+
+        setPlans(sortedPlans);
+
+        if (sortedPlans.length === 0) {
+          console.warn("⚠️ No active plans found");
+        }
       } catch (error) {
-        console.error("Failed to fetch plans:", error);
+        console.error("❌ Failed to fetch plans:", error);
         toast.error("Failed to load subscription plans");
-        setPlans([]); // ✅ Set empty array on error
+        setPlans([]);
       } finally {
         setLoading(false);
       }
@@ -69,9 +74,10 @@ const SubscriptionPlans = () => {
     );
   }
 
-  if (plans.length === 0) {
-    return null; // Don't show section if no plans
-  }
+  // // Don't render section if no plans
+  // if (plans.length === 0) {
+  //   return null;
+  // }
 
   return (
     <div className="px-6 md:px-16 lg:px-24 xl:px-44 py-20 overflow-hidden">
@@ -124,7 +130,7 @@ const SubscriptionPlans = () => {
                 planName={plan.planName}
                 price={plan.price}
                 description={plan.description}
-                features={plan.features}
+                features={plan.features || []}
                 isPopular={plan.isPopular}
                 duration={plan.duration}
                 tierRank={plan.tierRank}

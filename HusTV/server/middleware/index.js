@@ -1,4 +1,6 @@
-// middleware/index.js
+// ============================================
+// FILE 2: server/middleware/index.js (UPDATED)
+// ============================================
 // Central export file for all middleware
 
 // Authentication
@@ -13,7 +15,7 @@ export * from "./errorHandler.js";
 // Subscription validation
 export * from "./validateSubscription.js";
 
-// Rate limiting - import explicitly to avoid conflicts
+// Rate limiting - export all limiters
 export {
   apiLimiter,
   authLimiter,

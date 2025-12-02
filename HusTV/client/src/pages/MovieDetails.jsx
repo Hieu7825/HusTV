@@ -49,23 +49,22 @@ const MovieDetails = () => {
   // Check if movie is in favorites
   useEffect(() => {
     const checkFavoriteStatus = async () => {
-      try {
-        const response = await userService.checkFavorite(id);
+      if (!movie?._id) return; // Wait for movie to load
 
-        // ✅ Parse response correctly
+      try {
+        const response = await userService.checkFavorite(movie._id);
         const isFavorite =
           response.data?.isFavorite || response.isFavorite || false;
         setIsLiked(isFavorite);
       } catch (error) {
         console.error("Failed to check favorite status:", error);
-        // Don't show error toast - favorites are optional
       }
     };
 
     if (id) {
       checkFavoriteStatus();
     }
-  }, [id]);
+  }, [movie?._id]);
 
   // Fetch related movies (by genre)
   useEffect(() => {
@@ -98,7 +97,23 @@ const MovieDetails = () => {
   // Toggle favorite
   const toggleFavorite = async () => {
     try {
-      const response = await userService.toggleFavorite(id);
+      // Validate movie exists and has _id
+      if (!movie?._id) {
+        toast.error("Movie data not loaded");
+        return;
+      }
+
+      console.log("🎬 Full movie object:", movie);
+      console.log("❤️ movie._id:", movie._id);
+      console.log("❤️ movie._id type:", typeof movie._id);
+      console.log("❤️ movie._id length:", movie._id?.length);
+      console.log("❤️ movie._id is string?:", typeof movie._id === "string");
+
+      // Check if it's a valid MongoDB ObjectId (24 hex chars)
+      const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(movie._id);
+      console.log("❤️ Is valid ObjectId?:", isValidObjectId);
+
+      const response = await userService.toggleFavorite(movie._id);
 
       // Toggle local state
       setIsLiked(!isLiked);

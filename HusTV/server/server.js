@@ -1,3 +1,4 @@
+// server/index.js
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
@@ -7,56 +8,95 @@ import { serve } from "inngest/express";
 import { inngest, functions } from "./inngest/index.js";
 
 // Import routes
+import webhookRoutes from "./routes/webhookRoutes.js"; // ⚠️ MUST BE FIRST
 import subscriptionRoutes from "./routes/subscriptionRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import videoRoutes from "./routes/videoRoutes.js";
-import webhookRoutes from "./routes/webhookRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import genreRoutes from "./routes/genreRoutes.js"; // ⭐ THÊM MỚI
+import genreRoutes from "./routes/genreRoutes.js";
 
 // Import middleware
 import { errorHandler, notFound, apiLimiter } from "./middleware/index.js";
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
+// Connect to MongoDB
 await connectDB();
 
-// Webhooks need raw body - must be BEFORE express.json()
+// ============================================
+// ⚠️ CRITICAL: Webhook routes MUST be BEFORE express.json()
+// Stripe webhooks require raw body for signature verification
+// ============================================
 app.use("/api/webhooks", webhookRoutes);
 
-// Middleware
+// ============================================
+// Standard Middleware (AFTER webhook routes)
+// ============================================
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
   })
 );
+
 app.use(clerkMiddleware());
 
-// Apply rate limiting to all API routes
+// ============================================
+// Rate Limiting (Apply to all API routes)
+// ============================================
 app.use("/api", apiLimiter);
 
-// API Routes
-app.get("/", (req, res) => res.send("HusTV API Server is Live! 🎬"));
+// ============================================
+// Health Check
+// ============================================
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "HusTV API Server is Live! 🎬",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+  });
+});
 
-// Inngest
+// ============================================
+// Inngest Event System
+// ============================================
 app.use("/api/inngest", serve({ client: inngest, functions }));
 
-// Main routes
+// ============================================
+// API Routes
+// ============================================
+
+// Subscription routes (NEW)
 app.use("/api/subscriptions", subscriptionRoutes);
+
+// User routes
 app.use("/api/users", userRoutes);
+
+// Video routes
 app.use("/api/videos", videoRoutes);
-app.use("/api/genres", genreRoutes); // ⭐ THÊM MỚI - Genre management
+
+// Genre routes
+app.use("/api/genres", genreRoutes);
+
+// Admin routes
 app.use("/api/admin", adminRoutes);
 
-// Error handling (must be last)
+// ============================================
+// Error Handling (MUST BE LAST)
+// ============================================
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(port, () =>
-  console.log(`🚀 HusTV Server running at http://localhost:${port}`)
-);
+// ============================================
+// Start Server
+// ============================================
+app.listen(port, () => {
+  console.log(`🚀 HusTV Server is Running  `);
+});
 
 export default app;

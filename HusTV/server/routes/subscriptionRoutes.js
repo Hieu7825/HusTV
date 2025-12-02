@@ -1,67 +1,53 @@
-// server/routes/subscriptionRoutes.js
+// ============================================
+// FILE 1: server/routes/subscriptionRoutes.js (FIXED)
+// ============================================
 import express from "express";
 import {
-  protectUser,
-  protectAdmin,
-  validateCreateSubscription,
-  validateUpgradeSubscription,
-  validateCreatePlan,
-  paymentLimiter,
-} from "../middleware/index.js";
-import {
   getAllPlans,
-  getPlanById,
   createSubscription,
-  getUserSubscriptions,
   getCurrentSubscription,
+  getSubscriptionHistory,
   cancelSubscription,
-  checkSubscriptionStatus,
-  upgradeSubscription,
-  getUpgradeOptions,
-  canUpgrade,
-  createOrUpdatePlan,
-  deletePlan,
-  togglePlanStatus,
 } from "../controllers/subscriptionController.js";
+import { protectUser } from "../middleware/auth.js"; // ✅ FIXED: Import from auth.js
+import { paymentLimiter } from "../middleware/rateLimiter.js"; // ✅ FIXED: Import from rateLimiter.js
+import { validateCreateSubscription } from "../middleware/validation.js"; // ✅ FIXED: Import from validation.js
 
 const router = express.Router();
 
-// Public routes
-router.get("/plans", getAllPlans);
-router.get("/plans/:planId", getPlanById);
+/**
+ * Public Routes
+ */
 
-// User routes (protected)
+// Get all subscription plans
+// GET /api/subscriptions/plans
+router.get("/plans", getAllPlans);
+
+/**
+ * Protected Routes (require authentication)
+ */
+
+// Create new subscription (initiate payment)
+// POST /api/subscriptions/create
+// Body: { planId: "plan_premium_v3" }
 router.post(
   "/create",
-  protectUser,
-  paymentLimiter,
-  validateCreateSubscription,
+  protectUser, // Verify Clerk auth
+  paymentLimiter, // Rate limit: 10 requests per hour
+  validateCreateSubscription, // Validate request body
   createSubscription
 );
-router.get("/my-subscriptions", protectUser, getUserSubscriptions);
+
+// Get current active subscription
+// GET /api/subscriptions/current
 router.get("/current", protectUser, getCurrentSubscription);
-router.delete("/:id/cancel", protectUser, cancelSubscription);
-router.get("/status", protectUser, checkSubscriptionStatus);
 
-// Upgrade routes
-router.post(
-  "/upgrade",
-  protectUser,
-  paymentLimiter,
-  validateUpgradeSubscription,
-  upgradeSubscription
-);
-router.get("/upgrade-options", protectUser, getUpgradeOptions);
-router.get("/can-upgrade", protectUser, canUpgrade);
+// Get subscription history
+// GET /api/subscriptions/history
+router.get("/history", protectUser, getSubscriptionHistory);
 
-// Admin routes
-router.post(
-  "/plans/:planId",
-  protectAdmin,
-  validateCreatePlan,
-  createOrUpdatePlan
-);
-router.delete("/plans/:planId", protectAdmin, deletePlan);
-router.patch("/plans/:planId/toggle", protectAdmin, togglePlanStatus);
+// Cancel subscription
+// POST /api/subscriptions/cancel
+router.post("/cancel", protectUser, cancelSubscription);
 
 export default router;

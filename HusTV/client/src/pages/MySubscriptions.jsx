@@ -1,16 +1,11 @@
-// client/src/pages/MySubscriptions.jsx
+// ============================================
+// FILE 2: client/src/pages/MySubscriptions.jsx
+// ============================================
 import React, { useEffect, useState } from "react";
-import { subscriptionService } from "../services";
+import { subscriptionService } from "../services/subscriptionService";
 import Loading from "../components/Loading";
 import BlurCircle from "../components/BlurCircle";
-import {
-  CheckCircle,
-  Star,
-  Crown,
-  CreditCard,
-  Check,
-  TrendingUp,
-} from "lucide-react";
+import { CheckCircle, Crown, CreditCard, Check, X } from "lucide-react";
 import toast from "react-hot-toast";
 
 const MySubscriptions = () => {
@@ -20,138 +15,116 @@ const MySubscriptions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserPlan, setCurrentUserPlan] = useState(null);
 
-  useEffect(() => {
-    const getUserSubscriptions = async () => {
+  /**
+   * Fetch all plans and current subscription
+   */
+  const fetchSubscriptions = async () => {
+    try {
+      setIsLoading(true);
+
+      // Fetch all plans
+      const plansResponse = await subscriptionService.getAllPlans();
+      const plansData = plansResponse.data?.plans || plansResponse.data || [];
+
+      let currentPlan = null;
+
+      // Fetch current subscription
       try {
-        setIsLoading(true);
+        const currentResponse =
+          await subscriptionService.getCurrentSubscription();
+        const currentSubscription = currentResponse?.data?.subscription;
 
-        // ✅ Fetch all plans - Backend returns { success: true, plans: [...] }
-        const plansResponse = await subscriptionService.getAllPlans();
-        console.log("📥 Plans Response:", plansResponse);
-
-        // ✅ Extract plans array from response
-        const plansData = plansResponse.data?.plans || plansResponse.data || [];
-
-        // ✅ Fetch current subscription with error handling
-        let currentPlan = null;
-
-        try {
-          const currentResponse =
-            await subscriptionService.getCurrentSubscription();
-          console.log("📥 Current Subscription Response:", currentResponse);
-
-          // ✅ Extract current plan from subscription with safe checks
-          const currentSubscription = currentResponse?.data?.subscription;
-          currentPlan = currentSubscription?.plan || null;
-
-          console.log("✅ Current Plan:", currentPlan);
-        } catch (subError) {
-          // User might not have a subscription yet - this is OK
-          console.log(
-            "ℹ️ No active subscription found (this is normal for new users)"
-          );
-          currentPlan = null;
-        }
-
-        setCurrentUserPlan(currentPlan);
-
-        // Sort plans: available first, subscribed last
-        const sortedPlans = [...plansData].sort((a, b) => {
-          const aIsSubscribed = currentPlan && a._id === currentPlan._id;
-          const bIsSubscribed = currentPlan && b._id === currentPlan._id;
-
-          if (aIsSubscribed && !bIsSubscribed) return 1;
-          if (!aIsSubscribed && bIsSubscribed) return -1;
-          return a.tierRank - b.tierRank;
-        });
-
-        setPlans(sortedPlans);
-      } catch (error) {
-        console.error("❌ Failed to fetch subscriptions:", error);
-        toast.error(
-          error.response?.data?.message || "Failed to load subscription plans"
-        );
-      } finally {
-        setIsLoading(false);
+        // Only consider as current plan if isPaid = true
+        currentPlan = currentSubscription?.isPaid
+          ? currentSubscription?.plan
+          : null;
+      } catch (subError) {
+        // User doesn't have subscription yet
+        currentPlan = null;
       }
-    };
 
-    getUserSubscriptions();
-  }, []);
+      setCurrentUserPlan(currentPlan);
 
-  // Calculate upgrade price
-  const getUpgradePrice = (plan) => {
-    if (!currentUserPlan) return plan.price;
+      // Sort plans: current plan first, then by tierRank
+      const sortedPlans = [...plansData].sort((a, b) => {
+        const aIsSubscribed = currentPlan && a._id === currentPlan._id;
+        const bIsSubscribed = currentPlan && b._id === currentPlan._id;
 
-    if (currentUserPlan._id === plan._id) {
-      return 0;
+        if (aIsSubscribed && !bIsSubscribed) return -1;
+        if (!aIsSubscribed && bIsSubscribed) return 1;
+        return a.tierRank - b.tierRank;
+      });
+
+      setPlans(sortedPlans);
+    } catch (error) {
+      console.error("❌ Failed to fetch subscriptions:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to load subscription plans"
+      );
+    } finally {
+      setIsLoading(false);
     }
-
-    if (plan.tierRank <= currentUserPlan.tierRank) {
-      return 0;
-    }
-
-    const upgradePrice = plan.price - currentUserPlan.price;
-    return upgradePrice > 0 ? upgradePrice : 0;
   };
 
+  useEffect(() => {
+    fetchSubscriptions();
+
+    // Check for payment success/cancellation
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    const cancelled = params.get("cancelled");
+
+    if (sessionId) {
+      // Payment successful - refresh data after 2 seconds
+      const timer = setTimeout(() => {
+        fetchSubscriptions();
+        toast.success("✅ Payment successful! Your plan has been activated.");
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+
+    if (cancelled) {
+      toast.info("Payment cancelled. You can try again anytime.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  /**
+   * Check if user is subscribed to this plan
+   */
   const isSubscribed = (plan) => {
     return currentUserPlan && currentUserPlan._id === plan._id;
   };
 
-  const canUpgrade = (plan) => {
-    if (!currentUserPlan) return true;
-    return plan.tierRank > currentUserPlan.tierRank;
-  };
-
+  /**
+   * Check if this plan is lower tier than current
+   */
   const isLowerTier = (plan) => {
     if (!currentUserPlan) return false;
     return plan.tierRank < currentUserPlan.tierRank;
   };
 
-  const getButtonText = (plan) => {
-    if (isSubscribed(plan)) return "Current Plan";
-    if (isLowerTier(plan)) return "Downgrade";
-    if (canUpgrade(plan)) return "Upgrade Now";
-    return "Subscribe";
-  };
-
-  const getButtonStyle = (plan) => {
-    if (isSubscribed(plan)) {
-      return "bg-emerald-600 hover:bg-emerald-700 border-emerald-500/50 cursor-default";
-    }
-    if (isLowerTier(plan)) {
-      return "bg-gray-700 hover:bg-gray-600 border-gray-600/50 cursor-default";
-    }
-    return "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 border-red-500/50";
-  };
-
+  /**
+   * Handle subscription purchase
+   */
   const handleSubscribe = async (plan) => {
     if (isSubscribed(plan) || isLowerTier(plan)) return;
 
     try {
-      let response;
+      toast.loading("Creating checkout session...");
+      const response = await subscriptionService.createSubscription(plan._id);
+      toast.dismiss();
 
-      if (canUpgrade(plan) && currentUserPlan) {
-        // ✅ Upgrade flow - Backend expects { newPlanId }
-        toast.loading("Creating upgrade checkout...");
-        response = await subscriptionService.upgradeSubscription(plan._id);
-        toast.dismiss();
-        toast.success("Redirecting to checkout...");
-      } else {
-        // ✅ New subscription flow - Backend expects { planId }
-        toast.loading("Creating checkout session...");
-        response = await subscriptionService.createSubscription(plan._id);
-        toast.dismiss();
-        toast.success("Redirecting to checkout...");
-      }
-
-      console.log("✅ Subscription Response:", response);
-
-      // ✅ Backend returns { success: true, url: "...", ... }
       const paymentUrl = response.data?.url;
 
       if (paymentUrl) {
+        toast.success("Redirecting to payment...");
         window.location.href = paymentUrl;
       } else {
         throw new Error("Payment link not received");
@@ -171,46 +144,50 @@ const MySubscriptions = () => {
 
   return (
     <div className="relative px-4 sm:px-6 md:px-12 lg:px-24 xl:px-32 py-16 md:py-24 min-h-screen">
+      {/* Background Effects */}
       <BlurCircle top="100px" right="0" />
       <BlurCircle bottom="0px" left="300px" />
       <BlurCircle top="150px" left="-80px" />
       <BlurCircle bottom="50px" right="50px" />
 
+      {/* Header Section */}
       <div className="text-center mb-16 max-w-3xl mx-auto">
         <h1 className="gradient text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 uppercase tracking-tight">
-          All Subscription Plans
+          Subscription Plans
         </h1>
         <div className="w-24 h-1 bg-gradient-to-r from-red-600 via-red-500 to-red-600 mx-auto mb-6"></div>
         <p className="text-gray-400 text-base md:text-lg">
-          Choose your perfect plan or upgrade to unlock more features
+          Choose the perfect plan for unlimited entertainment
         </p>
+
+        {/* Current Plan Badge */}
         {currentUserPlan && (
           <div className="mt-6 inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/50 px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider">
             <Check className="w-4 h-4" />
-            Currently on {currentUserPlan.planName} Plan
+            Current Plan: {currentUserPlan.planName}
           </div>
         )}
       </div>
 
+      {/* Plans Grid */}
       {plans.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-gray-400 text-lg mb-4">
             No subscription plans available
           </p>
-          <p className="text-gray-500 text-sm">Please check back later</p>
         </div>
       ) : (
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {plans.map((plan) => {
-            const upgradePrice = getUpgradePrice(plan);
             const subscribed = isSubscribed(plan);
             const lowerTier = isLowerTier(plan);
 
             return (
               <div
                 key={plan._id}
-                className={`relative group ${subscribed ? "order-last" : ""}`}
+                className={`relative group ${subscribed ? "order-first" : ""}`}
               >
+                {/* Glow Effect */}
                 <div
                   className={`absolute -inset-1 rounded-3xl opacity-0 group-hover:opacity-75 blur-xl transition-all duration-500 ${
                     subscribed
@@ -219,6 +196,7 @@ const MySubscriptions = () => {
                   }`}
                 ></div>
 
+                {/* Plan Card */}
                 <div
                   className={`relative bg-gradient-to-br from-gray-900 via-gray-900 to-black rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 hover:-translate-y-1 border ${
                     subscribed
@@ -228,6 +206,7 @@ const MySubscriptions = () => {
                       : "border-gray-800 group-hover:border-red-500/50"
                   }`}
                 >
+                  {/* Popular/Subscribed Badge */}
                   {(plan.isPopular || subscribed) && (
                     <div className="absolute top-0 right-0 z-10">
                       <div
@@ -240,7 +219,7 @@ const MySubscriptions = () => {
                         {subscribed ? (
                           <>
                             <Check className="w-4 h-4" />
-                            YOUR PLAN
+                            CURRENT PLAN
                           </>
                         ) : (
                           <>
@@ -252,7 +231,9 @@ const MySubscriptions = () => {
                     </div>
                   )}
 
-                  <div className="relative p-8 flex flex-col h-[110vh]">
+                  {/* Card Content */}
+                  <div className="relative p-8 flex flex-col h-auto">
+                    {/* Plan Name */}
                     <div className="text-center mb-6 pt-4">
                       <h3
                         className={`text-3xl font-bold text-white mb-3 uppercase tracking-wide transition-colors duration-300 ${
@@ -268,6 +249,7 @@ const MySubscriptions = () => {
                       </p>
                     </div>
 
+                    {/* Price */}
                     <div
                       className={`text-center mb-6 py-6 bg-black/40 backdrop-blur-sm rounded-2xl border transition-all ${
                         subscribed
@@ -275,17 +257,6 @@ const MySubscriptions = () => {
                           : "border-gray-800 group-hover:border-gray-700"
                       }`}
                     >
-                      {currentUserPlan &&
-                        canUpgrade(plan) &&
-                        upgradePrice < plan.price && (
-                          <div className="flex items-baseline justify-center gap-1 mb-2 opacity-50">
-                            <span className="text-lg text-gray-500 font-semibold line-through">
-                              {currency}
-                              {plan.price}
-                            </span>
-                          </div>
-                        )}
-
                       <div className="flex items-baseline justify-center gap-1 mb-2">
                         <span
                           className={`text-2xl font-semibold ${
@@ -301,36 +272,20 @@ const MySubscriptions = () => {
                               : "text-white group-hover:scale-105"
                           }`}
                         >
-                          {subscribed
-                            ? plan.price
-                            : canUpgrade(plan) && upgradePrice < plan.price
-                            ? upgradePrice.toFixed(2)
-                            : plan.price}
+                          {plan.price}
                         </span>
                       </div>
-
-                      {currentUserPlan &&
-                        canUpgrade(plan) &&
-                        upgradePrice < plan.price && (
-                          <div className="flex items-center justify-center gap-1 mb-2">
-                            <TrendingUp className="w-4 h-4 text-red-400" />
-                            <span className="text-xs font-bold text-red-400 uppercase tracking-wider">
-                              Save {currency}
-                              {(plan.price - upgradePrice).toFixed(2)} on
-                              upgrade
-                            </span>
-                          </div>
-                        )}
 
                       <p
                         className={`text-sm font-medium uppercase tracking-wider ${
                           subscribed ? "text-emerald-600" : "text-gray-500"
                         }`}
                       >
-                        per {plan.duration}
+                        per {plan.duration === "Monthly" ? "month" : "year"}
                       </p>
                     </div>
 
+                    {/* Features */}
                     <div className="mb-6 flex-grow">
                       <div className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider font-bold mb-4 px-1">
                         <div
@@ -338,7 +293,7 @@ const MySubscriptions = () => {
                             subscribed ? "bg-emerald-600" : "bg-red-600"
                           }`}
                         ></div>
-                        <span>Plan Features</span>
+                        <span>Features</span>
                       </div>
                       <div className="space-y-3">
                         {plan.features?.map((feature, idx) => (
@@ -357,37 +312,42 @@ const MySubscriptions = () => {
                       </div>
                     </div>
 
+                    {/* CTA Button */}
                     <div className="mt-auto pt-6 border-t border-gray-800">
                       <button
                         disabled={subscribed || lowerTier}
                         onClick={() => handleSubscribe(plan)}
-                        className={`relative w-full py-4 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl overflow-hidden ${getButtonStyle(
-                          plan
-                        )} ${
+                        className={`relative w-full py-4 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all duration-300 transform overflow-hidden border ${
                           subscribed
-                            ? "hover:scale-100"
+                            ? "bg-emerald-600 hover:bg-emerald-700 border-emerald-500/50 cursor-default"
                             : lowerTier
-                            ? "hover:scale-100"
-                            : "hover:shadow-red-500/50 cursor-pointer"
+                            ? "bg-gray-700 hover:bg-gray-600 border-gray-600/50 cursor-not-allowed"
+                            : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 border-red-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-red-500/50 cursor-pointer"
                         }`}
                       >
                         <span className="relative z-10 flex items-center justify-center gap-2">
                           {subscribed ? (
-                            <Check className="w-4 h-4" />
+                            <>
+                              <Check className="w-4 h-4" />
+                              SUBSCRIBED
+                            </>
                           ) : lowerTier ? (
-                            <TrendingUp className="w-4 h-4 rotate-180" />
+                            <>
+                              <X className="w-4 h-4" />
+                              SUBSCRIBED
+                            </>
                           ) : (
-                            <CreditCard className="w-4 h-4" />
+                            <>
+                              <CreditCard className="w-4 h-4" />
+                              UPGRADE NOW
+                            </>
                           )}
-                          {getButtonText(plan)}
                         </span>
-                        {!subscribed && !lowerTier && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        )}
                       </button>
                     </div>
                   </div>
 
+                  {/* Bottom Glow */}
                   <div
                     className={`absolute bottom-0 left-0 w-full h-1 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ${
                       subscribed
@@ -402,10 +362,10 @@ const MySubscriptions = () => {
         </div>
       )}
 
+      {/* Footer Info */}
       <div className="text-center mt-16 max-w-2xl mx-auto">
         <p className="text-gray-400 text-sm mb-6">
-          All plans come with a 7-day free trial • Cancel anytime • No hidden
-          fees
+          All plans include 7-day free trial • Cancel anytime • No hidden fees
         </p>
         <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
           <span>✓ Instant Access</span>

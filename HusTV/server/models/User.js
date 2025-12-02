@@ -1,4 +1,6 @@
-// models/User.js
+// ============================================
+// FILE 1: server/models/User.js (UPDATED)
+// ============================================
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
@@ -28,7 +30,7 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    // Subscription Info
+    // Subscription Info - UPDATED
     currentSubscription: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Subscription",
@@ -89,7 +91,7 @@ const userSchema = new mongoose.Schema(
     // Favorites (array of video IDs)
     favorites: [
       {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: "Video",
       },
     ],
@@ -249,7 +251,7 @@ userSchema.statics.updateExpiredSubscriptions = async function () {
 
     // Update user subscription status
     await this.updateOne(
-      { _id: sub.user },
+      { clerkId: sub.user },
       {
         subscriptionStatus: "expired",
         currentSubscription: null,

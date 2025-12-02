@@ -1,70 +1,82 @@
-// client/src/services/subscriptionService.js
+// ============================================
+// FILE 1: client/src/services/subscriptionService.js
+// ============================================
 import api from "../lib/axios";
 
+/**
+ * Subscription Service
+ * Handles all subscription-related API calls
+ */
 export const subscriptionService = {
-  // Get all plans
+  /**
+   * Get all subscription plans
+   * @returns {Promise} Plans array
+   */
   getAllPlans: async () => {
-    return api.get("/subscriptions/plans");
+    try {
+      const response = await api.get("/subscriptions/plans");
+      return response;
+    } catch (error) {
+      console.error("❌ Failed to fetch plans:", error);
+      throw error;
+    }
   },
 
-  // Get single plan
-  getPlanById: async (planId) => {
-    return api.get(`/subscriptions/plans/${planId}`);
-  },
-
-  // Get user's subscriptions
-  getUserSubscriptions: async () => {
-    return api.get("/subscriptions/my-subscriptions");
-  },
-
-  // Get current subscription
+  /**
+   * Get current active subscription
+   * @returns {Promise} Current subscription or null
+   */
   getCurrentSubscription: async () => {
-    return api.get("/subscriptions/current");
+    try {
+      const response = await api.get("/subscriptions/current");
+      return response;
+    } catch (error) {
+      console.error("❌ Failed to fetch current subscription:", error);
+      throw error;
+    }
   },
 
-  // Check subscription status
-  checkSubscriptionStatus: async () => {
-    return api.get("/subscriptions/status");
+  /**
+   * Get subscription history
+   * @returns {Promise} Array of past subscriptions
+   */
+  getSubscriptionHistory: async () => {
+    try {
+      const response = await api.get("/subscriptions/history");
+      return response;
+    } catch (error) {
+      console.error("❌ Failed to fetch subscription history:", error);
+      throw error;
+    }
   },
 
-  // Create subscription (purchase)
+  /**
+   * Create new subscription (initiate payment)
+   * @param {string} planId - Plan ID to subscribe to
+   * @returns {Promise} Checkout session URL
+   */
   createSubscription: async (planId) => {
-    return api.post("/subscriptions/create", { planId });
+    try {
+      const response = await api.post("/subscriptions/create", { planId });
+      return response;
+    } catch (error) {
+      console.error("❌ Failed to create subscription:", error);
+      throw error;
+    }
   },
 
-  // Cancel subscription
-  cancelSubscription: async (subscriptionId) => {
-    return api.delete(`/subscriptions/${subscriptionId}/cancel`);
-  },
-
-  // Get upgrade options
-  getUpgradeOptions: async () => {
-    return api.get("/subscriptions/upgrade-options");
-  },
-
-  // Check if can upgrade
-  canUpgrade: async () => {
-    return api.get("/subscriptions/can-upgrade");
-  },
-
-  // Upgrade subscription
-  upgradeSubscription: async (newPlanId) => {
-    return api.post("/subscriptions/upgrade", { newPlanId });
-  },
-
-  // ADMIN: Create/Update plan
-  createOrUpdatePlan: async (planId, data) => {
-    return api.post(`/subscriptions/plans/${planId}`, data);
-  },
-
-  // ADMIN: Delete plan
-  deletePlan: async (planId) => {
-    return api.delete(`/subscriptions/plans/${planId}`);
-  },
-
-  // ADMIN: Toggle plan status
-  togglePlanStatus: async (planId) => {
-    return api.patch(`/subscriptions/plans/${planId}/toggle`);
+  /**
+   * Cancel current subscription
+   * @returns {Promise} Cancellation result
+   */
+  cancelSubscription: async () => {
+    try {
+      const response = await api.post("/subscriptions/cancel");
+      return response;
+    } catch (error) {
+      console.error("❌ Failed to cancel subscription:", error);
+      throw error;
+    }
   },
 };
 

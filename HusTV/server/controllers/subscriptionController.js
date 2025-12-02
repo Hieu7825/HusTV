@@ -1,68 +1,106 @@
-// controllers/subscriptionController.js
+// server/controllers/subscriptionController.js
 import SubscriptionPlan from "../models/SubscriptionPlan.js";
 import Subscription from "../models/Subscription.js";
 import User from "../models/User.js";
-import {
-  createCheckoutSession,
-  calculateUpgradePrice,
-} from "../utils/index.js";
+import { createCheckoutSession } from "../utils/stripe.js";
 import { clerkClient } from "@clerk/express";
-import { inngest } from "../inngest/index.js";
 
-// API to get all subscription plans
+/**
+ * Get all subscription plans
+ * GET /api/subscriptions/plans
+ * Public route
+ */
 export const getAllPlans = async (req, res) => {
   try {
+    // Get all active plans, sorted by tier rank
     const plans = await SubscriptionPlan.find({ isActive: true }).sort({
       tierRank: 1,
     });
 
-    res.json({ success: true, plans });
+    res.json({
+      success: true,
+      plans,
+      count: plans.length,
+    });
   } catch (error) {
-    console.error("Error fetching plans:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("❌ Error fetching subscription plans:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch subscription plans",
+      error: error.message,
+    });
   }
 };
 
-// API to get single plan by ID
-export const getPlanById = async (req, res) => {
-  try {
-    const { planId } = req.params;
-
-    const plan = await SubscriptionPlan.findById(planId);
-
-    if (!plan) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Plan not found" });
-    }
-
-    res.json({ success: true, plan });
-  } catch (error) {
-    console.error("Error fetching plan:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// API to create subscription (Stripe checkout)
+/**
+ * Create subscription (initiate payment)
+ * POST /api/subscriptions/create
+ * Protected route
+ */
 export const createSubscription = async (req, res) => {
   try {
     const { userId } = req.auth;
     const { planId } = req.body;
 
-    // Get user and plan
-    const user = await User.findByClerkId(userId);
+    // Validate plan ID
+    if (!planId) {
+      return res.status(400).json({
+        success: false,
+        message: "Plan ID is required",
+      });
+    }
+
+    // Get plan details
     const plan = await SubscriptionPlan.findById(planId);
 
     if (!plan) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Plan not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Subscription plan not found",
+      });
     }
 
     if (!plan.isActive) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Plan is not active" });
+      return res.status(400).json({
+        success: false,
+        message: "This subscription plan is no longer available",
+      });
+    }
+
+    // Get user from database
+    let user = await User.findByClerkId(userId);
+
+    // Check if user already has an active subscription
+    if (user && user.subscriptionStatus === "active") {
+      const currentSub = await Subscription.findById(
+        user.currentSubscription
+      ).populate("plan");
+
+      if (currentSub && currentSub.isPaid && currentSub.isValid()) {
+        const currentPlan = currentSub.plan;
+
+        // Check if trying to buy the same plan
+        if (currentPlan._id === planId) {
+          return res.status(400).json({
+            success: false,
+            message: "You already have this subscription plan",
+          });
+        }
+
+        // Check if trying to downgrade (not allowed)
+        if (plan.tierRank < currentPlan.tierRank) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Downgrade is not allowed. You already have a higher tier plan.",
+          });
+        }
+
+        // If upgrade, we'll handle it below
+        console.log(
+          `🔄 User upgrading from ${currentPlan.planName} to ${plan.planName}`
+        );
+      }
     }
 
     // Get user info from Clerk
@@ -77,6 +115,13 @@ export const createSubscription = async (req, res) => {
       "User";
     const userEmail = clerkUser.emailAddresses[0]?.emailAddress || "";
 
+    if (!userEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "User email is required",
+      });
+    }
+
     // Calculate expiry date based on plan duration
     const purchaseDate = new Date();
     const expiryDate = new Date(purchaseDate);
@@ -84,8 +129,16 @@ export const createSubscription = async (req, res) => {
     if (plan.duration === "Yearly") {
       expiryDate.setFullYear(expiryDate.getFullYear() + 1);
     } else {
+      // Monthly
       expiryDate.setMonth(expiryDate.getMonth() + 1);
     }
+
+    // Determine if this is an upgrade
+    const isUpgrade =
+      user && user.subscriptionStatus === "active" && user.currentSubscription;
+    const oldSubscriptionId = isUpgrade
+      ? user.currentSubscription.toString()
+      : null;
 
     // Create subscription document
     const subscription = await Subscription.create({
@@ -97,10 +150,12 @@ export const createSubscription = async (req, res) => {
       expiryDate,
       amount: plan.price,
       status: "Active",
-      isPaid: false,
+      isPaid: false, // Will be set to true after payment
     });
 
-    // Create Stripe checkout session using utility
+    console.log(`📝 Created subscription document: ${subscription._id}`);
+
+    // Create Stripe checkout session using utility function
     const checkoutSession = await createCheckoutSession({
       subscriptionId: subscription._id.toString(),
       planName: plan.planName,
@@ -108,95 +163,176 @@ export const createSubscription = async (req, res) => {
       userEmail,
       userName,
       userId,
-      isUpgrade: false,
-      oldSubscriptionId: null,
+      planId,
+      isUpgrade,
+      oldSubscriptionId,
+      bookingId: null, // This is subscription, not booking
     });
 
-    // Save payment link
+    // Save payment link to subscription
     subscription.paymentLink = checkoutSession.url;
     await subscription.save();
 
+    console.log(
+      `✅ Stripe checkout session created: ${checkoutSession.sessionId}`
+    );
+
     res.json({
       success: true,
-      message: "Checkout session created",
+      message: "Checkout session created successfully",
       url: checkoutSession.url,
+      sessionId: checkoutSession.sessionId,
       subscriptionId: subscription._id,
+      isUpgrade,
     });
   } catch (error) {
-    console.error("Error creating subscription:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("❌ Error creating subscription:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create subscription",
+      error: error.message,
+    });
   }
 };
 
-// API to get user's subscriptions
-export const getUserSubscriptions = async (req, res) => {
-  try {
-    const { userId } = req.auth;
-
-    const subscriptions = await Subscription.find({ user: userId })
-      .populate("plan")
-      .sort({ createdAt: -1 });
-
-    res.json({ success: true, subscriptions });
-  } catch (error) {
-    console.error("Error fetching user subscriptions:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// API to get current active subscription
+/**
+ * Get current active subscription
+ * GET /api/subscriptions/current
+ * Protected route
+ */
 export const getCurrentSubscription = async (req, res) => {
   try {
     const { userId } = req.auth;
 
+    // Get user with current subscription
     const user = await User.findByClerkId(userId).populate({
       path: "currentSubscription",
       populate: { path: "plan" },
     });
 
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if user has a subscription
     if (!user.currentSubscription) {
       return res.json({
         success: true,
         subscription: null,
-        message: "No active subscription",
+        message: "No active subscription found",
+      });
+    }
+
+    const subscription = user.currentSubscription;
+
+    // Verify subscription is paid and valid
+    if (!subscription.isPaid || subscription.status !== "Active") {
+      return res.json({
+        success: true,
+        subscription: null,
+        message: "No active subscription found",
+      });
+    }
+
+    // Check if expired
+    if (subscription.isExpired()) {
+      // Update status if expired
+      subscription.status = "Expired";
+      await subscription.save();
+
+      user.subscriptionStatus = "expired";
+      user.currentSubscription = null;
+      user.subscriptionTier = null;
+      await user.save();
+
+      return res.json({
+        success: true,
+        subscription: null,
+        message: "Subscription has expired",
       });
     }
 
     res.json({
       success: true,
-      subscription: user.currentSubscription,
+      subscription: {
+        _id: subscription._id,
+        plan: subscription.plan,
+        purchaseDate: subscription.purchaseDate,
+        expiryDate: subscription.expiryDate,
+        amount: subscription.amount,
+        status: subscription.status,
+        daysRemaining: subscription.daysRemaining,
+        isPaid: subscription.isPaid,
+      },
     });
   } catch (error) {
-    console.error("Error fetching current subscription:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("❌ Error fetching current subscription:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch current subscription",
+      error: error.message,
+    });
   }
 };
 
-// API to cancel subscription
+/**
+ * Get subscription history
+ * GET /api/subscriptions/history
+ * Protected route
+ */
+export const getSubscriptionHistory = async (req, res) => {
+  try {
+    const { userId } = req.auth;
+
+    // Get all subscriptions for this user
+    const subscriptions = await Subscription.find({ user: userId })
+      .populate("plan")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      subscriptions,
+      count: subscriptions.length,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching subscription history:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch subscription history",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Cancel subscription (for future use)
+ * POST /api/subscriptions/cancel
+ * Protected route
+ */
 export const cancelSubscription = async (req, res) => {
   try {
     const { userId } = req.auth;
-    const { id } = req.params;
 
-    const subscription = await Subscription.findById(id);
+    // Get user with current subscription
+    const user = await User.findByClerkId(userId);
 
-    if (!subscription) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Subscription not found" });
-    }
-
-    if (subscription.user !== userId) {
-      return res.status(403).json({
+    if (!user || !user.currentSubscription) {
+      return res.status(404).json({
         success: false,
-        message: "Not authorized to cancel this subscription",
+        message: "No active subscription found",
       });
     }
 
-    if (subscription.status !== "Active") {
-      return res.status(400).json({
+    // Get subscription
+    const subscription = await Subscription.findById(user.currentSubscription);
+
+    if (!subscription || !subscription.isPaid) {
+      return res.status(404).json({
         success: false,
-        message: "Subscription is not active",
+        message: "No active subscription found",
       });
     }
 
@@ -205,356 +341,31 @@ export const cancelSubscription = async (req, res) => {
     await subscription.save();
 
     // Update user subscription status
-    const user = await User.findByClerkId(userId);
-    if (user.currentSubscription?.toString() === id) {
-      user.subscriptionStatus = "cancelled";
-      user.currentSubscription = null;
-      user.subscriptionTier = null;
-      await user.save();
-    }
+    user.subscriptionStatus = "cancelled";
+    user.currentSubscription = null;
+    user.subscriptionTier = null;
+    await user.save();
+
+    console.log(`❌ Subscription cancelled for user: ${userId}`);
 
     res.json({
       success: true,
       message: "Subscription cancelled successfully",
     });
   } catch (error) {
-    console.error("Error cancelling subscription:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("❌ Error cancelling subscription:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to cancel subscription",
+      error: error.message,
+    });
   }
 };
 
-// API to check subscription status
-export const checkSubscriptionStatus = async (req, res) => {
-  try {
-    const { userId } = req.auth;
-
-    const user = await User.findByClerkId(userId);
-
-    res.json({
-      success: true,
-      hasActiveSubscription: user.subscriptionStatus === "active",
-      status: user.subscriptionStatus,
-      tier: user.subscriptionTier,
-    });
-  } catch (error) {
-    console.error("Error checking subscription status:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// API to upgrade subscription
-export const upgradeSubscription = async (req, res) => {
-  try {
-    const { userId } = req.auth;
-    const { newPlanId } = req.body;
-
-    // Get user's current subscription
-    const user = await User.findByClerkId(userId).populate({
-      path: "currentSubscription",
-      populate: { path: "plan" },
-    });
-
-    if (!user.currentSubscription || user.subscriptionStatus !== "active") {
-      return res.status(400).json({
-        success: false,
-        message: "No active subscription to upgrade",
-      });
-    }
-
-    const currentSubscription = user.currentSubscription;
-    const currentPlan = currentSubscription.plan;
-
-    // Get new plan
-    const newPlan = await SubscriptionPlan.findById(newPlanId);
-
-    if (!newPlan) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Plan not found" });
-    }
-
-    if (!newPlan.isActive) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Plan is not active" });
-    }
-
-    // Check if new plan rank is higher
-    if (newPlan.tierRank <= currentPlan.tierRank) {
-      return res.status(400).json({
-        success: false,
-        message: "Can only upgrade to higher tier plans",
-      });
-    }
-
-    // Calculate upgrade price using utility function
-    const upgradePrice = calculateUpgradePrice(
-      currentPlan.price,
-      newPlan.price
-    );
-
-    if (upgradePrice === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No upgrade cost required",
-      });
-    }
-
-    // Get user info from Clerk
-    const clerkUser = await clerkClient.users.getUser(userId);
-    const fullName = `${clerkUser.firstName || ""} ${
-      clerkUser.lastName || ""
-    }`.trim();
-    const userName =
-      fullName ||
-      clerkUser.username ||
-      clerkUser.emailAddresses[0]?.emailAddress.split("@")[0] ||
-      "User";
-    const userEmail = clerkUser.emailAddresses[0]?.emailAddress || "";
-
-    // Keep the same expiry date from current subscription
-    const expiryDate = currentSubscription.expiryDate;
-
-    // Create new subscription document for upgrade
-    const newSubscription = await Subscription.create({
-      user: userId,
-      userName,
-      userEmail,
-      plan: newPlanId,
-      purchaseDate: new Date(),
-      expiryDate,
-      amount: upgradePrice, // Only charge the difference
-      status: "Active",
-      isPaid: false,
-    });
-
-    // Create Stripe checkout session using utility
-    const checkoutSession = await createCheckoutSession({
-      subscriptionId: newSubscription._id.toString(),
-      planName: newPlan.planName,
-      price: upgradePrice,
-      userEmail,
-      userName,
-      userId,
-      isUpgrade: true,
-      oldSubscriptionId: currentSubscription._id.toString(),
-    });
-
-    // Save payment link
-    newSubscription.paymentLink = checkoutSession.url;
-    await newSubscription.save();
-
-    res.json({
-      success: true,
-      message: "Upgrade checkout session created",
-      url: checkoutSession.url,
-      upgradeInfo: {
-        currentPlan: currentPlan.planName,
-        newPlan: newPlan.planName,
-        currentPrice: currentPlan.price,
-        newPrice: newPlan.price,
-        upgradePrice,
-        expiryDate,
-      },
-    });
-  } catch (error) {
-    console.error("Error upgrading subscription:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// API to get upgrade options (available higher tier plans)
-export const getUpgradeOptions = async (req, res) => {
-  try {
-    const { userId } = req.auth;
-
-    // Get user's current subscription
-    const user = await User.findByClerkId(userId).populate({
-      path: "currentSubscription",
-      populate: { path: "plan" },
-    });
-
-    if (!user.currentSubscription || user.subscriptionStatus !== "active") {
-      return res.json({
-        success: false,
-        message: "No active subscription",
-        upgradeOptions: [],
-      });
-    }
-
-    const currentPlan = user.currentSubscription.plan;
-
-    // Find higher tier plans
-    const upgradeOptions = await SubscriptionPlan.find({
-      isActive: true,
-      tierRank: { $gt: currentPlan.tierRank },
-    }).sort({ tierRank: 1 });
-
-    // Calculate upgrade price for each option using utility function
-    const optionsWithPrice = upgradeOptions.map((plan) => ({
-      ...plan.toObject(),
-      upgradePrice: calculateUpgradePrice(currentPlan.price, plan.price),
-      currentPlan: {
-        _id: currentPlan._id,
-        planName: currentPlan.planName,
-        price: currentPlan.price,
-        tierRank: currentPlan.tierRank,
-      },
-    }));
-
-    res.json({
-      success: true,
-      currentPlan: {
-        _id: currentPlan._id,
-        planName: currentPlan.planName,
-        price: currentPlan.price,
-        tierRank: currentPlan.tierRank,
-      },
-      upgradeOptions: optionsWithPrice,
-    });
-  } catch (error) {
-    console.error("Error fetching upgrade options:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// API to check if user can upgrade
-export const canUpgrade = async (req, res) => {
-  try {
-    const { userId } = req.auth;
-
-    const user = await User.findByClerkId(userId).populate({
-      path: "currentSubscription",
-      populate: { path: "plan" },
-    });
-
-    if (!user.currentSubscription || user.subscriptionStatus !== "active") {
-      return res.json({
-        success: true,
-        canUpgrade: false,
-        message: "No active subscription",
-      });
-    }
-
-    const currentPlan = user.currentSubscription.plan;
-
-    // Check if there are higher tier plans available
-    const higherPlans = await SubscriptionPlan.countDocuments({
-      isActive: true,
-      tierRank: { $gt: currentPlan.tierRank },
-    });
-
-    res.json({
-      success: true,
-      canUpgrade: higherPlans > 0,
-      currentTier: currentPlan.tierRank,
-      currentPlanName: currentPlan.planName,
-    });
-  } catch (error) {
-    console.error("Error checking upgrade eligibility:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// API to create/update plan (admin only)
-export const createOrUpdatePlan = async (req, res) => {
-  try {
-    const { planId } = req.params;
-    const planData = req.body;
-
-    if (planId && planId !== "new") {
-      // Update existing plan
-      const plan = await SubscriptionPlan.findByIdAndUpdate(planId, planData, {
-        new: true,
-        runValidators: true,
-      });
-
-      if (!plan) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Plan not found" });
-      }
-
-      res.json({
-        success: true,
-        message: "Plan updated successfully",
-        plan,
-      });
-    } else {
-      // Create new plan
-      const plan = await SubscriptionPlan.create(planData);
-
-      res.json({
-        success: true,
-        message: "Plan created successfully",
-        plan,
-      });
-    }
-  } catch (error) {
-    console.error("Error creating/updating plan:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// API to delete plan (admin only)
-export const deletePlan = async (req, res) => {
-  try {
-    const { planId } = req.params;
-
-    // Check if any active subscriptions exist for this plan
-    const activeSubscriptions = await Subscription.countDocuments({
-      plan: planId,
-      status: "Active",
-    });
-
-    if (activeSubscriptions > 0) {
-      return res.status(400).json({
-        success: false,
-        message: `Cannot delete plan with ${activeSubscriptions} active subscriptions`,
-      });
-    }
-
-    const plan = await SubscriptionPlan.findByIdAndDelete(planId);
-
-    if (!plan) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Plan not found" });
-    }
-
-    res.json({
-      success: true,
-      message: "Plan deleted successfully",
-    });
-  } catch (error) {
-    console.error("Error deleting plan:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// API to toggle plan active status (admin only)
-export const togglePlanStatus = async (req, res) => {
-  try {
-    const { planId } = req.params;
-
-    const plan = await SubscriptionPlan.findById(planId);
-
-    if (!plan) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Plan not found" });
-    }
-
-    plan.isActive = !plan.isActive;
-    await plan.save();
-
-    res.json({
-      success: true,
-      message: `Plan ${plan.isActive ? "activated" : "deactivated"}`,
-      isActive: plan.isActive,
-    });
-  } catch (error) {
-    console.error("Error toggling plan status:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
+export default {
+  getAllPlans,
+  createSubscription,
+  getCurrentSubscription,
+  getSubscriptionHistory,
+  cancelSubscription,
 };

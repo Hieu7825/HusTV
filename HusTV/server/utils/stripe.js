@@ -1,15 +1,16 @@
-// utils/stripe.js
+// server/utils/stripe.js
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 /**
- * Create Stripe checkout session for new subscription
+ * Create Stripe checkout session for subscription or booking
  * @param {Object} params - Checkout parameters
  * @returns {Promise<Object>} Checkout session
  */
 export const createCheckoutSession = async ({
-  subscriptionId,
+  subscriptionId = null,
+  bookingId = null,
   planName,
   price,
   userEmail,
@@ -17,8 +18,63 @@ export const createCheckoutSession = async ({
   userId,
   isUpgrade = false,
   oldSubscriptionId = null,
+  planId = null,
 }) => {
   try {
+    // Determine product name and description
+    let productName = planName;
+    let description = "";
+
+    if (bookingId) {
+      // For booking: planName = movie title
+      productName = planName;
+      description = `Movie Booking - ${planName}`;
+    } else if (subscriptionId) {
+      // For subscription
+      if (isUpgrade) {
+        productName = `Upgrade to ${planName}`;
+        description = `Upgrade your subscription to ${planName}`;
+      } else {
+        productName = planName;
+        description = `${planName} Subscription`;
+      }
+    }
+
+    // Build metadata based on type
+    const metadata = {};
+
+    if (bookingId) {
+      // Booking metadata
+      metadata.bookingId = bookingId;
+      metadata.userName = userName;
+      metadata.userEmail = userEmail;
+    } else if (subscriptionId) {
+      // Subscription metadata
+      metadata.subscriptionId = subscriptionId;
+      metadata.userId = userId;
+      metadata.userName = userName;
+      metadata.planName = planName;
+      metadata.isUpgrade = isUpgrade.toString();
+
+      if (planId) {
+        metadata.planId = planId;
+      }
+
+      if (oldSubscriptionId) {
+        metadata.oldSubscriptionId = oldSubscriptionId;
+      }
+    }
+
+    // Determine success and cancel URLs
+    const successUrl = bookingId
+      ? `${process.env.WEBSITE_URL}/loading/my-bookings?session_id={CHECKOUT_SESSION_ID}`
+      : `${process.env.WEBSITE_URL}/my-subscriptions?session_id={CHECKOUT_SESSION_ID}`;
+
+    const cancelUrl = bookingId
+      ? `${process.env.WEBSITE_URL}/my-bookings?cancelled=true`
+      : `${process.env.WEBSITE_URL}/my-subscriptions?cancelled=true`;
+
+    // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -28,27 +84,18 @@ export const createCheckoutSession = async ({
           price_data: {
             currency: "usd",
             product_data: {
-              name: isUpgrade ? `Upgrade to ${planName}` : planName,
-              description: isUpgrade
-                ? `Upgrade your subscription to ${planName}`
-                : `${planName} Subscription`,
+              name: productName,
+              description,
             },
             unit_amount: Math.round(price * 100), // Convert to cents
           },
           quantity: 1,
         },
       ],
-      metadata: {
-        subscriptionId,
-        userId,
-        userName,
-        planName,
-        isUpgrade: isUpgrade.toString(),
-        ...(oldSubscriptionId && { oldSubscriptionId }),
-      },
-      success_url: `${process.env.WEBSITE_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.WEBSITE_URL}/subscription/cancel`,
-      expires_at: Math.floor(Date.now() / 1000) + 1800, // 30 minutes
+      metadata,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      expires_at: Math.floor(Date.now() / 1000) + 1800, // Expires in 30 minutes
     });
 
     return {
@@ -57,58 +104,32 @@ export const createCheckoutSession = async ({
       url: session.url,
     };
   } catch (error) {
-    console.error("Stripe checkout session error:", error);
+    console.error("❌ Stripe checkout session error:", error);
     throw new Error(`Failed to create checkout session: ${error.message}`);
   }
 };
 
 /**
- * Create recurring subscription (for future use)
- * @param {Object} params - Subscription parameters
- * @returns {Promise<Object>} Subscription result
+ * Retrieve checkout session details
+ * @param {string} sessionId - Checkout session ID
+ * @returns {Promise<Object>} Session details
  */
-export const createRecurringSubscription = async ({
-  customerId,
-  priceId,
-  metadata,
-}) => {
+export const getCheckoutSession = async (sessionId) => {
   try {
-    const subscription = await stripe.subscriptions.create({
-      customer: customerId,
-      items: [{ price: priceId }],
-      metadata,
-      payment_behavior: "default_incomplete",
-      expand: ["latest_invoice.payment_intent"],
-    });
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     return {
       success: true,
-      subscriptionId: subscription.id,
-      clientSecret: subscription.latest_invoice.payment_intent.client_secret,
+      id: session.id,
+      paymentStatus: session.payment_status,
+      paymentIntentId: session.payment_intent,
+      customerEmail: session.customer_email,
+      amountTotal: session.amount_total / 100, // Convert from cents
+      metadata: session.metadata,
     };
   } catch (error) {
-    console.error("Stripe subscription error:", error);
-    throw new Error(`Failed to create subscription: ${error.message}`);
-  }
-};
-
-/**
- * Cancel Stripe subscription
- * @param {string} subscriptionId - Stripe subscription ID
- * @returns {Promise<Object>} Cancellation result
- */
-export const cancelStripeSubscription = async (subscriptionId) => {
-  try {
-    const subscription = await stripe.subscriptions.cancel(subscriptionId);
-
-    return {
-      success: true,
-      status: subscription.status,
-      canceledAt: subscription.canceled_at,
-    };
-  } catch (error) {
-    console.error("Stripe cancellation error:", error);
-    throw new Error(`Failed to cancel subscription: ${error.message}`);
+    console.error("❌ Get checkout session error:", error);
+    throw new Error(`Failed to retrieve session: ${error.message}`);
   }
 };
 
@@ -129,96 +150,17 @@ export const getPaymentIntent = async (paymentIntentId) => {
       status: paymentIntent.status,
       metadata: paymentIntent.metadata,
       created: paymentIntent.created,
+      paymentMethodTypes: paymentIntent.payment_method_types,
     };
   } catch (error) {
-    console.error("Get payment intent error:", error);
+    console.error("❌ Get payment intent error:", error);
     throw new Error(`Failed to retrieve payment intent: ${error.message}`);
   }
 };
 
 /**
- * Retrieve checkout session details
- * @param {string} sessionId - Checkout session ID
- * @returns {Promise<Object>} Session details
- */
-export const getCheckoutSession = async (sessionId) => {
-  try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-    return {
-      success: true,
-      id: session.id,
-      paymentStatus: session.payment_status,
-      paymentIntentId: session.payment_intent,
-      customerEmail: session.customer_email,
-      amountTotal: session.amount_total / 100,
-      metadata: session.metadata,
-    };
-  } catch (error) {
-    console.error("Get checkout session error:", error);
-    throw new Error(`Failed to retrieve session: ${error.message}`);
-  }
-};
-
-/**
- * Create Stripe customer
- * @param {Object} params - Customer parameters
- * @returns {Promise<Object>} Customer details
- */
-export const createCustomer = async ({ email, name, userId }) => {
-  try {
-    const customer = await stripe.customers.create({
-      email,
-      name,
-      metadata: {
-        userId,
-      },
-    });
-
-    return {
-      success: true,
-      customerId: customer.id,
-      email: customer.email,
-    };
-  } catch (error) {
-    console.error("Create customer error:", error);
-    throw new Error(`Failed to create customer: ${error.message}`);
-  }
-};
-
-/**
- * Create refund
- * @param {string} paymentIntentId - Payment intent ID
- * @param {number} amount - Refund amount (optional, full refund if not provided)
- * @returns {Promise<Object>} Refund details
- */
-export const createRefund = async (paymentIntentId, amount = null) => {
-  try {
-    const refundParams = {
-      payment_intent: paymentIntentId,
-    };
-
-    if (amount) {
-      refundParams.amount = Math.round(amount * 100); // Convert to cents
-    }
-
-    const refund = await stripe.refunds.create(refundParams);
-
-    return {
-      success: true,
-      refundId: refund.id,
-      amount: refund.amount / 100,
-      status: refund.status,
-    };
-  } catch (error) {
-    console.error("Refund error:", error);
-    throw new Error(`Failed to create refund: ${error.message}`);
-  }
-};
-
-/**
  * Construct webhook event (for webhook verification)
- * @param {string} payload - Request body
+ * @param {string} payload - Request body (raw)
  * @param {string} signature - Stripe signature header
  * @returns {Object} Verified event
  */
@@ -231,7 +173,7 @@ export const constructWebhookEvent = (payload, signature) => {
     );
     return event;
   } catch (error) {
-    console.error("Webhook verification error:", error);
+    console.error("❌ Webhook verification error:", error);
     throw new Error(`Webhook verification failed: ${error.message}`);
   }
 };
@@ -250,7 +192,7 @@ export const calculateUpgradePrice = (currentPrice, newPrice) => {
 /**
  * Format price for display
  * @param {number} price - Price in dollars
- * @param {string} currency - Currency code
+ * @param {string} currency - Currency code (default: USD)
  * @returns {string} Formatted price
  */
 export const formatPrice = (price, currency = "USD") => {
@@ -279,16 +221,95 @@ export const validateWebhookSignature = (payload, signature) => {
   }
 };
 
+/**
+ * Create Stripe customer (optional for future recurring subscriptions)
+ * @param {Object} params - Customer parameters
+ * @returns {Promise<Object>} Customer details
+ */
+export const createCustomer = async ({ email, name, userId }) => {
+  try {
+    const customer = await stripe.customers.create({
+      email,
+      name,
+      metadata: {
+        userId,
+      },
+    });
+
+    return {
+      success: true,
+      customerId: customer.id,
+      email: customer.email,
+    };
+  } catch (error) {
+    console.error("❌ Create customer error:", error);
+    throw new Error(`Failed to create customer: ${error.message}`);
+  }
+};
+
+/**
+ * Create refund (for cancellations)
+ * @param {string} paymentIntentId - Payment intent ID
+ * @param {number} amount - Refund amount (optional, full refund if not provided)
+ * @returns {Promise<Object>} Refund details
+ */
+export const createRefund = async (paymentIntentId, amount = null) => {
+  try {
+    const refundParams = {
+      payment_intent: paymentIntentId,
+    };
+
+    if (amount) {
+      refundParams.amount = Math.round(amount * 100); // Convert to cents
+    }
+
+    const refund = await stripe.refunds.create(refundParams);
+
+    return {
+      success: true,
+      refundId: refund.id,
+      amount: refund.amount / 100,
+      status: refund.status,
+      created: refund.created,
+    };
+  } catch (error) {
+    console.error("❌ Refund error:", error);
+    throw new Error(`Failed to create refund: ${error.message}`);
+  }
+};
+
+/**
+ * List checkout sessions by payment intent
+ * @param {string} paymentIntentId - Payment intent ID
+ * @returns {Promise<Object>} Session list
+ */
+export const listCheckoutSessions = async (paymentIntentId) => {
+  try {
+    const sessions = await stripe.checkout.sessions.list({
+      payment_intent: paymentIntentId,
+      limit: 1,
+    });
+
+    return {
+      success: true,
+      sessions: sessions.data,
+    };
+  } catch (error) {
+    console.error("❌ List sessions error:", error);
+    throw new Error(`Failed to list sessions: ${error.message}`);
+  }
+};
+
+// Export all functions
 export default {
   createCheckoutSession,
-  createRecurringSubscription,
-  cancelStripeSubscription,
-  getPaymentIntent,
   getCheckoutSession,
-  createCustomer,
-  createRefund,
+  getPaymentIntent,
   constructWebhookEvent,
   calculateUpgradePrice,
   formatPrice,
   validateWebhookSignature,
+  createCustomer,
+  createRefund,
+  listCheckoutSessions,
 };

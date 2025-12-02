@@ -1,4 +1,5 @@
 // controllers/userController.js
+import mongoose from "mongoose";
 import User from "../models/User.js";
 import Video from "../models/Video.js";
 import WatchHistory from "../models/WatchHistory.js";
@@ -33,12 +34,23 @@ export const toggleFavorite = async (req, res) => {
     const { userId } = req.auth;
     const { videoId } = req.body;
 
+    console.log("🎬 toggleFavorite - videoId:", videoId);
+
+    if (!videoId) {
+      return res.status(400).json({
+        success: false,
+        message: "Video ID is required",
+      });
+    }
+
     // Check if video exists
-    const video = await Video.findById(videoId);
+    const video = await Video.findOne({ _id: videoId });
+
     if (!video) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Video not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Video not found",
+      });
     }
 
     const user = await User.findByClerkId(userId);
@@ -48,7 +60,7 @@ export const toggleFavorite = async (req, res) => {
 
     if (isFavorite) {
       // Remove from favorites
-      user.favorites = user.favorites.filter((id) => id.toString() !== videoId);
+      user.favorites = user.favorites.filter((id) => id !== videoId);
       await user.save();
 
       res.json({
@@ -72,7 +84,6 @@ export const toggleFavorite = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 // API to get user favorites
 export const getFavorites = async (req, res) => {
   try {
@@ -338,7 +349,9 @@ export const updateDevice = async (req, res) => {
       });
     }
 
-    const user = await User.findByClerkId(userId).populate("currentSubscription");
+    const user = await User.findByClerkId(userId).populate(
+      "currentSubscription"
+    );
 
     // Check device limit
     const maxDevices = user.currentSubscription?.plan?.connectedDevices || 1;

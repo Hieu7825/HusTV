@@ -17,12 +17,21 @@ export const userService = {
     return api.get("/users/favorites");
   },
 
+  // ✅ FIX: Nhận videoId string, extract _id nếu là object
   toggleFavorite: async (videoId) => {
-    return api.post("/users/favorites", { videoId });
+    // Handle both string và object với _id property
+    const id = typeof videoId === "string" ? videoId : videoId?._id;
+
+    if (!id) {
+      throw new Error("Invalid videoId: must be string or object with _id");
+    }
+
+    return api.post("/users/favorites", { videoId: id });
   },
 
   checkFavorite: async (videoId) => {
-    return api.get(`/users/favorites/${videoId}`);
+    const id = typeof videoId === "string" ? videoId : videoId?._id;
+    return api.get(`/users/favorites/${id}`);
   },
 
   // WATCH HISTORY
@@ -32,15 +41,18 @@ export const userService = {
   },
 
   updateWatchProgress: async (videoId, data) => {
-    return api.post(`/users/watch-progress/${videoId}`, data);
+    const id = typeof videoId === "string" ? videoId : videoId?._id;
+    return api.post(`/users/watch-progress/${id}`, data);
   },
 
   getWatchProgress: async (videoId) => {
-    return api.get(`/users/watch-progress/${videoId}`);
+    const id = typeof videoId === "string" ? videoId : videoId?._id;
+    return api.get(`/users/watch-progress/${id}`);
   },
 
   deleteWatchHistory: async (videoId) => {
-    return api.delete(`/users/watch-history/${videoId}`);
+    const id = typeof videoId === "string" ? videoId : videoId?._id;
+    return api.delete(`/users/watch-history/${id}`);
   },
 
   clearWatchHistory: async () => {

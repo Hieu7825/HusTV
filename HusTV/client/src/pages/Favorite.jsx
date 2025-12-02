@@ -26,33 +26,8 @@ const Favorite = () => {
 
         console.log("📥 Favorites response:", response);
 
-        // ✅ Parse response - Handle different formats
-        let moviesData = [];
-
-        if (Array.isArray(response)) {
-          moviesData = response;
-        } else if (response.data) {
-          if (Array.isArray(response.data)) {
-            moviesData = response.data;
-          } else if (
-            response.data.favorites &&
-            Array.isArray(response.data.favorites)
-          ) {
-            moviesData = response.data.favorites;
-          } else if (
-            response.data.videos &&
-            Array.isArray(response.data.videos)
-          ) {
-            moviesData = response.data.videos;
-          } else if (
-            response.data.movies &&
-            Array.isArray(response.data.movies)
-          ) {
-            moviesData = response.data.movies;
-          }
-        } else if (response.favorites && Array.isArray(response.favorites)) {
-          moviesData = response.favorites;
-        }
+        // ✅ ĐƠNGIẢN HÓA: Backend returns { success: true, favorites: [...] }
+        const moviesData = response.data?.favorites || [];
 
         console.log("✅ Parsed favorites:", moviesData.length);
         setFavoriteMovies(moviesData);

@@ -12,19 +12,7 @@ export const genreService = {
     return api.get(`/genres/${id}`);
   },
 
-  // Search genres
-  searchGenres: async (query) => {
-    return api.get("/genres/search", {
-      params: { q: query },
-    });
-  },
-
-  // ADMIN: Get genre stats
-  getGenreStats: async () => {
-    return api.get("/genres/stats");
-  },
-
-  // ADMIN: Create genre
+  // ADMIN: Create genre (no ID needed - auto-generated)
   createGenre: async (data) => {
     return api.post("/genres", data);
   },

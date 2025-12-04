@@ -1,7 +1,8 @@
-// inngest/index.js
+// ============================================
+// FILE 5: inngest/index.js - UPDATED (add cleanup function)
+// ============================================
 import { inngest } from "./client.js";
 
-// Import all function modules
 import {
   clerkUserCreated,
   clerkUserUpdated,
@@ -9,6 +10,7 @@ import {
 } from "./functions/clerkSync.js";
 
 import {
+  cleanupUnpaidSubscriptions, // ✅ NEW
   checkExpiredSubscriptions,
   sendExpiryReminders,
   cleanupOldSubscriptions,
@@ -29,7 +31,6 @@ import {
   cleanupDraftVideos,
 } from "./functions/videoProcessing.js";
 
-// Export inngest client and functions
 export { inngest };
 
 export const functions = [
@@ -39,6 +40,7 @@ export const functions = [
   clerkUserDeleted,
 
   // Subscription management
+  cleanupUnpaidSubscriptions, // ✅ NEW - runs every minute
   checkExpiredSubscriptions,
   sendExpiryReminders,
   cleanupOldSubscriptions,

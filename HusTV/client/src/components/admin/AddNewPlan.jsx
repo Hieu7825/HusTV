@@ -12,6 +12,8 @@ import {
   Sparkles,
   CheckCircle,
   Crown,
+  Info,
+  Loader2,
 } from "lucide-react";
 
 const AddNewPlan = ({ plan, onClose, onSave }) => {
@@ -23,17 +25,19 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
     features: [],
     connectedDevices: 0,
     duration: "Monthly",
-    tierRank: 1,
     isPopular: false,
-    isActive: true,
+    isActive: true, // Always true by default, hidden from UI
   });
 
   const [newFeature, setNewFeature] = useState("");
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (plan) {
-      setFormData(plan);
+      // Don't include tierRank when editing
+      const { tierRank, ...planWithoutRank } = plan;
+      setFormData(planWithoutRank);
     }
   }, [plan]);
 
@@ -74,27 +78,36 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
       newErrors.description = "Description is required";
     if (formData.features.length === 0)
       newErrors.features = "At least one feature is required";
+    if (!formData.connectedDevices || formData.connectedDevices === 0)
+      newErrors.connectedDevices = "Connected devices is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm() || isSubmitting) return;
+
+    setIsSubmitting(true);
 
     const planData = {
       ...formData,
       _id: formData._id || `plan_${Date.now()}`,
       price: parseFloat(formData.price),
-      tierRank: parseFloat(formData.tierRank),
       connectedDevices:
         formData.connectedDevices === "Unlimited"
           ? "Unlimited"
           : parseInt(formData.connectedDevices),
+      isActive: true, // Always set to true
     };
 
-    onSave(planData);
-    onClose();
+    try {
+      await onSave(planData);
+    } catch (error) {
+      console.error("Error in AddNewPlan:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -106,13 +119,20 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
             <div className="p-2 bg-red-600/20 rounded-lg">
               <CreditCard className="w-6 h-6 text-red-500" />
             </div>
-            <h2 className="text-3xl font-black text-white">
-              {plan ? "Edit Plan" : "Add New Plan"}
-            </h2>
+            <div>
+              <h2 className="text-3xl font-black text-white">
+                {plan ? "Edit Plan" : "Add New Plan"}
+              </h2>
+              <p className="text-sm text-gray-400 mt-1 flex items-center gap-1">
+                <Info className="w-3 h-3" />
+                Tier rank will be auto-calculated based on price
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-red-900/30 rounded-lg transition-colors group"
+            disabled={isSubmitting}
+            className="p-2 hover:bg-red-900/30 rounded-lg transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <X className="w-6 h-6 text-gray-400 group-hover:text-red-500" />
           </button>
@@ -121,7 +141,7 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
         {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="p-6 space-y-6 max-h-[70vh] overflow-y-auto"
+          className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar"
         >
           {/* Basic Info */}
           <div className="space-y-4">
@@ -140,10 +160,11 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
                 name="planName"
                 value={formData.planName}
                 onChange={handleChange}
+                disabled={isSubmitting}
                 className={`w-full px-4 py-3 bg-black/50 border-2 ${
                   errors.planName ? "border-red-500" : "border-red-900/30"
-                } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors`}
-                placeholder="Enter plan name"
+                } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                placeholder="e.g., Premium Plan"
               />
               {errors.planName && (
                 <p className="text-red-500 text-xs mt-1">{errors.planName}</p>
@@ -159,11 +180,12 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
+                disabled={isSubmitting}
                 rows="3"
                 className={`w-full px-4 py-3 bg-black/50 border-2 ${
                   errors.description ? "border-red-500" : "border-red-900/30"
-                } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors resize-none`}
-                placeholder="Enter plan description"
+                } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors resize-none disabled:opacity-50 disabled:cursor-not-allowed`}
+                placeholder="Describe what makes this plan special..."
               />
               {errors.description && (
                 <p className="text-red-500 text-xs mt-1">
@@ -180,58 +202,54 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
               Pricing Details
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-gray-400 mb-2">
                   Price <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  step="0.01"
-                  min="0"
-                  className={`w-full px-4 py-3 bg-black/50 border-2 ${
-                    errors.price ? "border-red-500" : "border-red-900/30"
-                  } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors`}
-                  placeholder="19.99"
-                />
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    $
+                  </span>
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                    step="0.01"
+                    min="0"
+                    className={`w-full pl-8 pr-4 py-3 bg-black/50 border-2 ${
+                      errors.price ? "border-red-500" : "border-red-900/30"
+                    } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                    placeholder="19.99"
+                  />
+                </div>
                 {errors.price && (
                   <p className="text-red-500 text-xs mt-1">{errors.price}</p>
                 )}
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Lower price = Lower tier rank
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-bold text-gray-400 mb-2">
-                  Duration
+                  Duration <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="duration"
                   value={formData.duration}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-black/50 border-2 border-red-900/30 rounded-lg text-white focus:outline-none focus:border-red-600 transition-colors"
+                  disabled={isSubmitting}
+                  className="w-full px-4 py-3 bg-black/50 border-2 border-red-900/30 rounded-lg text-white focus:outline-none focus:border-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="Monthly">Monthly</option>
                   <option value="Yearly">Yearly</option>
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-400 mb-2">
-                  Tier Rank
-                </label>
-                <input
-                  type="number"
-                  name="tierRank"
-                  value={formData.tierRank}
-                  onChange={handleChange}
-                  step="0.5"
-                  min="1"
-                  max="5"
-                  className="w-full px-4 py-3 bg-black/50 border-2 border-red-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors"
-                  placeholder="3"
-                />
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Ranks are calculated separately for each duration
+                </p>
               </div>
             </div>
           </div>
@@ -245,16 +263,29 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
 
             <div>
               <label className="block text-sm font-bold text-gray-400 mb-2">
-                Connected Devices
+                Connected Devices <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="connectedDevices"
                 value={formData.connectedDevices}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-black/50 border-2 border-red-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors"
-                placeholder="5 or Unlimited"
+                disabled={isSubmitting}
+                className={`w-full px-4 py-3 bg-black/50 border-2 ${
+                  errors.connectedDevices
+                    ? "border-red-500"
+                    : "border-red-900/30"
+                } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                placeholder="e.g., 5 or Unlimited"
               />
+              {errors.connectedDevices && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.connectedDevices}
+                </p>
+              )}
+              <p className="text-xs text-gray-400 mt-1">
+                Enter a number (e.g., 1, 2, 5) or type "Unlimited"
+              </p>
             </div>
           </div>
 
@@ -266,26 +297,30 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
             </h3>
 
             {/* Feature List */}
-            <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
-              {formData.features.map((feature, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between px-4 py-2 bg-black/30 border border-red-900/30 rounded-lg"
-                >
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <p className="text-white">{feature}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFeature(index)}
-                    className="p-1 hover:bg-red-900/30 rounded transition-colors"
+            {formData.features.length > 0 && (
+              <div className="space-y-2 mb-3 max-h-40 overflow-y-auto custom-scrollbar">
+                {formData.features.map((feature, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between px-4 py-3 bg-black/30 border border-red-900/30 rounded-lg hover:border-red-700/50 transition-colors group"
                   >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <p className="text-white text-sm">{feature}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFeature(index)}
+                      disabled={isSubmitting}
+                      className="p-1.5 hover:bg-red-900/30 rounded transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-30"
+                      title="Remove feature"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Add Feature */}
             <div className="flex gap-2">
@@ -293,16 +328,21 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
                 type="text"
                 value={newFeature}
                 onChange={(e) => setNewFeature(e.target.value)}
-                onKeyPress={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), handleAddFeature())
-                }
-                className="flex-1 px-4 py-3 bg-black/50 border-2 border-red-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors"
-                placeholder="Enter feature"
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddFeature();
+                  }
+                }}
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-3 bg-black/50 border-2 border-red-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="e.g., HD Streaming, Offline Downloads..."
               />
               <button
                 type="button"
                 onClick={handleAddFeature}
-                className="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg font-bold text-white transition-colors flex items-center gap-2"
+                disabled={!newFeature.trim() || isSubmitting}
+                className="px-6 py-3 bg-red-600 hover:bg-red-500 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-bold text-white transition-colors flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Add
@@ -311,20 +351,24 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
             {errors.features && (
               <p className="text-red-500 text-xs mt-1">{errors.features}</p>
             )}
+            <p className="text-xs text-gray-400">
+              Press Enter or click Add to include a feature
+            </p>
           </div>
 
-          {/* Status Options */}
+          {/* Status Options - ONLY Popular checkbox */}
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-red-500">Status Options</h3>
 
-            <div className="flex gap-6">
-              <label className="flex items-center gap-3 cursor-pointer">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <label className="flex items-center gap-3 cursor-pointer p-3 bg-black/30 border border-red-900/30 rounded-lg hover:border-red-700/50 transition-colors">
                 <input
                   type="checkbox"
                   name="isPopular"
                   checked={formData.isPopular}
                   onChange={handleChange}
-                  className="w-5 h-5 rounded border-2 border-red-900/30 bg-black/50 text-red-600 focus:ring-2 focus:ring-red-600"
+                  disabled={isSubmitting}
+                  className="w-5 h-5 rounded border-2 border-red-900/30 bg-black/50 text-red-600 focus:ring-2 focus:ring-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <span className="text-white font-semibold flex items-center gap-2">
                   <Crown className="w-4 h-4 text-yellow-400" />
@@ -332,20 +376,17 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
                 </span>
               </label>
 
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="isActive"
-                  checked={formData.isActive}
-                  onChange={handleChange}
-                  className="w-5 h-5 rounded border-2 border-red-900/30 bg-black/50 text-red-600 focus:ring-2 focus:ring-red-600"
-                />
-                <span className="text-white font-semibold flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-400" />
-                  Active
+              {/* Active Plan Info - Read-only display */}
+              <div className="flex items-center gap-3 p-3 bg-green-950/20 border border-green-600/30 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-green-400" />
+                <span className="text-green-400 font-semibold text-sm">
+                  Plan will be active by default
                 </span>
-              </label>
+              </div>
             </div>
+            <p className="text-xs text-gray-400">
+              All new plans are automatically active and visible to users
+            </p>
           </div>
 
           {/* Submit Buttons */}
@@ -353,16 +394,27 @@ const AddNewPlan = ({ plan, onClose, onSave }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg font-bold text-white transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg font-bold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 rounded-lg font-bold text-white shadow-lg shadow-red-600/30 hover:shadow-red-500/50 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+              disabled={isSubmitting}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 disabled:from-gray-700 disabled:to-gray-800 disabled:cursor-not-allowed rounded-lg font-bold text-white shadow-lg shadow-red-600/30 hover:shadow-red-500/50 transition-all duration-300 hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-2"
             >
-              <Save className="w-5 h-5" />
-              {plan ? "Update Plan" : "Add Plan"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  <span>{plan ? "Update Plan" : "Create Plan"}</span>
+                </>
+              )}
             </button>
           </div>
         </form>

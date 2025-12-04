@@ -2,7 +2,12 @@
 import api from "../lib/axios";
 
 export const adminService = {
-  // Dashboard
+  // ✅ THÊM MỚI: Check if current user is admin
+  checkAdmin: async () => {
+    return api.get("/admin/check");
+  },
+
+  // Dashboard - Single optimized API call
   getDashboardStats: async () => {
     return api.get("/admin/dashboard/stats");
   },
@@ -10,37 +15,19 @@ export const adminService = {
   // Users Management
   getAllUsers: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return api.get(`/admin/users?${queryString}`);
+    return api.get(`/admin/users${queryString ? `?${queryString}` : ""}`);
   },
 
-  getUserById: async (userId) => {
-    return api.get(`/admin/users/${userId}`);
-  },
-
-  updateUserRole: async (userId, role) => {
-    return api.patch(`/admin/users/${userId}/role`, { role });
+  toggleUserBan: async (userId) => {
+    return api.patch(`/admin/users/${userId}/ban`);
   },
 
   // Subscriptions Management
   getAllSubscriptions: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return api.get(`/admin/subscriptions?${queryString}`);
-  },
-
-  // Revenue Analytics
-  getRevenueStats: async () => {
-    return api.get("/admin/revenue");
-  },
-
-  // Video Management
-  getTopVideos: async () => {
-    return api.get("/admin/videos/top");
-  },
-
-  // Activity Logs
-  getActivities: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return api.get(`/admin/activities?${queryString}`);
+    return api.get(
+      `/admin/subscriptions${queryString ? `?${queryString}` : ""}`
+    );
   },
 };
 

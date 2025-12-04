@@ -1,4 +1,4 @@
-//  client/src/components/SubscriptionCard.jsx
+// client/src/components/SubscriptionCard.jsx
 import React from "react";
 import { CheckCircle, Star, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -21,12 +21,12 @@ const SubscriptionCard = ({
   const navigate = useNavigate();
 
   return (
-    <div className="relative group ">
+    <div className="relative group h-full">
       {/* Animated border gradient */}
       <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 via-red-500 to-red-700 rounded-2xl opacity-0 group-hover:opacity-100 animate-pulse transition-all duration-500 blur-sm"></div>
 
       {/* Main card */}
-      <div className="relative w-80 h-[600px] bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-500 hover:-translate-y-2 hover:scale-105 hover:shadow-red-600/50 border border-red-600/30 hover:border-red-500">
+      <div className="relative w-80 min-h-[600px] h-full bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-500 hover:-translate-y-2 hover:scale-105 hover:shadow-red-600/50 border border-red-600/30 hover:border-red-500 flex flex-col">
         {/* Popular badge */}
         {isPopular && (
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
@@ -41,8 +41,8 @@ const SubscriptionCard = ({
         <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 via-transparent to-red-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
         {/* Content */}
-        <div className="relative p-8 pt-20 text-center h-full flex flex-col justify-between">
-          <div>
+        <div className="relative p-8 pt-20 text-center flex-1 flex flex-col justify-between">
+          <div className="flex-grow">
             <div className="mb-6">
               <h3 className="text-2xl font-bold text-white mb-2 uppercase tracking-wider group-hover:text-red-400 transition-colors duration-300">
                 {planName}
@@ -77,10 +77,11 @@ const SubscriptionCard = ({
             </div>
           </div>
           {/* CTA Button */}
-          <div className="mt-auto">
+          <div className="mt-auto pt-4">
             <button
               onClick={() => {
-                scrollTo(0, 0), navigate("/my-subscriptions");
+                scrollTo(0, 0);
+                navigate("/my-subscriptions");
               }}
               className="relative cursor-pointer w-full py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 border border-red-500/50 group-hover:border-red-400"
             >

@@ -54,8 +54,8 @@ const subscriptionSchema = new mongoose.Schema(
     // Status
     status: {
       type: String,
-      enum: ["Active", "Expired", "Cancelled"],
-      default: "Active",
+      enum: ["Pending", "Active", "Expired", "Cancelled"],
+      default: "Pending", // ✅ Changed default to Pending
       index: true,
     },
 

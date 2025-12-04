@@ -1,4 +1,7 @@
-// server/controllers/stripeWebhooks.js (FIXED FOR STREAMING PLATFORM)
+// ============================================
+// FILE: server/controllers/stripeWebhooks.js
+// Complete code with auto-sync Clerk metadata
+// ============================================
 import Stripe from "stripe";
 import { constructWebhookEvent } from "../utils/stripe.js";
 import Subscription from "../models/Subscription.js";
@@ -6,8 +9,58 @@ import Booking from "../models/Booking.js";
 import SubscriptionPlan from "../models/SubscriptionPlan.js";
 import User from "../models/User.js";
 import { inngest } from "../inngest/index.js";
+import { clerkClient } from "@clerk/express";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+/**
+ * 🔥 HELPER: Sync Clerk Metadata
+ */
+const syncClerkMetadata = async (userId) => {
+  try {
+    console.log(`🔄 [AUTO-SYNC] Syncing Clerk metadata for: ${userId}`);
+
+    const user = await User.findOne({ clerkId: userId }).populate({
+      path: "currentSubscription",
+      populate: { path: "plan" },
+    });
+
+    if (!user) {
+      console.error("❌ [AUTO-SYNC] User not found:", userId);
+      return;
+    }
+
+    const subscription = user.currentSubscription;
+
+    const hasActive =
+      subscription &&
+      subscription.isPaid &&
+      subscription.status === "Active" &&
+      new Date(subscription.expiryDate) > new Date();
+
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        hasActiveSubscription: hasActive,
+        subscriptionPlan: hasActive ? subscription.plan?.planName : null,
+        subscriptionExpiry: hasActive
+          ? subscription.expiryDate.toISOString()
+          : null,
+        subscriptionTier: hasActive ? subscription.plan?.tierRank : null,
+      },
+    });
+
+    console.log(`✅ [AUTO-SYNC] Clerk metadata synced for: ${userId}`);
+    if (hasActive) {
+      console.log(`   └─ Plan: ${subscription.plan?.planName}`);
+      console.log(`   └─ Tier: ${subscription.plan?.tierRank}`);
+      console.log(`   └─ Expires: ${subscription.expiryDate.toISOString()}`);
+    } else {
+      console.log(`   └─ Metadata cleared (no active subscription)`);
+    }
+  } catch (error) {
+    console.error("❌ [AUTO-SYNC] Failed:", error.message);
+  }
+};
 
 /**
  * Stripe Webhook Handler
@@ -19,7 +72,6 @@ export const stripeWebhookHandler = async (request, response) => {
   let event;
 
   try {
-    // Verify webhook signature using utility function
     event = constructWebhookEvent(request.body, sig);
   } catch (error) {
     console.error("❌ Webhook signature verification failed:", error.message);
@@ -37,7 +89,6 @@ export const stripeWebhookHandler = async (request, response) => {
         console.log("💰 Payment intent succeeded");
         const paymentIntent = event.data.object;
 
-        // Get checkout session from payment intent
         const sessionList = await stripe.checkout.sessions.list({
           payment_intent: paymentIntent.id,
           limit: 1,
@@ -74,7 +125,7 @@ export const stripeWebhookHandler = async (request, response) => {
           // Update subscription: Mark as paid
           subscription.isPaid = true;
           subscription.status = "Active";
-          subscription.paymentLink = ""; // Clear payment link
+          subscription.paymentLink = "";
           subscription.paymentMethod =
             paymentIntent.payment_method_types[0] || "card";
           subscription.transactionId = paymentIntent.id;
@@ -85,17 +136,12 @@ export const stripeWebhookHandler = async (request, response) => {
           // If this is an upgrade, cancel old subscription
           if (isUpgrade === "true" && oldSubscriptionId) {
             try {
-              const oldSubscription = await Subscription.findByIdAndUpdate(
-                oldSubscriptionId,
-                { status: "Cancelled" },
-                { new: true }
+              await Subscription.findByIdAndUpdate(oldSubscriptionId, {
+                status: "Cancelled",
+              });
+              console.log(
+                `✅ Old subscription cancelled: ${oldSubscriptionId}`
               );
-
-              if (oldSubscription) {
-                console.log(
-                  `✅ Old subscription cancelled: ${oldSubscriptionId}`
-                );
-              }
             } catch (upgradeError) {
               console.error(
                 "⚠️ Failed to cancel old subscription:",
@@ -106,13 +152,12 @@ export const stripeWebhookHandler = async (request, response) => {
 
           // Update user subscription status
           try {
-            const user = await User.findByClerkId(userId);
+            const user = await User.findOne({ clerkId: userId });
 
             if (user) {
               user.subscriptionStatus = "active";
               user.currentSubscription = subscriptionId;
 
-              // Get plan for tier name
               const plan = await SubscriptionPlan.findById(planId);
               if (plan) {
                 user.subscriptionTier = plan.planName;
@@ -120,6 +165,11 @@ export const stripeWebhookHandler = async (request, response) => {
 
               await user.save();
               console.log("✅ User subscription status updated:", userId);
+
+              // ============================================
+              // 🔥 AUTO-SYNC: Sync Clerk metadata
+              // ============================================
+              await syncClerkMetadata(userId);
             } else {
               console.log("⚠️ User not found for subscription update:", userId);
             }
@@ -152,7 +202,6 @@ export const stripeWebhookHandler = async (request, response) => {
         }
 
         // ============ Handle BOOKING Payment ============
-        // NOTE: Booking model exists but used differently in streaming platform
         if (bookingId) {
           console.log(`🎬 Processing booking payment: ${bookingId}`);
 
@@ -163,9 +212,8 @@ export const stripeWebhookHandler = async (request, response) => {
             break;
           }
 
-          // Update booking: Mark as paid
           booking.isPaid = true;
-          booking.paymentLink = ""; // Clear payment link
+          booking.paymentLink = "";
           booking.transactionId = paymentIntent.id;
           booking.paymentMethod =
             paymentIntent.payment_method_types[0] || "card";
@@ -173,7 +221,6 @@ export const stripeWebhookHandler = async (request, response) => {
 
           console.log("✅ Booking marked as paid:", bookingId);
 
-          // Send confirmation email via Inngest
           try {
             await inngest.send({
               name: "booking/confirmed",
@@ -201,7 +248,6 @@ export const stripeWebhookHandler = async (request, response) => {
         console.log("❌ Payment intent failed");
         const paymentIntent = event.data.object;
 
-        // Get checkout session
         const sessionList = await stripe.checkout.sessions.list({
           payment_intent: paymentIntent.id,
           limit: 1,
@@ -209,9 +255,8 @@ export const stripeWebhookHandler = async (request, response) => {
 
         if (sessionList.data.length > 0) {
           const session = sessionList.data[0];
-          const { subscriptionId, bookingId } = session.metadata;
+          const { subscriptionId, bookingId, userId } = session.metadata;
 
-          // Handle subscription payment failure
           if (subscriptionId) {
             try {
               await Subscription.findByIdAndUpdate(subscriptionId, {
@@ -223,12 +268,18 @@ export const stripeWebhookHandler = async (request, response) => {
                 "⚠️ Subscription cancelled due to payment failure:",
                 subscriptionId
               );
+
+              // ============================================
+              // 🔥 AUTO-SYNC: Clear metadata on failure
+              // ============================================
+              if (userId) {
+                await syncClerkMetadata(userId);
+              }
             } catch (error) {
               console.error("❌ Failed to cancel subscription:", error);
             }
           }
 
-          // Handle booking payment failure
           if (bookingId) {
             try {
               await Booking.findByIdAndUpdate(bookingId, {
@@ -254,9 +305,8 @@ export const stripeWebhookHandler = async (request, response) => {
       case "checkout.session.expired": {
         console.log("⏰ Checkout session expired");
         const session = event.data.object;
-        const { subscriptionId, bookingId } = session.metadata;
+        const { subscriptionId, bookingId, userId } = session.metadata;
 
-        // Handle subscription expiration
         if (subscriptionId) {
           try {
             await Subscription.findByIdAndUpdate(subscriptionId, {
@@ -268,12 +318,18 @@ export const stripeWebhookHandler = async (request, response) => {
               "⚠️ Subscription cancelled due to expired checkout:",
               subscriptionId
             );
+
+            // ============================================
+            // 🔥 AUTO-SYNC: Clear metadata on expiry
+            // ============================================
+            if (userId) {
+              await syncClerkMetadata(userId);
+            }
           } catch (error) {
             console.error("❌ Failed to cancel expired subscription:", error);
           }
         }
 
-        // Handle booking expiration
         if (bookingId) {
           try {
             await Booking.findByIdAndUpdate(bookingId, {
@@ -296,8 +352,6 @@ export const stripeWebhookHandler = async (request, response) => {
         console.log("✅ Checkout session completed");
         const session = event.data.object;
 
-        // This is mainly handled by payment_intent.succeeded
-        // But we can log it for monitoring
         console.log("Session ID:", session.id);
         console.log("Payment status:", session.payment_status);
         console.log("Customer email:", session.customer_email);
@@ -311,7 +365,6 @@ export const stripeWebhookHandler = async (request, response) => {
         console.log(`ℹ️ Unhandled event type: ${event.type}`);
     }
 
-    // Send success response
     response.json({
       received: true,
       type: event.type,

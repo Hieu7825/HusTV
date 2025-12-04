@@ -6,8 +6,6 @@ import {
   createGenre,
   updateGenre,
   deleteGenre,
-  searchGenres,
-  getGenreStats,
 } from "../controllers/genreController.js";
 import { protectAdmin } from "../middleware/auth.js";
 import { body, param } from "express-validator";
@@ -17,7 +15,6 @@ const router = express.Router();
 
 // Validation middleware
 const validateCreateGenre = [
-  body("id").isInt({ min: 1 }).withMessage("ID must be a positive integer"),
   body("name")
     .trim()
     .notEmpty()
@@ -41,12 +38,10 @@ const validateGenreId = [
 
 // Public routes
 router.get("/", getAllGenres); // Get all genres (sorted)
-router.get("/search", searchGenres); // Search genres
-router.get("/stats", protectAdmin, getGenreStats); // Admin stats
 router.get("/:id", validateGenreId, validate, getGenreById); // Get single genre
 
 // Admin only routes
-router.post("/", protectAdmin, validateCreateGenre, validate, createGenre); // Create genre
+router.post("/", protectAdmin, validateCreateGenre, validate, createGenre); // Create genre (auto ID)
 
 router.put(
   "/:id",

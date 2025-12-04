@@ -1,4 +1,6 @@
-// server/controllers/subscriptionController.js
+// ============================================
+// FILE 3: server/controllers/subscriptionController.js (UPDATED)
+// ============================================
 import SubscriptionPlan from "../models/SubscriptionPlan.js";
 import Subscription from "../models/Subscription.js";
 import User from "../models/User.js";
@@ -14,7 +16,8 @@ export const getAllPlans = async (req, res) => {
   try {
     // Get all active plans, sorted by tier rank
     const plans = await SubscriptionPlan.find({ isActive: true }).sort({
-      tierRank: 1,
+      duration: 1, // ✅ UPDATED: Sort by duration first
+      tierRank: 1, // Then by tier rank
     });
 
     res.json({
@@ -33,6 +36,30 @@ export const getAllPlans = async (req, res) => {
 };
 
 /**
+ * ✅ NEW: Recalculate all tier ranks manually
+ * POST /api/subscriptions/plans/recalculate-ranks
+ * Admin only
+ */
+export const recalculateRanks = async (req, res) => {
+  try {
+    const result = await SubscriptionPlan.recalculateAllRanks();
+
+    res.json({
+      success: true,
+      message: "Tier ranks recalculated successfully",
+      updated: result,
+    });
+  } catch (error) {
+    console.error("❌ Error recalculating ranks:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to recalculate tier ranks",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Create subscription (initiate payment)
  * POST /api/subscriptions/create
  * Protected route
@@ -42,7 +69,6 @@ export const createSubscription = async (req, res) => {
     const { userId } = req.auth;
     const { planId } = req.body;
 
-    // Validate plan ID
     if (!planId) {
       return res.status(400).json({
         success: false,
@@ -50,7 +76,6 @@ export const createSubscription = async (req, res) => {
       });
     }
 
-    // Get plan details
     const plan = await SubscriptionPlan.findById(planId);
 
     if (!plan) {
@@ -67,10 +92,8 @@ export const createSubscription = async (req, res) => {
       });
     }
 
-    // Get user from database
     let user = await User.findByClerkId(userId);
 
-    // Check if user already has an active subscription
     if (user && user.subscriptionStatus === "active") {
       const currentSub = await Subscription.findById(
         user.currentSubscription
@@ -79,7 +102,6 @@ export const createSubscription = async (req, res) => {
       if (currentSub && currentSub.isPaid && currentSub.isValid()) {
         const currentPlan = currentSub.plan;
 
-        // Check if trying to buy the same plan
         if (currentPlan._id === planId) {
           return res.status(400).json({
             success: false,
@@ -87,7 +109,6 @@ export const createSubscription = async (req, res) => {
           });
         }
 
-        // Check if trying to downgrade (not allowed)
         if (plan.tierRank < currentPlan.tierRank) {
           return res.status(400).json({
             success: false,
@@ -96,14 +117,12 @@ export const createSubscription = async (req, res) => {
           });
         }
 
-        // If upgrade, we'll handle it below
         console.log(
           `🔄 User upgrading from ${currentPlan.planName} to ${plan.planName}`
         );
       }
     }
 
-    // Get user info from Clerk
     const clerkUser = await clerkClient.users.getUser(userId);
     const fullName = `${clerkUser.firstName || ""} ${
       clerkUser.lastName || ""
@@ -122,25 +141,21 @@ export const createSubscription = async (req, res) => {
       });
     }
 
-    // Calculate expiry date based on plan duration
     const purchaseDate = new Date();
     const expiryDate = new Date(purchaseDate);
 
     if (plan.duration === "Yearly") {
       expiryDate.setFullYear(expiryDate.getFullYear() + 1);
     } else {
-      // Monthly
       expiryDate.setMonth(expiryDate.getMonth() + 1);
     }
 
-    // Determine if this is an upgrade
     const isUpgrade =
       user && user.subscriptionStatus === "active" && user.currentSubscription;
     const oldSubscriptionId = isUpgrade
       ? user.currentSubscription.toString()
       : null;
 
-    // Create subscription document
     const subscription = await Subscription.create({
       user: userId,
       userName,
@@ -149,13 +164,12 @@ export const createSubscription = async (req, res) => {
       purchaseDate,
       expiryDate,
       amount: plan.price,
-      status: "Active",
-      isPaid: false, // Will be set to true after payment
+      status: "Pending",
+      isPaid: false,
     });
 
     console.log(`📝 Created subscription document: ${subscription._id}`);
 
-    // Create Stripe checkout session using utility function
     const checkoutSession = await createCheckoutSession({
       subscriptionId: subscription._id.toString(),
       planName: plan.planName,
@@ -166,10 +180,9 @@ export const createSubscription = async (req, res) => {
       planId,
       isUpgrade,
       oldSubscriptionId,
-      bookingId: null, // This is subscription, not booking
+      bookingId: null,
     });
 
-    // Save payment link to subscription
     subscription.paymentLink = checkoutSession.url;
     await subscription.save();
 
@@ -195,16 +208,10 @@ export const createSubscription = async (req, res) => {
   }
 };
 
-/**
- * Get current active subscription
- * GET /api/subscriptions/current
- * Protected route
- */
 export const getCurrentSubscription = async (req, res) => {
   try {
     const { userId } = req.auth;
 
-    // Get user with current subscription
     const user = await User.findByClerkId(userId).populate({
       path: "currentSubscription",
       populate: { path: "plan" },
@@ -217,7 +224,6 @@ export const getCurrentSubscription = async (req, res) => {
       });
     }
 
-    // Check if user has a subscription
     if (!user.currentSubscription) {
       return res.json({
         success: true,
@@ -228,7 +234,6 @@ export const getCurrentSubscription = async (req, res) => {
 
     const subscription = user.currentSubscription;
 
-    // Verify subscription is paid and valid
     if (!subscription.isPaid || subscription.status !== "Active") {
       return res.json({
         success: true,
@@ -237,9 +242,7 @@ export const getCurrentSubscription = async (req, res) => {
       });
     }
 
-    // Check if expired
     if (subscription.isExpired()) {
-      // Update status if expired
       subscription.status = "Expired";
       await subscription.save();
 
@@ -247,6 +250,24 @@ export const getCurrentSubscription = async (req, res) => {
       user.currentSubscription = null;
       user.subscriptionTier = null;
       await user.save();
+
+      // ✅ UPDATE CLERK METADATA - Remove active subscription
+      try {
+        const { clerkClient } = await import("@clerk/express");
+        await clerkClient.users.updateUserMetadata(userId, {
+          publicMetadata: {
+            hasActiveSubscription: false,
+            subscriptionPlan: null,
+            subscriptionExpiry: null,
+            subscriptionTier: null,
+          },
+        });
+        console.log(
+          `✅ Cleared Clerk metadata for expired subscription: ${userId}`
+        );
+      } catch (clerkError) {
+        console.error("⚠️ Failed to clear Clerk metadata:", clerkError);
+      }
 
       return res.json({
         success: true,
@@ -278,16 +299,10 @@ export const getCurrentSubscription = async (req, res) => {
   }
 };
 
-/**
- * Get subscription history
- * GET /api/subscriptions/history
- * Protected route
- */
 export const getSubscriptionHistory = async (req, res) => {
   try {
     const { userId } = req.auth;
 
-    // Get all subscriptions for this user
     const subscriptions = await Subscription.find({ user: userId })
       .populate("plan")
       .sort({ createdAt: -1 });
@@ -307,16 +322,10 @@ export const getSubscriptionHistory = async (req, res) => {
   }
 };
 
-/**
- * Cancel subscription (for future use)
- * POST /api/subscriptions/cancel
- * Protected route
- */
 export const cancelSubscription = async (req, res) => {
   try {
     const { userId } = req.auth;
 
-    // Get user with current subscription
     const user = await User.findByClerkId(userId);
 
     if (!user || !user.currentSubscription) {
@@ -326,7 +335,6 @@ export const cancelSubscription = async (req, res) => {
       });
     }
 
-    // Get subscription
     const subscription = await Subscription.findById(user.currentSubscription);
 
     if (!subscription || !subscription.isPaid) {
@@ -336,15 +344,31 @@ export const cancelSubscription = async (req, res) => {
       });
     }
 
-    // Update subscription status
     subscription.status = "Cancelled";
     await subscription.save();
 
-    // Update user subscription status
     user.subscriptionStatus = "cancelled";
     user.currentSubscription = null;
     user.subscriptionTier = null;
     await user.save();
+
+    // ✅ UPDATE CLERK METADATA - Remove active subscription
+    try {
+      const { clerkClient } = await import("@clerk/express");
+      await clerkClient.users.updateUserMetadata(userId, {
+        publicMetadata: {
+          hasActiveSubscription: false,
+          subscriptionPlan: null,
+          subscriptionExpiry: null,
+          subscriptionTier: null,
+        },
+      });
+      console.log(
+        `✅ Cleared Clerk metadata for cancelled subscription: ${userId}`
+      );
+    } catch (clerkError) {
+      console.error("⚠️ Failed to clear Clerk metadata:", clerkError);
+    }
 
     console.log(`❌ Subscription cancelled for user: ${userId}`);
 
@@ -361,11 +385,75 @@ export const cancelSubscription = async (req, res) => {
     });
   }
 };
+export const syncClerkMetadata = async (req, res) => {
+  try {
+    const { userId } = req.auth;
+
+    const user = await User.findByClerkId(userId).populate({
+      path: "currentSubscription",
+      populate: { path: "plan" },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const subscription = user.currentSubscription;
+
+    // Check if has active subscription
+    const hasActive =
+      subscription &&
+      subscription.isPaid &&
+      subscription.status === "Active" &&
+      new Date(subscription.expiryDate) > new Date();
+
+    // Update Clerk metadata
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        hasActiveSubscription: hasActive,
+        subscriptionPlan: hasActive ? subscription.plan?.planName : null,
+        subscriptionExpiry: hasActive
+          ? subscription.expiryDate.toISOString()
+          : null,
+        subscriptionTier: hasActive ? subscription.plan?.tierRank : null,
+      },
+    });
+
+    console.log(`✅ Synced Clerk metadata for user ${userId}`);
+    console.log(`   - hasActiveSubscription: ${hasActive}`);
+    console.log(
+      `   - subscriptionPlan: ${hasActive ? subscription.plan?.planName : null}`
+    );
+
+    res.json({
+      success: true,
+      message: "Metadata synced successfully",
+      metadata: {
+        hasActiveSubscription: hasActive,
+        subscriptionPlan: hasActive ? subscription.plan?.planName : null,
+        subscriptionExpiry: hasActive ? subscription.expiryDate : null,
+        subscriptionTier: hasActive ? subscription.plan?.tierRank : null,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Sync error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to sync metadata",
+      error: error.message,
+    });
+  }
+};
 
 export default {
   getAllPlans,
+  recalculateRanks, // ✅ NEW
   createSubscription,
   getCurrentSubscription,
   getSubscriptionHistory,
   cancelSubscription,
+  syncClerkMetadata,
 };

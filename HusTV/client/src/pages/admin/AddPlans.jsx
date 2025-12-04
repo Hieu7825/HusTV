@@ -11,13 +11,11 @@ import {
   Crown,
   CheckCircle,
   Sparkles,
-  Info,
   Users,
 } from "lucide-react";
 import Title from "../../components/admin/Title";
 import BlurCircle from "../../components/BlurCircle";
 import AddNewPlan from "../../components/admin/AddNewPlan";
-import PlanDetailsModal from "../../components/admin/PlanDetailsModal";
 import Loading from "../../components/Loading";
 import { subscriptionService } from "../../services";
 import toast from "react-hot-toast";
@@ -27,7 +25,6 @@ const AddPlans = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
-  const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Fetch plans from API
@@ -39,7 +36,20 @@ const AddPlans = () => {
     try {
       setLoading(true);
       const response = await subscriptionService.getAllPlans();
-      setPlans(response.data || []);
+
+      // Handle different response structures
+      let plansData = [];
+
+      if (response.data?.plans && Array.isArray(response.data.plans)) {
+        plansData = response.data.plans;
+      } else if (Array.isArray(response.data)) {
+        plansData = response.data;
+      } else if (Array.isArray(response)) {
+        plansData = response;
+      }
+
+      setPlans(plansData);
+      console.log(`✅ Loaded ${plansData.length} plans`);
     } catch (error) {
       console.error("Failed to fetch plans:", error);
       toast.error("Failed to load subscription plans");
@@ -49,11 +59,13 @@ const AddPlans = () => {
     }
   };
 
-  const filteredPlans = plans.filter(
-    (plan) =>
-      plan.planName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plan.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPlans = Array.isArray(plans)
+    ? plans.filter(
+        (plan) =>
+          plan?.planName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          plan?.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this plan?")) return;
@@ -319,13 +331,13 @@ const AddPlans = () => {
                     Features
                   </p>
                   <div className="space-y-2">
-                    {plan.features.slice(0, 3).map((feature, i) => (
+                    {plan.features?.slice(0, 3).map((feature, i) => (
                       <div key={i} className="flex items-center gap-2">
                         <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
                         <span className="text-xs text-gray-300">{feature}</span>
                       </div>
                     ))}
-                    {plan.features.length > 3 && (
+                    {plan.features?.length > 3 && (
                       <p className="text-xs text-red-400 font-semibold ml-5">
                         +{plan.features.length - 3} more features
                       </p>
@@ -336,7 +348,7 @@ const AddPlans = () => {
                 {/* Divider */}
                 <div className="h-px bg-gradient-to-r from-transparent via-red-900/40 to-transparent"></div>
 
-                {/* Status Badges */}
+                {/* Status Badges - ONLY Popular badge */}
                 <div className="flex gap-2 flex-wrap">
                   {plan.isPopular && (
                     <span className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-yellow-950 to-black text-yellow-400 border border-yellow-600/50 rounded-full text-xs font-black uppercase">
@@ -344,30 +356,8 @@ const AddPlans = () => {
                       Popular
                     </span>
                   )}
-                  <span
-                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase border ${
-                      plan.isActive
-                        ? "bg-gradient-to-r from-green-950 to-black text-green-400 border-green-600/50"
-                        : "bg-gradient-to-r from-red-950 to-black text-red-400 border-red-600/50"
-                    }`}
-                  >
-                    {plan.isActive ? (
-                      <CheckCircle className="w-3 h-3" />
-                    ) : (
-                      <X className="w-3 h-3" />
-                    )}
-                    {plan.isActive ? "Active" : "Inactive"}
-                  </span>
+                  {/* Active badge removed - all plans are active by default */}
                 </div>
-
-                {/* View Details Button */}
-                <button
-                  onClick={() => setSelectedPlan(plan)}
-                  className="w-full mt-4 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 rounded-lg font-bold text-white shadow-lg shadow-red-600/30 hover:shadow-red-500/50 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
-                >
-                  <Info className="w-4 h-4" />
-                  View Details
-                </button>
               </div>
 
               {/* Shimmer Effect */}
@@ -385,7 +375,11 @@ const AddPlans = () => {
             <h3 className="text-2xl font-bold text-gray-400 mb-2">
               No plans found
             </h3>
-            <p className="text-gray-500">Try adjusting your search terms</p>
+            <p className="text-gray-500">
+              {searchTerm
+                ? "Try adjusting your search terms"
+                : "Click 'Add New Plan' to create your first subscription plan"}
+            </p>
           </div>
         )}
       </div>
@@ -399,14 +393,6 @@ const AddPlans = () => {
             setEditingPlan(null);
           }}
           onSave={handleSavePlan}
-        />
-      )}
-
-      {/* Detail Modal */}
-      {selectedPlan && (
-        <PlanDetailsModal
-          plan={selectedPlan}
-          onClose={() => setSelectedPlan(null)}
         />
       )}
     </div>

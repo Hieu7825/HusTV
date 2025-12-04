@@ -5,6 +5,55 @@ import User from "../../models/User.js";
 import { sendExpiryReminder } from "../../utils/index.js";
 
 /**
+ * ✅ NEW: Cleanup unpaid subscriptions every minute
+ * Automatically delete subscriptions that are unpaid after 15 minutes
+ */
+export const cleanupUnpaidSubscriptions = inngest.createFunction(
+  { id: "cleanup-unpaid-subscriptions" },
+  { cron: "* * * * *" }, // Run every minute
+  async ({ step }) => {
+    await step.run("delete-unpaid-subscriptions", async () => {
+      const fifteenMinutesAgo = new Date();
+      fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15);
+
+      // Find unpaid subscriptions older than 15 minutes
+      const unpaidSubscriptions = await Subscription.find({
+        isPaid: false,
+        status: "Pending",
+        createdAt: { $lt: fifteenMinutesAgo },
+      });
+
+      console.log(
+        `Found ${unpaidSubscriptions.length} unpaid subscriptions to cleanup`
+      );
+
+      let deletedCount = 0;
+
+      for (const subscription of unpaidSubscriptions) {
+        try {
+          // Delete the unpaid subscription
+          await Subscription.findByIdAndDelete(subscription._id);
+
+          console.log(`🗑️ Deleted unpaid subscription: ${subscription._id}`);
+          deletedCount++;
+        } catch (error) {
+          console.error(
+            `❌ Error deleting unpaid subscription ${subscription._id}:`,
+            error
+          );
+        }
+      }
+
+      return {
+        success: true,
+        totalFound: unpaidSubscriptions.length,
+        deleted: deletedCount,
+      };
+    });
+  }
+);
+
+/**
  * Daily cron job to check and update expired subscriptions
  */
 export const checkExpiredSubscriptions = inngest.createFunction(

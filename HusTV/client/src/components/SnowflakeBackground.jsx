@@ -99,21 +99,26 @@ const Snowflake = ({ id, style }) => {
         />
       </div>
 
-      <style jsx>{`
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        @keyframes fall {
-          to {
-            transform: translateY(100vh) translateX(var(--drift));
-          }
-        }
-      `}</style>
+      {/* ✅ FIX: Chuyển style tag ra ngoài và dùng dangerouslySetInnerHTML */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes spin {
+              from {
+                transform: rotate(0deg);
+              }
+              to {
+                transform: rotate(360deg);
+              }
+            }
+            @keyframes fall {
+              to {
+                transform: translateY(100vh) translateX(var(--drift));
+              }
+            }
+          `,
+        }}
+      />
     </div>
   );
 };

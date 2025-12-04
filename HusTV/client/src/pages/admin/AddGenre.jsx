@@ -1,15 +1,6 @@
 // client/src/pages/admin/AddGenre.jsx
 import React, { useState, useEffect } from "react";
-import {
-  Tag,
-  Plus,
-  Edit,
-  Trash2,
-  Search,
-  X,
-  Sparkles,
-  Save,
-} from "lucide-react";
+import { Tag, Plus, Edit, Trash2, Search, X, Save } from "lucide-react";
 import Title from "../../components/admin/Title";
 import BlurCircle from "../../components/BlurCircle";
 import { genreService } from "../../services";
@@ -23,7 +14,6 @@ const AddGenre = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingGenre, setEditingGenre] = useState(null);
-  const [genreId, setGenreId] = useState("");
   const [genreName, setGenreName] = useState("");
 
   // Pagination
@@ -35,10 +25,17 @@ const AddGenre = () => {
     try {
       setLoading(true);
       const response = await genreService.getAllGenres();
-      setGenres(response.data || []);
+      console.log("📥 Fetch genres response:", response);
+
+      // Handle different response structures
+      const genresData = response.data?.data || response.data || [];
+      console.log("✅ Parsed genres:", genresData);
+
+      setGenres(Array.isArray(genresData) ? genresData : []);
     } catch (error) {
-      console.error("Failed to fetch genres:", error);
+      console.error("❌ Failed to fetch genres:", error);
       toast.error("Failed to load genres");
+      setGenres([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -78,7 +75,7 @@ const AddGenre = () => {
     try {
       await genreService.deleteGenre(id);
       toast.success("Genre deleted successfully");
-      fetchGenres(); // Refresh list
+      fetchGenres();
     } catch (error) {
       console.error("Failed to delete genre:", error);
       toast.error(error.response?.data?.message || "Failed to delete genre");
@@ -87,7 +84,6 @@ const AddGenre = () => {
 
   const handleEdit = (genre) => {
     setEditingGenre(genre);
-    setGenreId(genre.id.toString());
     setGenreName(genre.name);
     setShowModal(true);
   };
@@ -100,30 +96,21 @@ const AddGenre = () => {
       return;
     }
 
-    if (!editingGenre && !genreId.trim()) {
-      toast.error("Please enter a genre ID!");
-      return;
-    }
-
     try {
       if (editingGenre) {
         // Update existing genre
         await genreService.updateGenre(editingGenre.id, { name: genreName });
         toast.success("Genre updated successfully");
       } else {
-        // Add new genre
-        await genreService.createGenre({
-          id: parseInt(genreId),
-          name: genreName,
-        });
+        // Add new genre (no ID needed, backend auto-generates)
+        await genreService.createGenre({ name: genreName });
         toast.success("Genre created successfully");
       }
 
       setShowModal(false);
       setEditingGenre(null);
-      setGenreId("");
       setGenreName("");
-      fetchGenres(); // Refresh list
+      fetchGenres();
     } catch (error) {
       console.error("Failed to save genre:", error);
       toast.error(error.response?.data?.message || "Failed to save genre");
@@ -176,7 +163,6 @@ const AddGenre = () => {
           <button
             onClick={() => {
               setEditingGenre(null);
-              setGenreId("");
               setGenreName("");
               setShowModal(true);
             }}
@@ -307,7 +293,6 @@ const AddGenre = () => {
                 onClick={() => {
                   setShowModal(false);
                   setEditingGenre(null);
-                  setGenreId("");
                   setGenreName("");
                 }}
                 className="p-2 hover:bg-red-900/30 rounded-lg transition-colors group"
@@ -318,22 +303,6 @@ const AddGenre = () => {
 
             {/* Modal Form */}
             <form onSubmit={handleSave} className="p-6 space-y-6">
-              {!editingGenre && (
-                <div>
-                  <label className="block text-sm font-bold text-gray-400 mb-2">
-                    Genre ID <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    value={genreId}
-                    onChange={(e) => setGenreId(e.target.value)}
-                    className="w-full px-4 py-3 bg-black/50 border-2 border-red-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors"
-                    placeholder="Enter genre ID (e.g., 28)"
-                    autoFocus
-                  />
-                </div>
-              )}
-
               <div>
                 <label className="block text-sm font-bold text-gray-400 mb-2">
                   Genre Name <span className="text-red-500">*</span>
@@ -343,9 +312,12 @@ const AddGenre = () => {
                   value={genreName}
                   onChange={(e) => setGenreName(e.target.value)}
                   className="w-full px-4 py-3 bg-black/50 border-2 border-red-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors"
-                  placeholder="Enter genre name"
-                  autoFocus={!!editingGenre}
+                  placeholder="Enter genre name (e.g., action, sci-fi)"
+                  autoFocus
                 />
+                <p className="text-xs text-gray-500 mt-2">
+                  Note: Name will be auto-formatted to Title Case
+                </p>
               </div>
 
               {/* Buttons */}
@@ -355,7 +327,6 @@ const AddGenre = () => {
                   onClick={() => {
                     setShowModal(false);
                     setEditingGenre(null);
-                    setGenreId("");
                     setGenreName("");
                   }}
                   className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg font-bold text-white transition-colors"

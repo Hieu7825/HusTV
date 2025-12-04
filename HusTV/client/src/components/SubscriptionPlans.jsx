@@ -1,6 +1,4 @@
-// ============================================
 // client/src/components/SubscriptionPlans.jsx
-// ============================================
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BlurCircle from "./BlurCircle";
@@ -20,37 +18,27 @@ const SubscriptionPlans = () => {
         setLoading(true);
         const response = await subscriptionService.getAllPlans();
 
-        console.log("📥 API Response:", response);
-
-        // ✅ Extract plans from response.data
         let plansData = [];
-
         if (response?.data?.plans) {
-          // Case: { data: { plans: [...] } }
           plansData = response.data.plans;
         } else if (response?.data) {
-          // Case: { data: [...] }
           plansData = response.data;
         } else if (response?.plans) {
-          // Case: { plans: [...] }
           plansData = response.plans;
         } else if (Array.isArray(response)) {
-          // Case: [...]
           plansData = response;
         }
 
-        console.log("✅ Extracted plans:", plansData);
-
-        // Filter active plans only
-        const activePlans = plansData.filter((plan) => plan.isActive === true);
-
         // Sort by tierRank
-        const sortedPlans = activePlans.sort((a, b) => a.tierRank - b.tierRank);
+        const allPlans = plansData.sort((a, b) => a.tierRank - b.tierRank);
 
-        setPlans(sortedPlans);
+        // Select exactly 3 plans to display
+        const selectedPlans = selectTopThreePlans(allPlans);
 
-        if (sortedPlans.length === 0) {
-          console.warn("⚠️ No active plans found");
+        setPlans(selectedPlans);
+
+        if (selectedPlans.length === 0) {
+          console.warn("⚠️ No plans found");
         }
       } catch (error) {
         console.error("❌ Failed to fetch plans:", error);
@@ -64,6 +52,46 @@ const SubscriptionPlans = () => {
     fetchPlans();
   }, []);
 
+  // Function to select top 3 plans (popular in middle)
+  const selectTopThreePlans = (allPlans) => {
+    if (allPlans.length === 0) return [];
+    if (allPlans.length <= 3) return allPlans;
+
+    // Find popular plan
+    const popularPlan = allPlans.find((plan) => plan.isPopular);
+
+    // Find lowest and highest tier plans
+    const lowestTierPlan = allPlans[0]; // Already sorted by tierRank
+    const highestTierPlan = allPlans[allPlans.length - 1];
+
+    if (popularPlan) {
+      // If popular plan exists, place it in middle
+      const selectedPlans = [lowestTierPlan, popularPlan, highestTierPlan];
+
+      // Remove duplicates (in case popular is also lowest/highest)
+      const uniquePlans = selectedPlans.filter(
+        (plan, index, self) =>
+          index === self.findIndex((p) => p._id === plan._id)
+      );
+
+      // If we have less than 3 after removing duplicates, fill with other plans
+      if (uniquePlans.length < 3) {
+        const remainingPlans = allPlans.filter(
+          (p) => !uniquePlans.find((up) => up._id === p._id)
+        );
+        while (uniquePlans.length < 3 && remainingPlans.length > 0) {
+          uniquePlans.push(remainingPlans.shift());
+        }
+      }
+
+      return uniquePlans.slice(0, 3);
+    } else {
+      // No popular plan, just take first, middle, and last
+      const middleIndex = Math.floor(allPlans.length / 2);
+      return [lowestTierPlan, allPlans[middleIndex], highestTierPlan];
+    }
+  };
+
   if (loading) {
     return (
       <div className="px-6 md:px-16 lg:px-24 xl:px-44 py-20 overflow-hidden">
@@ -73,11 +101,6 @@ const SubscriptionPlans = () => {
       </div>
     );
   }
-
-  // // Don't render section if no plans
-  // if (plans.length === 0) {
-  //   return null;
-  // }
 
   return (
     <div className="px-6 md:px-16 lg:px-24 xl:px-44 py-20 overflow-hidden">
@@ -119,11 +142,11 @@ const SubscriptionPlans = () => {
         <BlurCircle top="-100px" right="-100px" />
         <BlurCircle top="300px" left="-150px" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-16 lg:gap-20 justify-items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-16 lg:gap-20 justify-items-center auto-rows-fr">
           {plans.map((plan, index) => (
             <div
               key={plan._id}
-              className="animate-fade-in-up"
+              className="animate-fade-in-up w-full flex"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <SubscriptionCard

@@ -1,9 +1,8 @@
-// middleware/validation.js
+// ============================================
+// FILE 2: server/middleware/validation.js (UPDATED)
+// ============================================
 import { body, param, query, validationResult } from "express-validator";
 
-/**
- * Middleware to check validation results
- */
 export const validate = (req, res, next) => {
   const errors = validationResult(req);
 
@@ -22,9 +21,47 @@ export const validate = (req, res, next) => {
   next();
 };
 
-/**
- * Video validation rules
- */
+// ✅ UPDATED: Removed tierRank validation - it's now auto-calculated
+export const validateCreatePlan = [
+  body("planName")
+    .trim()
+    .notEmpty()
+    .withMessage("Plan name is required")
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Plan name must be 2-50 characters"),
+
+  body("price")
+    .isFloat({ min: 0 })
+    .withMessage("Price must be a positive number"),
+
+  body("description")
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage("Description must not exceed 500 characters"),
+
+  body("features")
+    .isArray({ min: 1 })
+    .withMessage("At least one feature is required"),
+
+  body("connectedDevices").custom((value) => {
+    if (value === "Unlimited") return true;
+    if (typeof value === "number" && value > 0) return true;
+    throw new Error(
+      'Connected devices must be a positive number or "Unlimited"'
+    );
+  }),
+
+  body("duration")
+    .isIn(["Monthly", "Yearly"])
+    .withMessage("Duration must be Monthly or Yearly"),
+
+  // ✅ REMOVED: tierRank validation - auto-calculated now
+
+  validate,
+];
+
+// Video validation rules
 export const validateCreateVideo = [
   body("title")
     .trim()
@@ -86,9 +123,6 @@ export const validateUpdateVideo = [
   validate,
 ];
 
-/**
- * Subscription validation rules
- */
 export const validateCreateSubscription = [
   body("planId").trim().notEmpty().withMessage("Plan ID is required"),
 
@@ -107,50 +141,6 @@ export const validateUpgradeSubscription = [
   validate,
 ];
 
-export const validateCreatePlan = [
-  body("planName")
-    .trim()
-    .notEmpty()
-    .withMessage("Plan name is required")
-    .isLength({ min: 2, max: 50 })
-    .withMessage("Plan name must be 2-50 characters"),
-
-  body("price")
-    .isFloat({ min: 0 })
-    .withMessage("Price must be a positive number"),
-
-  body("description")
-    .optional()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage("Description must not exceed 500 characters"),
-
-  body("features")
-    .isArray({ min: 1 })
-    .withMessage("At least one feature is required"),
-
-  body("connectedDevices").custom((value) => {
-    if (value === "Unlimited") return true;
-    if (typeof value === "number" && value > 0) return true;
-    throw new Error(
-      'Connected devices must be a positive number or "Unlimited"'
-    );
-  }),
-
-  body("duration")
-    .isIn(["Monthly", "Yearly"])
-    .withMessage("Duration must be Monthly or Yearly"),
-
-  body("tierRank")
-    .isInt({ min: 1, max: 5 })
-    .withMessage("Tier rank must be between 1 and 5"),
-
-  validate,
-];
-
-/**
- * User validation rules
- */
 export const validateUpdatePreferences = [
   body("language")
     .optional()
@@ -206,9 +196,6 @@ export const validateWatchProgress = [
   validate,
 ];
 
-/**
- * Query validation rules
- */
 export const validatePagination = [
   query("page")
     .optional()

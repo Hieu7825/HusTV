@@ -11,9 +11,6 @@ import {
   Star,
   Calendar,
   Clock,
-  Edit,
-  Trash2,
-  Loader2,
 } from "lucide-react";
 import Title from "../../components/admin/Title";
 import BlurCircle from "../../components/BlurCircle";
@@ -21,7 +18,6 @@ import Loading from "../../components/Loading";
 import Pagination from "../../components/Pagination";
 import { videoService } from "../../services";
 import toast from "react-hot-toast";
-import MovieDetailsModal from "../../components/admin/MovieDetailsModal";
 
 const ListMovies = () => {
   const [movies, setMovies] = useState([]);
@@ -31,9 +27,6 @@ const ListMovies = () => {
     key: null,
     direction: "asc",
   });
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -110,29 +103,6 @@ const ListMovies = () => {
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleViewDetails = (movie) => {
-    setSelectedMovie(movie);
-    setShowModal(true);
-  };
-
-  const handleDeleteMovie = async (movieId) => {
-    if (!window.confirm("Are you sure you want to delete this movie?")) {
-      return;
-    }
-
-    try {
-      setDeleteLoading(movieId);
-      await videoService.deleteVideo(movieId);
-      toast.success("Movie deleted successfully");
-      fetchMovies(); // Refresh list
-    } catch (error) {
-      console.error("Error deleting movie:", error);
-      toast.error("Failed to delete movie");
-    } finally {
-      setDeleteLoading(null);
-    }
   };
 
   const SortIcon = ({ columnKey }) => {
@@ -309,11 +279,6 @@ const ListMovies = () => {
                         Genres
                       </span>
                     </th>
-                    <th className="p-4 text-left">
-                      <span className="font-black uppercase text-sm tracking-wider text-gray-300">
-                        Actions
-                      </span>
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -393,29 +358,6 @@ const ListMovies = () => {
                           )}
                         </div>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleViewDetails(movie)}
-                            className="p-2 bg-blue-900/30 hover:bg-blue-700/50 rounded-lg transition-colors group/btn"
-                            title="View Details"
-                          >
-                            <Edit className="w-4 h-4 text-blue-400 group-hover/btn:text-blue-300" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteMovie(movie._id)}
-                            disabled={deleteLoading === movie._id}
-                            className="p-2 bg-red-900/30 hover:bg-red-700/50 rounded-lg transition-colors group/btn disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Delete Movie"
-                          >
-                            {deleteLoading === movie._id ? (
-                              <Loader2 className="w-4 h-4 text-red-400 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4 text-red-400 group-hover/btn:text-red-300" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -472,17 +414,6 @@ const ListMovies = () => {
           />
         )}
       </div>
-
-      {/* Movie Details Modal */}
-      {showModal && selectedMovie && (
-        <MovieDetailsModal
-          movie={selectedMovie}
-          onClose={() => {
-            setShowModal(false);
-            setSelectedMovie(null);
-          }}
-        />
-      )}
 
       <style jsx>{`
         @keyframes fadeIn {

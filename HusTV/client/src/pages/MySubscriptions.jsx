@@ -1,11 +1,17 @@
-// ============================================
-// FILE 2: client/src/pages/MySubscriptions.jsx
-// ============================================
-import React, { useEffect, useState } from "react";
+// client/src/pages/MySubscriptions.jsx
+import React, { useEffect, useState, useRef } from "react";
 import { subscriptionService } from "../services/subscriptionService";
 import Loading from "../components/Loading";
 import BlurCircle from "../components/BlurCircle";
-import { CheckCircle, Crown, CreditCard, Check, X } from "lucide-react";
+import {
+  CheckCircle,
+  Crown,
+  CreditCard,
+  Check,
+  X,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 const MySubscriptions = () => {
@@ -14,6 +20,11 @@ const MySubscriptions = () => {
   const [plans, setPlans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserPlan, setCurrentUserPlan] = useState(null);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false); // ✅ NEW: Sync state
+
+  const pollingIntervalRef = useRef(null);
+  const maxPollingAttemptsRef = useRef(0);
 
   /**
    * Fetch all plans and current subscription
@@ -34,12 +45,10 @@ const MySubscriptions = () => {
           await subscriptionService.getCurrentSubscription();
         const currentSubscription = currentResponse?.data?.subscription;
 
-        // Only consider as current plan if isPaid = true
         currentPlan = currentSubscription?.isPaid
           ? currentSubscription?.plan
           : null;
       } catch (subError) {
-        // User doesn't have subscription yet
         currentPlan = null;
       }
 
@@ -66,33 +75,127 @@ const MySubscriptions = () => {
     }
   };
 
-  useEffect(() => {
-    fetchSubscriptions();
+  /**
+   * ✅ NEW: Handle manual sync to Clerk
+   */
+  const handleSyncToClerk = async () => {
+    try {
+      setIsSyncing(true);
+      toast.loading("🔄 Syncing subscription to your profile...", {
+        id: "sync-toast",
+      });
 
-    // Check for payment success/cancellation
+      await subscriptionService.syncClerkMetadata();
+
+      // Refresh data after sync
+      await fetchSubscriptions();
+
+      toast.success("✅ Subscription synced successfully!", {
+        id: "sync-toast",
+        duration: 4000,
+      });
+
+      console.log("✅ Manual sync completed");
+    } catch (error) {
+      console.error("❌ Failed to sync:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to sync subscription",
+        {
+          id: "sync-toast",
+          duration: 4000,
+        }
+      );
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  /**
+   * Poll payment status until confirmed (max 20 attempts = ~20 seconds)
+   */
+  const pollPaymentStatus = async () => {
+    const MAX_ATTEMPTS = 20;
+    const POLL_INTERVAL = 1000;
+
+    maxPollingAttemptsRef.current = 0;
+    setIsVerifyingPayment(true);
+
+    pollingIntervalRef.current = setInterval(async () => {
+      try {
+        maxPollingAttemptsRef.current += 1;
+
+        console.log(
+          `🔄 Polling payment status (attempt ${maxPollingAttemptsRef.current}/${MAX_ATTEMPTS})`
+        );
+
+        const currentResponse =
+          await subscriptionService.getCurrentSubscription();
+        const currentSubscription = currentResponse?.data?.subscription;
+
+        if (currentSubscription?.isPaid) {
+          clearInterval(pollingIntervalRef.current);
+          setIsVerifyingPayment(false);
+
+          await fetchSubscriptions();
+
+          toast.success(
+            "✅ Payment successful! Your plan has been activated.",
+            { duration: 5000 }
+          );
+
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
+
+          return;
+        }
+
+        if (maxPollingAttemptsRef.current >= MAX_ATTEMPTS) {
+          clearInterval(pollingIntervalRef.current);
+          setIsVerifyingPayment(false);
+
+          toast.error(
+            "Payment verification taking longer than expected. Please refresh the page.",
+            { duration: 6000 }
+          );
+
+          await fetchSubscriptions();
+        }
+      } catch (error) {
+        console.error("❌ Error polling payment status:", error);
+
+        if (maxPollingAttemptsRef.current >= MAX_ATTEMPTS) {
+          clearInterval(pollingIntervalRef.current);
+          setIsVerifyingPayment(false);
+        }
+      }
+    }, POLL_INTERVAL);
+  };
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session_id");
     const cancelled = params.get("cancelled");
 
     if (sessionId) {
-      // Payment successful - refresh data after 2 seconds
-      const timer = setTimeout(() => {
-        fetchSubscriptions();
-        toast.success("✅ Payment successful! Your plan has been activated.");
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        );
-      }, 2000);
-
-      return () => clearTimeout(timer);
+      console.log("💳 Payment session detected, starting verification...");
+      pollPaymentStatus();
+    } else {
+      fetchSubscriptions();
     }
 
     if (cancelled) {
       toast.info("Payment cancelled. You can try again anytime.");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, []);
 
   /**
@@ -144,13 +247,11 @@ const MySubscriptions = () => {
 
   return (
     <div className="relative px-4 sm:px-6 md:px-12 lg:px-24 xl:px-32 py-16 md:py-24 min-h-screen">
-      {/* Background Effects */}
       <BlurCircle top="100px" right="0" />
       <BlurCircle bottom="0px" left="300px" />
       <BlurCircle top="150px" left="-80px" />
       <BlurCircle bottom="50px" right="50px" />
 
-      {/* Header Section */}
       <div className="text-center mb-16 max-w-3xl mx-auto">
         <h1 className="gradient text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 uppercase tracking-tight">
           Subscription Plans
@@ -160,16 +261,55 @@ const MySubscriptions = () => {
           Choose the perfect plan for unlimited entertainment
         </p>
 
-        {/* Current Plan Badge */}
-        {currentUserPlan && (
-          <div className="mt-6 inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/50 px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider">
-            <Check className="w-4 h-4" />
-            Current Plan: {currentUserPlan.planName}
+        {isVerifyingPayment && (
+          <div className="mt-6 inline-flex items-center gap-3 bg-blue-500/10 text-blue-400 border border-blue-500/50 px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider animate-pulse">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Verifying Payment...
+          </div>
+        )}
+
+        {currentUserPlan && !isVerifyingPayment && (
+          <div className="mt-6 space-y-3">
+            {/* Current Plan Badge */}
+            <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/50 px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider">
+              <Check className="w-4 h-4" />
+              Current Plan: {currentUserPlan.planName}
+            </div>
+
+            {/* ✅ NEW: Sync Button */}
+            <div className="flex justify-center">
+              <button
+                onClick={handleSyncToClerk}
+                disabled={isSyncing}
+                className={`inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider transition-all duration-300 border ${
+                  isSyncing
+                    ? "bg-gray-700 text-gray-400 border-gray-600 cursor-not-allowed"
+                    : "bg-blue-500/10 text-blue-400 border-blue-500/50 hover:bg-blue-500/20 hover:border-blue-400 cursor-pointer"
+                }`}
+              >
+                {isSyncing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Sync to Profile
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Helper text */}
+            <p className="text-gray-500 text-xs">
+              💡 Click "Sync to Profile" if your subscription doesn't show in
+              your account
+            </p>
           </div>
         )}
       </div>
 
-      {/* Plans Grid */}
       {plans.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-gray-400 text-lg mb-4">
@@ -187,7 +327,6 @@ const MySubscriptions = () => {
                 key={plan._id}
                 className={`relative group ${subscribed ? "order-first" : ""}`}
               >
-                {/* Glow Effect */}
                 <div
                   className={`absolute -inset-1 rounded-3xl opacity-0 group-hover:opacity-75 blur-xl transition-all duration-500 ${
                     subscribed
@@ -196,7 +335,6 @@ const MySubscriptions = () => {
                   }`}
                 ></div>
 
-                {/* Plan Card */}
                 <div
                   className={`relative bg-gradient-to-br from-gray-900 via-gray-900 to-black rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 hover:-translate-y-1 border ${
                     subscribed
@@ -206,7 +344,6 @@ const MySubscriptions = () => {
                       : "border-gray-800 group-hover:border-red-500/50"
                   }`}
                 >
-                  {/* Popular/Subscribed Badge */}
                   {(plan.isPopular || subscribed) && (
                     <div className="absolute top-0 right-0 z-10">
                       <div
@@ -231,9 +368,7 @@ const MySubscriptions = () => {
                     </div>
                   )}
 
-                  {/* Card Content */}
                   <div className="relative p-8 flex flex-col h-auto">
-                    {/* Plan Name */}
                     <div className="text-center mb-6 pt-4">
                       <h3
                         className={`text-3xl font-bold text-white mb-3 uppercase tracking-wide transition-colors duration-300 ${
@@ -249,7 +384,6 @@ const MySubscriptions = () => {
                       </p>
                     </div>
 
-                    {/* Price */}
                     <div
                       className={`text-center mb-6 py-6 bg-black/40 backdrop-blur-sm rounded-2xl border transition-all ${
                         subscribed
@@ -285,7 +419,6 @@ const MySubscriptions = () => {
                       </p>
                     </div>
 
-                    {/* Features */}
                     <div className="mb-6 flex-grow">
                       <div className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider font-bold mb-4 px-1">
                         <div
@@ -312,7 +445,6 @@ const MySubscriptions = () => {
                       </div>
                     </div>
 
-                    {/* CTA Button */}
                     <div className="mt-auto pt-6 border-t border-gray-800">
                       <button
                         disabled={subscribed || lowerTier}
@@ -334,7 +466,7 @@ const MySubscriptions = () => {
                           ) : lowerTier ? (
                             <>
                               <X className="w-4 h-4" />
-                              SUBSCRIBED
+                              LOWER TIER
                             </>
                           ) : (
                             <>
@@ -347,7 +479,6 @@ const MySubscriptions = () => {
                     </div>
                   </div>
 
-                  {/* Bottom Glow */}
                   <div
                     className={`absolute bottom-0 left-0 w-full h-1 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ${
                       subscribed
@@ -362,7 +493,6 @@ const MySubscriptions = () => {
         </div>
       )}
 
-      {/* Footer Info */}
       <div className="text-center mt-16 max-w-2xl mx-auto">
         <p className="text-gray-400 text-sm mb-6">
           All plans include 7-day free trial • Cancel anytime • No hidden fees

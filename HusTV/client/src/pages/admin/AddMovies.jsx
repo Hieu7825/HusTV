@@ -13,14 +13,10 @@ import {
   X,
   Image as ImageIcon,
   Users,
-  Play,
-  Info,
-  Youtube,
 } from "lucide-react";
 import Title from "../../components/admin/Title";
 import BlurCircle from "../../components/BlurCircle";
 import AddNewMovie from "../../components/admin/AddNewMovie";
-import MovieDetailsModal from "../../components/admin/MovieDetailsModal";
 import Pagination from "../../components/Pagination";
 import Loading from "../../components/Loading";
 import { videoService } from "../../services";
@@ -31,7 +27,6 @@ const AddMovies = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingMovie, setEditingMovie] = useState(null);
-  const [selectedMovie, setSelectedMovie] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Pagination state
@@ -42,8 +37,6 @@ const AddMovies = () => {
   useEffect(() => {
     fetchMovies();
   }, []);
-
-  // Thay thế hàm fetchMovies trong AddMovies.jsx (từ dòng 42-56)
 
   const fetchMovies = async () => {
     try {
@@ -238,7 +231,7 @@ const AddMovies = () => {
         </div>
 
         {/* Movies Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[800px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[600px]">
           {currentMovies.map((movie, index) => (
             <div
               key={movie._id}
@@ -320,38 +313,6 @@ const AddMovies = () => {
                       "{movie.tagline}"
                     </p>
                   )}
-
-                  {/* Trailer & Video Buttons */}
-                  <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    {movie.trailer && (
-                      <a
-                        href={movie.trailer}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/90 hover:bg-red-500 rounded-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 shadow-lg"
-                      >
-                        <Youtube className="w-4 h-4 text-white" />
-                        <span className="text-xs font-bold text-white">
-                          Trailer
-                        </span>
-                      </a>
-                    )}
-                    {movie.video && (
-                      <a
-                        href={movie.video}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600/90 hover:bg-rose-500 rounded-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 shadow-lg"
-                      >
-                        <Play className="w-4 h-4 text-white" />
-                        <span className="text-xs font-bold text-white">
-                          Watch
-                        </span>
-                      </a>
-                    )}
-                  </div>
                 </div>
               </div>
 
@@ -431,46 +392,6 @@ const AddMovies = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Video Links */}
-                {(movie.trailer || movie.video) && (
-                  <>
-                    <div className="h-px bg-gradient-to-r from-transparent via-red-900/40 to-transparent"></div>
-                    <div className="flex gap-2">
-                      {movie.trailer && (
-                        <a
-                          href={movie.trailer}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 rounded-lg font-bold text-white shadow-lg shadow-red-600/30 hover:shadow-red-500/50 transition-all duration-300 hover:scale-105"
-                        >
-                          <Youtube className="w-4 h-4" />
-                          Trailer
-                        </a>
-                      )}
-                      {movie.video && (
-                        <a
-                          href={movie.video}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-500 hover:to-pink-600 rounded-lg font-bold text-white shadow-lg shadow-rose-600/30 hover:shadow-rose-500/50 transition-all duration-300 hover:scale-105"
-                        >
-                          <Play className="w-4 h-4" />
-                          Watch
-                        </a>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {/* View Details Button */}
-                <button
-                  onClick={() => setSelectedMovie(movie)}
-                  className="w-full mt-4 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 rounded-lg font-bold text-white shadow-lg shadow-red-600/30 hover:shadow-red-500/50 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
-                >
-                  <Info className="w-4 h-4" />
-                  View Details
-                </button>
               </div>
 
               {/* Shimmer Effect */}
@@ -512,14 +433,6 @@ const AddMovies = () => {
           }}
           onSave={handleSaveMovie}
           onRefresh={fetchMovies}
-        />
-      )}
-
-      {/* Detail Modal */}
-      {selectedMovie && (
-        <MovieDetailsModal
-          movie={selectedMovie}
-          onClose={() => setSelectedMovie(null)}
         />
       )}
     </div>

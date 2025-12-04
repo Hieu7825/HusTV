@@ -1,5 +1,5 @@
-// client/src/pages/admin/DashBoard.jsx
 import React, { useEffect, useState } from "react";
+import { useUser } from "@clerk/clerk-react"; // ✅ Import useUser hook
 import { adminService } from "../../services";
 import {
   TrendingUpIcon,
@@ -22,6 +22,7 @@ import toast from "react-hot-toast";
 
 const DashBoard = () => {
   const currency = import.meta.env.VITE_CURRENCY || "$";
+  const { isLoaded, isSignedIn } = useUser(); // ✅ Check Clerk status
 
   const [dashboardData, setDashboardData] = useState({
     totalSubscriptions: 0,
@@ -115,8 +116,11 @@ const DashBoard = () => {
   };
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    // ✅ Chỉ fetch khi Clerk đã load và user đã sign in
+    if (isLoaded && isSignedIn) {
+      fetchDashboardData();
+    }
+  }, [isLoaded, isSignedIn]);
 
   const getPlanBorderColor = (planName) => {
     const colors = {
@@ -154,7 +158,12 @@ const DashBoard = () => {
     return gradients[planName] || "from-gray-800 via-gray-900 to-black";
   };
 
-  return !loading ? (
+  // ✅ Show loading nếu Clerk chưa load
+  if (!isLoaded || loading) {
+    return <Loading />;
+  }
+
+  return (
     <>
       <div className="flex items-center justify-between mb-8">
         <Title text1="Admin" text2="Dashboard" />
@@ -425,8 +434,6 @@ const DashBoard = () => {
         )}
       </div>
     </>
-  ) : (
-    <Loading />
   );
 };
 

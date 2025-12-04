@@ -14,9 +14,11 @@ import userRoutes from "./routes/userRoutes.js";
 import videoRoutes from "./routes/videoRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import genreRoutes from "./routes/genreRoutes.js";
+import adminPlanRoutes from "./routes/adminPlanRoutes.js";
 
 // Import middleware
 import { errorHandler, notFound, apiLimiter } from "./middleware/index.js";
+import { startSubscriptionChecker } from "./cron/subscriptionChecker.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -73,7 +75,7 @@ app.use("/api/inngest", serve({ client: inngest, functions }));
 
 // Subscription routes (NEW)
 app.use("/api/subscriptions", subscriptionRoutes);
-
+app.use("/api/admin/plans", adminPlanRoutes);
 // User routes
 app.use("/api/users", userRoutes);
 
@@ -91,6 +93,7 @@ app.use("/api/admin", adminRoutes);
 // ============================================
 app.use(notFound);
 app.use(errorHandler);
+// startSubscriptionChecker();
 
 // ============================================
 // Start Server

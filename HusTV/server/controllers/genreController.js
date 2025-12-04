@@ -4,6 +4,27 @@ import Video from "../models/Video.js";
 import { asyncHandler } from "../middleware/index.js";
 
 /**
+ * Helper function: Convert to Title Case
+ * "action" -> "Action"
+ * "science fiction" -> "Science Fiction"
+ * "sci-fi" -> "Sci-Fi"
+ */
+const toTitleCase = (str) => {
+  return str
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => {
+      // Handle hyphenated words
+      return word
+        .split("-")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join("-");
+    })
+    .join(" ");
+};
+
+/**
  * @desc    Get all genres (sorted alphabetically)
  * @route   GET /api/genres
  * @access  Public
@@ -33,7 +54,7 @@ export const getGenreById = asyncHandler(async (req, res) => {
     });
   }
 
-  // Optionally count videos with this genre
+  // Count videos with this genre
   const videoCount = await Video.countDocuments({
     "genres.id": genre.id,
     status: "published",
@@ -49,43 +70,44 @@ export const getGenreById = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc    Create new genre
+ * @desc    Create new genre (auto-increment ID)
  * @route   POST /api/genres
  * @access  Admin only
  */
 export const createGenre = asyncHandler(async (req, res) => {
-  const { id, name } = req.body;
+  const { name } = req.body;
 
   // Validation
-  if (!id || !name) {
+  if (!name || !name.trim()) {
     return res.status(400).json({
       success: false,
-      message: "Please provide both id and name",
+      message: "Please provide genre name",
     });
   }
 
-  // Check if genre already exists
+  // Format name to Title Case
+  const formattedName = toTitleCase(name);
+
+  // Check if genre name already exists (case-insensitive)
   const existingGenre = await Genre.findOne({
-    $or: [
-      { id: parseInt(id) },
-      { name: { $regex: new RegExp(`^${name}$`, "i") } },
-    ],
+    name: { $regex: new RegExp(`^${formattedName}$`, "i") },
   });
 
   if (existingGenre) {
     return res.status(400).json({
       success: false,
-      message:
-        existingGenre.id === parseInt(id)
-          ? "Genre ID already exists"
-          : "Genre name already exists",
+      message: `Genre "${formattedName}" already exists`,
     });
   }
 
+  // Get the highest ID and increment
+  const lastGenre = await Genre.findOne().sort({ id: -1 });
+  const newId = lastGenre ? lastGenre.id + 1 : 1;
+
   // Create genre
   const genre = await Genre.create({
-    id: parseInt(id),
-    name: name.trim(),
+    id: newId,
+    name: formattedName,
   });
 
   res.status(201).json({
@@ -103,12 +125,15 @@ export const createGenre = asyncHandler(async (req, res) => {
 export const updateGenre = asyncHandler(async (req, res) => {
   const { name } = req.body;
 
-  if (!name) {
+  if (!name || !name.trim()) {
     return res.status(400).json({
       success: false,
       message: "Please provide genre name",
     });
   }
+
+  // Format name to Title Case
+  const formattedName = toTitleCase(name);
 
   // Find genre
   const genre = await Genre.findOne({ id: parseInt(req.params.id) });
@@ -120,24 +145,24 @@ export const updateGenre = asyncHandler(async (req, res) => {
     });
   }
 
-  // Check if new name already exists (for other genre)
+  // Check if new name already exists (for other genre, case-insensitive)
   const existingGenre = await Genre.findOne({
-    name: { $regex: new RegExp(`^${name}$`, "i") },
+    name: { $regex: new RegExp(`^${formattedName}$`, "i") },
     id: { $ne: parseInt(req.params.id) },
   });
 
   if (existingGenre) {
     return res.status(400).json({
       success: false,
-      message: "Genre name already exists",
+      message: `Genre "${formattedName}" already exists`,
     });
   }
 
   // Update genre
-  genre.name = name.trim();
+  genre.name = formattedName;
   await genre.save();
 
-  // 🔄 BONUS: Update all videos with this genre (optional)
+  // Update all videos with this genre
   await Video.updateMany(
     { "genres.id": genre.id },
     { $set: { "genres.$[elem].name": genre.name } },
@@ -183,67 +208,5 @@ export const deleteGenre = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Genre deleted successfully",
-  });
-});
-
-/**
- * @desc    Search genres
- * @route   GET /api/genres/search?q=action
- * @access  Public
- */
-export const searchGenres = asyncHandler(async (req, res) => {
-  const { q } = req.query;
-
-  if (!q) {
-    return res.status(400).json({
-      success: false,
-      message: "Please provide search query",
-    });
-  }
-
-  const genres = await Genre.find({
-    name: { $regex: q, $options: "i" },
-  })
-    .sort({ name: 1 })
-    .limit(20);
-
-  res.status(200).json({
-    success: true,
-    count: genres.length,
-    data: genres,
-  });
-});
-
-/**
- * @desc    Get genre statistics
- * @route   GET /api/genres/stats
- * @access  Admin only
- */
-export const getGenreStats = asyncHandler(async (req, res) => {
-  const genres = await Genre.find().sort({ name: 1 });
-
-  // Count videos for each genre
-  const genreStats = await Promise.all(
-    genres.map(async (genre) => {
-      const videoCount = await Video.countDocuments({
-        "genres.id": genre.id,
-        status: "published",
-      });
-
-      return {
-        id: genre.id,
-        name: genre.name,
-        videoCount,
-      };
-    })
-  );
-
-  // Sort by video count
-  genreStats.sort((a, b) => b.videoCount - a.videoCount);
-
-  res.status(200).json({
-    success: true,
-    count: genreStats.length,
-    data: genreStats,
   });
 });

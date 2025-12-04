@@ -33,7 +33,14 @@ const MovieDetails = () => {
         setMovie(movieData);
 
         // Increment view count
-        await videoService.incrementView(id);
+        try {
+          await videoService.incrementView(id);
+        } catch (error) {
+          // Ignore 401 errors - view tracking is optional
+          if (error.response?.status !== 401) {
+            console.error("Failed to increment view:", error);
+          }
+        }
       } catch (error) {
         console.error("❌ Failed to fetch movie details:", error);
         toast.error("Failed to load movie details");
@@ -57,7 +64,12 @@ const MovieDetails = () => {
           response.data?.isFavorite || response.isFavorite || false;
         setIsLiked(isFavorite);
       } catch (error) {
-        console.error("Failed to check favorite status:", error);
+        // Ignore 401 errors - favorite check is optional for guests
+        if (error.response?.status === 401) {
+          setIsLiked(false); // Guest → not favorited
+        } else {
+          console.error("Failed to check favorite status:", error);
+        }
       }
     };
 

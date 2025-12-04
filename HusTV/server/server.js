@@ -40,7 +40,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: [
+      "http://localhost:5173", // Để code ở máy (Local)
+      "https://hustv.vercel.app", // Để chạy trên Vercel (Production)
+    ],
     credentials: true,
   })
 );

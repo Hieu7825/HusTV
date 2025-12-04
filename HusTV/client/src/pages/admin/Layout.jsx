@@ -1,7 +1,7 @@
 // client/src/pages/admin/Layout.jsx
 import React from "react";
 import AdminNavBar from "../../components/admin/AdminNavBar";
-import AdminSidebar from "../../components/admin/AdminSidebar";
+import AdminSideBar from "../../components/admin/AdminSideBar";
 import { Outlet } from "react-router-dom";
 
 const Layout = () => {
@@ -9,7 +9,7 @@ const Layout = () => {
     <>
       <AdminNavBar />
       <div className="flex">
-        <AdminSidebar />
+        <AdminSideBar />
         <div className="flex-1 px-4 py-10 md:px-10 h-[calc(100vh-64px)] overflow-y-auto">
           <Outlet />
         </div>

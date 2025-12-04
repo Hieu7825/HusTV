@@ -20,7 +20,7 @@ import MySubscriptions from "./pages/MySubscriptions";
 
 // Admin Pages
 import Layout from "./pages/admin/Layout";
-import DashBoard from "./pages/admin/DashBoard";
+import DashBoard from "./pages/admin/Dashboard";
 import AddGenre from "./pages/admin/AddGenre";
 import AddMovies from "./pages/admin/AddMovies";
 import AddPlans from "./pages/admin/AddPlans";

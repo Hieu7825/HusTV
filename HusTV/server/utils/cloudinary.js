@@ -1,4 +1,4 @@
-// utils/cloudinary.js
+// server/utils/cloudinary.js
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
@@ -15,11 +15,57 @@ console.log("☁️ Cloudinary configured:", {
   api_secret: process.env.CLOUDINARY_API_SECRET ? "✅" : "❌",
 });
 
+// ==================== 🆕 NEW: SIGNATURE GENERATION FOR CLIENT UPLOAD ====================
+/**
+ * ⭐ Generate signature for client-side uploads
+ * This allows frontend to upload directly to Cloudinary (bypass server size limit)
+ */
+export const generateUploadSignature = (params = {}) => {
+  try {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+
+    // Parameters to sign
+    const paramsToSign = {
+      timestamp,
+      folder: params.folder || "hustv",
+      ...params, // Allow custom params (public_id, etc.)
+    };
+
+    // Remove undefined values
+    Object.keys(paramsToSign).forEach((key) => {
+      if (paramsToSign[key] === undefined) {
+        delete paramsToSign[key];
+      }
+    });
+
+    // Generate signature
+    const signature = cloudinary.utils.api_sign_request(
+      paramsToSign,
+      process.env.CLOUDINARY_API_SECRET
+    );
+
+    console.log(
+      "✅ Upload signature generated for folder:",
+      paramsToSign.folder
+    );
+
+    return {
+      signature,
+      timestamp,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      folder: paramsToSign.folder,
+    };
+  } catch (error) {
+    console.error("❌ Signature generation error:", error);
+    throw error;
+  }
+};
+
+// ==================== LEGACY: SERVER-SIDE UPLOAD ====================
 /**
  * Upload video to Cloudinary from file path
  */
-// server/utils/cloudinary.js - Thay thế hàm uploadVideo
-
 export const uploadVideo = async (filePath, folder = "hustv/videos") => {
   try {
     console.log("📹 Uploading video to Cloudinary:", filePath);
@@ -187,7 +233,9 @@ export const generateThumbnail = (publicId) => {
   });
 };
 
+// ==================== 🆕 EXPORT ====================
 export default {
+  generateUploadSignature, // 🆕 THÊM DÒNG NÀY
   uploadVideo,
   uploadImage,
   deleteVideo,

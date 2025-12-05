@@ -2,7 +2,7 @@
 import express from "express";
 import { protectUser, protectAdmin, optionalAuth } from "../middleware/auth.js";
 import {
-  uploadVideoComplete, // ← import multer middleware object (has .fields() method)
+  uploadVideoComplete,
   handleUploadError,
   validateVideoFile,
   validateFileSizes,
@@ -15,7 +15,7 @@ import {
   getTrendingVideos,
   getVideosByGenre,
   streamVideo,
-  getTrailerUrl, // NEW - Get trailer URL
+  getTrailerUrl,
   uploadVideo,
   updateVideo,
   deleteVideo,
@@ -23,8 +23,45 @@ import {
   toggleTrending,
   incrementView,
 } from "../controllers/videoController.js";
+import { generateUploadSignature } from "../utils/cloudinary.js"; // 🆕 THÊM IMPORT
 
 const router = express.Router();
+
+// ==================== 🆕 NEW: CLOUDINARY SIGNATURE ====================
+/**
+ * Generate signed upload parameters for client-side uploads
+ * POST /api/videos/cloudinary/signature
+ * Allows frontend to upload directly to Cloudinary (bypass 4.5MB server limit)
+ */
+router.post("/cloudinary/signature", protectUser, async (req, res) => {
+  try {
+    const { folder, public_id } = req.body;
+
+    console.log("📝 Generating Cloudinary signature for:", {
+      folder: folder || "hustv",
+      public_id: public_id || "(auto-generated)",
+    });
+
+    const signatureData = generateUploadSignature({
+      folder: folder || "hustv",
+      public_id: public_id,
+    });
+
+    console.log("✅ Signature generated successfully");
+
+    res.json({
+      success: true,
+      ...signatureData,
+    });
+  } catch (error) {
+    console.error("❌ Signature generation error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate upload signature",
+      error: error.message,
+    });
+  }
+});
 
 // ==================== PUBLIC ROUTES ====================
 // No authentication required
@@ -47,7 +84,7 @@ router.get("/genre/:genreId", optionalAuth, getVideosByGenre);
 // Get single video by ID
 router.get("/:id", optionalAuth, getVideoById);
 
-// ⭐ NEW: Get trailer URL (public - no subscription required)
+// Get trailer URL (public - no subscription required)
 router.get("/:id/trailer", getTrailerUrl);
 
 // ==================== PROTECTED ROUTES ====================
@@ -78,8 +115,8 @@ const debugUpload = (req, res, next) => {
 router.post(
   "/",
   protectAdmin,
-  uploadVideoComplete, // ← multer parses FormData FIRST
-  debugUpload, // ← then log parsed data
+  uploadVideoComplete,
+  debugUpload,
   handleUploadError,
   validateVideoFile,
   validateFileSizes,
@@ -90,7 +127,7 @@ router.post(
 router.put(
   "/:id",
   protectAdmin,
-  uploadVideoComplete, // ← multer parses FormData FIRST
+  uploadVideoComplete,
   handleUploadError,
   validateVideoFile,
   validateFileSizes,

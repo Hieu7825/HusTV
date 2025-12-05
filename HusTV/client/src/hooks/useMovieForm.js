@@ -99,12 +99,11 @@ export const useMovieForm = (movie, onSuccess) => {
     }
 
     if (type === "poster") {
-      // ✅ Lưu vào ref thay vì state
       filesRef.current.poster = file;
       setPosterPreview(URL.createObjectURL(file));
       setFormData((prev) => ({
         ...prev,
-        poster_path: "", // Clear old URL
+        poster_path: "",
       }));
       console.log("✅ Poster saved to ref:", filesRef.current.poster.name);
 
@@ -271,6 +270,7 @@ export const useMovieForm = (movie, onSuccess) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // ==================== 🆕 CLOUDINARY UPLOAD LOGIC ====================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -287,91 +287,162 @@ export const useMovieForm = (movie, onSuccess) => {
     );
 
     try {
-      const formDataToSend = new FormData();
+      // ==================== 🆕 STEP 1: Upload files to Cloudinary ====================
+      const uploadedUrls = {};
 
-      // ===== TEXT FIELDS ONLY =====
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("overview", formData.overview);
-      formDataToSend.append("tagline", formData.tagline || "");
-      formDataToSend.append("release_date", formData.release_date);
-      formDataToSend.append(
-        "original_language",
-        formData.original_language || "en"
-      );
-      formDataToSend.append("runtime", parseInt(formData.runtime) || 0);
-      formDataToSend.append(
-        "vote_average",
-        parseFloat(formData.vote_average) || 0
-      );
-      formDataToSend.append("vote_count", parseInt(formData.vote_count) || 0);
-      formDataToSend.append("featured", formData.featured || false);
-      formDataToSend.append("trending", formData.trending || false);
-      formDataToSend.append("adult", formData.adult || false);
-      formDataToSend.append("genres", JSON.stringify(formData.genres || []));
-      formDataToSend.append("casts", JSON.stringify(formData.casts || []));
-
-      // ===== FILE FIELDS - Lấy từ ref =====
-      console.log("📤 Appending files from ref...");
-
-      if (filesRef.current.poster instanceof File) {
-        formDataToSend.append("poster", filesRef.current.poster);
-        console.log("✅ Poster:", filesRef.current.poster.name);
-      } else if (formData.poster_path) {
-        formDataToSend.append("poster_path", formData.poster_path);
-        console.log("ℹ️ Keep existing poster_path");
-      }
-
-      if (filesRef.current.backdrop instanceof File) {
-        formDataToSend.append("backdrop", filesRef.current.backdrop);
-        console.log("✅ Backdrop:", filesRef.current.backdrop.name);
-      } else if (formData.backdrop_path) {
-        formDataToSend.append("backdrop_path", formData.backdrop_path);
-      }
-
-      if (filesRef.current.trailer instanceof File) {
-        formDataToSend.append("trailer", filesRef.current.trailer);
-        console.log("✅ Trailer:", filesRef.current.trailer.name);
-      } else if (formData.trailer_url) {
-        formDataToSend.append("trailer_url", formData.trailer_url);
-      }
-
-      if (filesRef.current.video instanceof File) {
-        formDataToSend.append("video", filesRef.current.video);
-        console.log("✅ Video:", filesRef.current.video.name);
-      } else if (formData.video_url) {
-        formDataToSend.append("video_url", formData.video_url);
-      }
-
-      // Progress callback
-      const onUploadProgress = (progress) => {
-        setUploadProgress(Math.round(progress));
-        if (progress < 100) {
-          toast.loading(`Uploading... ${Math.round(progress)}%`, {
-            id: loadingToast,
-          });
-        }
+      // Track which files need uploading
+      const filesToUpload = {
+        video:
+          filesRef.current.video instanceof File
+            ? filesRef.current.video
+            : null,
+        trailer:
+          filesRef.current.trailer instanceof File
+            ? filesRef.current.trailer
+            : null,
+        poster:
+          filesRef.current.poster instanceof File
+            ? filesRef.current.poster
+            : null,
+        backdrop:
+          filesRef.current.backdrop instanceof File
+            ? filesRef.current.backdrop
+            : null,
       };
 
-      // Send to API
+      // Count total files to upload
+      const totalFiles = Object.values(filesToUpload).filter(Boolean).length;
+
+      if (totalFiles > 0) {
+        console.log(`📤 Uploading ${totalFiles} files to Cloudinary...`);
+        toast.loading(`Uploading files to Cloudinary... (0/${totalFiles})`, {
+          id: loadingToast,
+        });
+
+        let uploadedCount = 0;
+
+        // Upload each file with progress
+        const uploadFile = async (file, type, folder, resourceType) => {
+          if (!file) return null;
+
+          console.log(`📤 Uploading ${type}...`);
+
+          const result = await videoService.uploadToCloudinary(
+            file,
+            { folder, resourceType },
+            (percent) => {
+              setUploadProgress(
+                Math.round(
+                  (uploadedCount / totalFiles + percent / 100 / totalFiles) *
+                    100
+                )
+              );
+              toast.loading(
+                `Uploading ${type}... ${percent}% (${uploadedCount}/${totalFiles} files)`,
+                { id: loadingToast }
+              );
+            }
+          );
+
+          uploadedCount++;
+          toast.loading(`Uploaded ${uploadedCount}/${totalFiles} files`, {
+            id: loadingToast,
+          });
+
+          return result;
+        };
+
+        // Upload video
+        if (filesToUpload.video) {
+          const videoResult = await uploadFile(
+            filesToUpload.video,
+            "video",
+            "hustv/videos",
+            "video"
+          );
+          uploadedUrls.video_url = videoResult.url;
+          uploadedUrls.cloudinary_public_id = videoResult.publicId;
+          uploadedUrls.duration = videoResult.duration;
+        }
+
+        // Upload trailer
+        if (filesToUpload.trailer) {
+          const trailerResult = await uploadFile(
+            filesToUpload.trailer,
+            "trailer",
+            "hustv/trailers",
+            "video"
+          );
+          uploadedUrls.trailer_url = trailerResult.url;
+        }
+
+        // Upload poster
+        if (filesToUpload.poster) {
+          const posterResult = await uploadFile(
+            filesToUpload.poster,
+            "poster",
+            "hustv/posters",
+            "image"
+          );
+          uploadedUrls.poster_path = posterResult.url;
+        }
+
+        // Upload backdrop
+        if (filesToUpload.backdrop) {
+          const backdropResult = await uploadFile(
+            filesToUpload.backdrop,
+            "backdrop",
+            "hustv/backdrops",
+            "image"
+          );
+          uploadedUrls.backdrop_path = backdropResult.url;
+        }
+
+        console.log("✅ All files uploaded to Cloudinary:", uploadedUrls);
+      }
+
+      // ==================== STEP 2: Send metadata + URLs to backend ====================
+      toast.loading("Saving movie to database...", { id: loadingToast });
+
+      const movieData = {
+        title: formData.title,
+        overview: formData.overview,
+        tagline: formData.tagline || "",
+        release_date: formData.release_date,
+        original_language: formData.original_language || "en",
+        runtime: parseInt(formData.runtime) || 0,
+        vote_average: parseFloat(formData.vote_average) || 0,
+        vote_count: parseInt(formData.vote_count) || 0,
+        featured: formData.featured || false,
+        trending: formData.trending || false,
+        adult: formData.adult || false,
+        genres: formData.genres || [],
+        casts: formData.casts || [],
+
+        // 🆕 Use Cloudinary URLs (if uploaded) or keep existing URLs
+        video_url: uploadedUrls.video_url || formData.video_url || "",
+        trailer_url: uploadedUrls.trailer_url || formData.trailer_url || "",
+        poster_path: uploadedUrls.poster_path || formData.poster_path || "",
+        backdrop_path:
+          uploadedUrls.backdrop_path || formData.backdrop_path || "",
+        cloudinary_public_id: uploadedUrls.cloudinary_public_id || "",
+      };
+
+      console.log("📤 Sending to backend:", movieData);
+
+      // Send to API (as JSON, not FormData!)
       let response;
       if (movie && movie._id) {
         console.log("🔄 Updating movie:", movie._id);
-        response = await videoService.updateVideo(
-          movie._id,
-          formDataToSend,
-          onUploadProgress
-        );
+        response = await videoService.updateVideo(movie._id, movieData);
         toast.success("Movie updated successfully!", { id: loadingToast });
       } else {
         console.log("➕ Creating new movie");
-        response = await videoService.createVideo(
-          formDataToSend,
-          onUploadProgress
-        );
+        response = await videoService.createVideo(movieData);
         toast.success("Movie created successfully!", { id: loadingToast });
       }
 
-      console.log("✅ Upload successful:", response.data);
+      console.log("✅ Save successful:", response.data);
 
       setUploadProgress(0);
       if (onSuccess) {

@@ -16,10 +16,10 @@ import fs from "fs";
 // ==================== UPLOAD & CREATE ====================
 
 /**
- * Upload video with trailer, poster, backdrop
- * Supports both file uploads and base64 strings
+ * 🆕 MODIFIED: Upload video - SUPPORTS BOTH:
+ * 1. Client-side upload (only URLs in request body) ⭐ NEW
+ * 2. Server-side upload (files in req.files) - LEGACY, limited to 4MB
  */
-// server/controllers/videoController.js
 export const uploadVideo = async (req, res) => {
   try {
     const auth = req.auth();
@@ -37,6 +37,12 @@ export const uploadVideo = async (req, res) => {
       adult,
       vote_average,
       vote_count,
+      // 🆕 NEW: URLs from client-side Cloudinary upload
+      video_url,
+      trailer_url,
+      poster_path,
+      backdrop_path,
+      cloudinary_public_id,
     } = req.body;
 
     // Validate required fields
@@ -54,195 +60,206 @@ export const uploadVideo = async (req, res) => {
       req.files ? Object.keys(req.files) : "none"
     );
 
-    let videoUrl = null;
-    let trailerUrl = null;
-    let posterUrl = null;
-    let backdropUrl = null;
-    let cloudinaryPublicId = null;
-    // ⭐ CHỈNH SỬA TẠI ĐÂY: Thêm logic kiểm tra poster_path cũ
-    if (req.body.poster_path && !req.files?.poster) {
-      posterUrl = req.body.poster_path; // Gán URL cũ nếu không có file mới
-      console.log("ℹ️ Keeping existing poster URL:", posterUrl);
-    }
-    if (req.body.backdrop_path && !req.files?.backdrop) {
-      backdropUrl = req.body.backdrop_path;
-      console.log("ℹ️ Keeping existing backdrop URL:", backdropUrl);
-    }
-    if (req.body.trailer_url && !req.files?.trailer) {
-      trailerUrl = req.body.trailer_url;
-      console.log("ℹ️ Keeping existing trailer URL:", trailerUrl);
-    }
-    if (req.body.video_url && !req.files?.video) {
-      videoUrl = req.body.video_url;
-      console.log("ℹ️ Keeping existing video URL:", videoUrl);
-    }
-    // ===== UPLOAD POSTER TO CLOUDINARY =====
-    if (req.files?.poster && req.files.poster.length > 0) {
-      console.log("🖼️ Uploading poster to Cloudinary...");
-      const posterFile = req.files.poster[0];
+    let videoUrl = video_url || null;
+    let trailerUrl = trailer_url || null;
+    let posterUrl = poster_path || null;
+    let backdropUrl = backdrop_path || null;
+    let cloudinaryPublicId = cloudinary_public_id || null;
 
-      console.log("📂 Poster file details:", {
-        fieldname: posterFile.fieldname,
-        originalname: posterFile.originalname,
-        mimetype: posterFile.mimetype,
-        size: posterFile.size,
-        path: posterFile.path,
-      });
+    // ==================== 🆕 CLIENT-SIDE UPLOAD PATH ====================
+    // If URLs are provided in body, skip file upload (already uploaded by client)
+    const hasClientUploadedUrls = video_url || poster_path;
 
-      try {
-        const posterResult = await uploadImage(
-          posterFile.path,
-          "hustv/posters"
-        );
-        posterUrl = posterResult.url;
-        console.log("✅ Poster uploaded to Cloudinary:", posterUrl);
+    if (hasClientUploadedUrls) {
+      console.log("✅ Using client-uploaded URLs (bypassed server upload)");
+      console.log("📹 Video URL:", videoUrl);
+      console.log("🎬 Trailer URL:", trailerUrl);
+      console.log("🖼️ Poster URL:", posterUrl);
+      console.log("🖼️ Backdrop URL:", backdropUrl);
+    }
+    // ==================== LEGACY: SERVER-SIDE UPLOAD PATH ====================
+    else {
+      console.log("⚠️ Using legacy server-side upload (4MB limit on Vercel)");
 
-        // ✅ Cleanup temp file
-        if (fs.existsSync(posterFile.path)) {
-          fs.unlinkSync(posterFile.path);
-          console.log("🗑️ Cleaned up temp poster file");
-        }
-      } catch (error) {
-        console.error("❌ Poster upload failed:", error);
+      // Keep existing poster/backdrop/trailer/video if provided
+      if (req.body.poster_path && !req.files?.poster) {
+        posterUrl = req.body.poster_path;
+        console.log("ℹ️ Keeping existing poster URL:", posterUrl);
+      }
+      if (req.body.backdrop_path && !req.files?.backdrop) {
+        backdropUrl = req.body.backdrop_path;
+        console.log("ℹ️ Keeping existing backdrop URL:", backdropUrl);
+      }
+      if (req.body.trailer_url && !req.files?.trailer) {
+        trailerUrl = req.body.trailer_url;
+        console.log("ℹ️ Keeping existing trailer URL:", trailerUrl);
+      }
+      if (req.body.video_url && !req.files?.video) {
+        videoUrl = req.body.video_url;
+        console.log("ℹ️ Keeping existing video URL:", videoUrl);
+      }
 
-        // Cleanup any uploaded files
-        if (req.files) {
-          Object.values(req.files).forEach((fileArray) => {
-            fileArray.forEach((file) => {
-              if (fs.existsSync(file.path)) {
-                fs.unlinkSync(file.path);
-              }
+      // ===== UPLOAD POSTER TO CLOUDINARY =====
+      if (req.files?.poster && req.files.poster.length > 0) {
+        console.log("🖼️ Uploading poster to Cloudinary...");
+        const posterFile = req.files.poster[0];
+
+        console.log("📂 Poster file details:", {
+          fieldname: posterFile.fieldname,
+          originalname: posterFile.originalname,
+          mimetype: posterFile.mimetype,
+          size: posterFile.size,
+          path: posterFile.path,
+        });
+
+        try {
+          const posterResult = await uploadImage(
+            posterFile.path,
+            "hustv/posters"
+          );
+          posterUrl = posterResult.url;
+          console.log("✅ Poster uploaded to Cloudinary:", posterUrl);
+
+          if (fs.existsSync(posterFile.path)) {
+            fs.unlinkSync(posterFile.path);
+            console.log("🗑️ Cleaned up temp poster file");
+          }
+        } catch (error) {
+          console.error("❌ Poster upload failed:", error);
+
+          // Cleanup any uploaded files
+          if (req.files) {
+            Object.values(req.files).forEach((fileArray) => {
+              fileArray.forEach((file) => {
+                if (fs.existsSync(file.path)) {
+                  fs.unlinkSync(file.path);
+                }
+              });
             });
+          }
+
+          return res.status(500).json({
+            success: false,
+            message: "Failed to upload poster to Cloudinary",
+            error: error.message,
           });
         }
+      } else {
+        console.log("⚠️ No poster file in request");
+      }
 
-        return res.status(500).json({
-          success: false,
-          message: "Failed to upload poster to Cloudinary",
-          error: error.message,
+      // ===== UPLOAD BACKDROP TO CLOUDINARY =====
+      if (req.files?.backdrop && req.files.backdrop.length > 0) {
+        console.log("🖼️ Uploading backdrop to Cloudinary...");
+        const backdropFile = req.files.backdrop[0];
+
+        console.log("📂 Backdrop file details:", {
+          fieldname: backdropFile.fieldname,
+          originalname: backdropFile.originalname,
+          mimetype: backdropFile.mimetype,
+          size: backdropFile.size,
+          path: backdropFile.path,
         });
+
+        try {
+          const backdropResult = await uploadImage(
+            backdropFile.path,
+            "hustv/backdrops"
+          );
+          backdropUrl = backdropResult.url;
+          console.log("✅ Backdrop uploaded to Cloudinary:", backdropUrl);
+
+          if (fs.existsSync(backdropFile.path)) {
+            fs.unlinkSync(backdropFile.path);
+            console.log("🗑️ Cleaned up temp backdrop file");
+          }
+        } catch (error) {
+          console.error("❌ Backdrop upload failed:", error);
+          if (fs.existsSync(backdropFile.path)) {
+            fs.unlinkSync(backdropFile.path);
+          }
+        }
+      } else {
+        console.log("ℹ️ No backdrop file in request");
       }
-    } else {
-      console.log("⚠️ No poster file in request");
-    }
 
-    // ===== UPLOAD BACKDROP TO CLOUDINARY =====
-    if (req.files?.backdrop && req.files.backdrop.length > 0) {
-      console.log("🖼️ Uploading backdrop to Cloudinary...");
-      const backdropFile = req.files.backdrop[0];
+      // ===== UPLOAD TRAILER TO CLOUDINARY =====
+      if (req.files?.trailer && req.files.trailer.length > 0) {
+        console.log("🎬 Uploading trailer to Cloudinary...");
+        const trailerFile = req.files.trailer[0];
 
-      console.log("📂 Backdrop file details:", {
-        fieldname: backdropFile.fieldname,
-        originalname: backdropFile.originalname,
-        mimetype: backdropFile.mimetype,
-        size: backdropFile.size,
-        path: backdropFile.path,
-      });
+        console.log("📂 Trailer file details:", {
+          fieldname: trailerFile.fieldname,
+          originalname: trailerFile.originalname,
+          mimetype: trailerFile.mimetype,
+          size: trailerFile.size,
+          path: trailerFile.path,
+        });
 
-      try {
-        const backdropResult = await uploadImage(
-          backdropFile.path,
-          "hustv/backdrops"
-        );
-        backdropUrl = backdropResult.url;
-        console.log("✅ Backdrop uploaded to Cloudinary:", backdropUrl);
+        try {
+          const trailerResult = await uploadToCloudinary(
+            trailerFile.path,
+            "hustv/trailers"
+          );
+          trailerUrl = trailerResult.playbackUrl || trailerResult.url;
+          console.log("✅ Trailer uploaded to Cloudinary:", trailerUrl);
 
-        // ✅ Cleanup temp file
-        if (fs.existsSync(backdropFile.path)) {
-          fs.unlinkSync(backdropFile.path);
-          console.log("🗑️ Cleaned up temp backdrop file");
+          if (fs.existsSync(trailerFile.path)) {
+            fs.unlinkSync(trailerFile.path);
+            console.log("🗑️ Cleaned up temp trailer file");
+          }
+        } catch (error) {
+          console.error("❌ Trailer upload failed:", error);
+          if (fs.existsSync(trailerFile.path)) {
+            fs.unlinkSync(trailerFile.path);
+          }
         }
-      } catch (error) {
-        console.error("❌ Backdrop upload failed:", error);
-        // Backdrop is optional, so continue
-        if (fs.existsSync(backdropFile.path)) {
-          fs.unlinkSync(backdropFile.path);
-        }
+      } else {
+        console.log("ℹ️ No trailer file in request");
       }
-    } else {
-      console.log("ℹ️ No backdrop file in request");
-    }
 
-    // ===== UPLOAD TRAILER TO CLOUDINARY =====
-    if (req.files?.trailer && req.files.trailer.length > 0) {
-      console.log("🎬 Uploading trailer to Cloudinary...");
-      const trailerFile = req.files.trailer[0];
+      // ===== UPLOAD VIDEO TO CLOUDINARY =====
+      if (req.files?.video && req.files.video.length > 0) {
+        console.log("📹 Uploading video to Cloudinary...");
+        const videoFile = req.files.video[0];
 
-      console.log("📂 Trailer file details:", {
-        fieldname: trailerFile.fieldname,
-        originalname: trailerFile.originalname,
-        mimetype: trailerFile.mimetype,
-        size: trailerFile.size,
-        path: trailerFile.path,
-      });
+        console.log("📂 Video file details:", {
+          fieldname: videoFile.fieldname,
+          originalname: videoFile.originalname,
+          mimetype: videoFile.mimetype,
+          size: videoFile.size,
+          path: videoFile.path,
+        });
 
-      try {
-        const trailerResult = await uploadToCloudinary(
-          trailerFile.path,
-          "hustv/trailers"
-        );
-        trailerUrl = trailerResult.playbackUrl || trailerResult.url;
-        console.log("✅ Trailer uploaded to Cloudinary:", trailerUrl);
+        try {
+          const videoResult = await uploadToCloudinary(
+            videoFile.path,
+            "hustv/videos"
+          );
+          videoUrl = videoResult.playbackUrl || videoResult.url;
+          cloudinaryPublicId = videoResult.publicId;
+          console.log("✅ Video uploaded to Cloudinary:", videoUrl);
 
-        // ✅ Cleanup temp file
-        if (fs.existsSync(trailerFile.path)) {
-          fs.unlinkSync(trailerFile.path);
-          console.log("🗑️ Cleaned up temp trailer file");
+          if (fs.existsSync(videoFile.path)) {
+            fs.unlinkSync(videoFile.path);
+            console.log("🗑️ Cleaned up temp video file");
+          }
+        } catch (error) {
+          console.error("❌ Video upload failed:", error);
+          if (fs.existsSync(videoFile.path)) {
+            fs.unlinkSync(videoFile.path);
+          }
         }
-      } catch (error) {
-        console.error("❌ Trailer upload failed:", error);
-        // Trailer is optional, so continue
-        if (fs.existsSync(trailerFile.path)) {
-          fs.unlinkSync(trailerFile.path);
-        }
+      } else {
+        console.log("ℹ️ No video file in request");
       }
-    } else {
-      console.log("ℹ️ No trailer file in request");
-    }
-
-    // ===== UPLOAD VIDEO TO CLOUDINARY =====
-    if (req.files?.video && req.files.video.length > 0) {
-      console.log("📹 Uploading video to Cloudinary...");
-      const videoFile = req.files.video[0];
-
-      console.log("📂 Video file details:", {
-        fieldname: videoFile.fieldname,
-        originalname: videoFile.originalname,
-        mimetype: videoFile.mimetype,
-        size: videoFile.size,
-        path: videoFile.path,
-      });
-
-      try {
-        const videoResult = await uploadToCloudinary(
-          videoFile.path,
-          "hustv/videos"
-        );
-        videoUrl = videoResult.playbackUrl || videoResult.url;
-        cloudinaryPublicId = videoResult.publicId;
-        console.log("✅ Video uploaded to Cloudinary:", videoUrl);
-
-        // ✅ Cleanup temp file
-        if (fs.existsSync(videoFile.path)) {
-          fs.unlinkSync(videoFile.path);
-          console.log("🗑️ Cleaned up temp video file");
-        }
-      } catch (error) {
-        console.error("❌ Video upload failed:", error);
-        // Video is optional for now
-        if (fs.existsSync(videoFile.path)) {
-          fs.unlinkSync(videoFile.path);
-        }
-      }
-    } else {
-      console.log("ℹ️ No video file in request");
     }
 
     // ===== VALIDATE REQUIRED FIELDS =====
     if (!posterUrl) {
       console.error("❌ VALIDATION: Poster URL is required");
 
-      // ✅ Cleanup all uploaded files if validation fails
+      // Cleanup all uploaded files if validation fails
       if (req.files) {
         Object.values(req.files).forEach((fileArray) => {
           fileArray.forEach((file) => {
@@ -278,7 +295,7 @@ export const uploadVideo = async (req, res) => {
       tagline: tagline || "",
       video: videoUrl || "",
       trailer: trailerUrl || "",
-      poster_path: posterUrl, // ✅ Cloudinary URL
+      poster_path: posterUrl,
       backdrop_path: backdropUrl || posterUrl,
       cloudinaryPublicId: cloudinaryPublicId || "",
       cloudinaryFolder: "hustv/videos",
@@ -307,7 +324,6 @@ export const uploadVideo = async (req, res) => {
       console.log("✅ Inngest processing event triggered");
     } catch (inngestError) {
       console.error("⚠️ Inngest trigger failed:", inngestError);
-      // Don't fail the upload if Inngest fails
     }
 
     res.status(201).json({
@@ -688,7 +704,6 @@ export const getTrailerUrl = async (req, res) => {
         trailerUrl = getStreamingUrl(trailerUrl);
       } catch (error) {
         console.error("Error generating trailer URL:", error);
-        // Fallback to original value
       }
     }
 
@@ -714,7 +729,9 @@ export const getTrailerUrl = async (req, res) => {
 // ==================== UPDATE & DELETE ====================
 
 /**
- * Update video
+ * 🆕 MODIFIED: Update video - SUPPORTS BOTH:
+ * 1. Client-side uploaded URLs (video_url, poster_path, etc.) ⭐ NEW
+ * 2. Server-side file upload (req.files) - LEGACY
  */
 export const updateVideo = async (req, res) => {
   try {
@@ -742,7 +759,24 @@ export const updateVideo = async (req, res) => {
       });
     }
 
-    // Upload new files if provided
+    // 🆕 CLIENT-SIDE UPLOAD: Use URLs from body
+    if (updateData.video_url) {
+      updateData.video = updateData.video_url;
+      delete updateData.video_url;
+      console.log("✅ Using client-uploaded video URL");
+    }
+    if (updateData.trailer_url) {
+      updateData.trailer = updateData.trailer_url;
+      delete updateData.trailer_url;
+      console.log("✅ Using client-uploaded trailer URL");
+    }
+    if (updateData.cloudinary_public_id) {
+      updateData.cloudinaryPublicId = updateData.cloudinary_public_id;
+      delete updateData.cloudinary_public_id;
+    }
+    // poster_path and backdrop_path can be used directly
+
+    // LEGACY: Upload new files if provided
     if (req.files?.video) {
       console.log("📹 Uploading new video...");
       const videoResult = await uploadToCloudinary(

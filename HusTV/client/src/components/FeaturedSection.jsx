@@ -19,9 +19,10 @@ const FeaturedSection = () => {
 
         // ✅ GIỐNG Y CHANG HEROSECTION
         const response = await videoService.getAllVideos({
-          featured: true,
+          // featured: true,
           limit: 6,
           status: "published",
+          sort: "-view",
         });
 
         console.log("📥 FeaturedSection response:", response);

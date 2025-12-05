@@ -26,9 +26,10 @@ const HeroSection = () => {
       try {
         setLoading(true);
         const response = await videoService.getAllVideos({
-          featured: true,
+          // featured: true,
           limit: 6,
           status: "published",
+          sort: "-view",
         });
 
         const movies = response.data?.videos || [];

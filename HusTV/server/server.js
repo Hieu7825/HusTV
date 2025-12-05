@@ -22,14 +22,22 @@ import { startSubscriptionChecker } from "./cron/subscriptionChecker.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "https://hustv.vercel.app"],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+const corsOptions = {
+  origin: ["http://localhost:5173", "https://hustv.vercel.app"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+  ],
+  exposedHeaders: ["Content-Length"],
+  maxAge: 86400,
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 
 // Connect to MongoDB
 await connectDB();

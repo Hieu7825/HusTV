@@ -22,6 +22,14 @@ import { startSubscriptionChecker } from "./cron/subscriptionChecker.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://hustv.vercel.app"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // Connect to MongoDB
 await connectDB();
@@ -38,15 +46,15 @@ app.use("/api/webhooks", webhookRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173", // Để code ở máy (Local)
-      "https://hustv.vercel.app", // Để chạy trên Vercel (Production)
-    ],
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:5173", // Để code ở máy (Local)
+//       "https://hustv.vercel.app", // Để chạy trên Vercel (Production)
+//     ],
+//     credentials: true,
+//   })
+// );
 
 app.use(clerkMiddleware());
 

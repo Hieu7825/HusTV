@@ -7,7 +7,7 @@ import { videoService } from "../services";
 import toast from "react-hot-toast";
 
 const timeRunning = 2000;
-const displayedThumbnails = 6;
+const displayedThumbnails = 2;
 
 const HeroSection = () => {
   const [carouselData, setCarouselData] = useState([]);

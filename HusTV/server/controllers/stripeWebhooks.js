@@ -5,7 +5,6 @@
 import Stripe from "stripe";
 import { constructWebhookEvent } from "../utils/stripe.js";
 import Subscription from "../models/Subscription.js";
-import Booking from "../models/Booking.js";
 import SubscriptionPlan from "../models/SubscriptionPlan.js";
 import User from "../models/User.js";
 import { inngest } from "../inngest/index.js";
@@ -100,14 +99,8 @@ export const stripeWebhookHandler = async (request, response) => {
         }
 
         const session = sessionList.data[0];
-        const {
-          subscriptionId,
-          bookingId,
-          userId,
-          planId,
-          isUpgrade,
-          oldSubscriptionId,
-        } = session.metadata;
+        const { subscriptionId, userId, planId, isUpgrade, oldSubscriptionId } =
+          session.metadata;
 
         // ============ Handle SUBSCRIPTION Payment ============
         if (subscriptionId) {
@@ -201,43 +194,6 @@ export const stripeWebhookHandler = async (request, response) => {
           }
         }
 
-        // ============ Handle BOOKING Payment ============
-        if (bookingId) {
-          console.log(`🎬 Processing booking payment: ${bookingId}`);
-
-          const booking = await Booking.findById(bookingId);
-
-          if (!booking) {
-            console.log("⚠️ Booking not found:", bookingId);
-            break;
-          }
-
-          booking.isPaid = true;
-          booking.paymentLink = "";
-          booking.transactionId = paymentIntent.id;
-          booking.paymentMethod =
-            paymentIntent.payment_method_types[0] || "card";
-          await booking.save();
-
-          console.log("✅ Booking marked as paid:", bookingId);
-
-          try {
-            await inngest.send({
-              name: "booking/confirmed",
-              data: {
-                bookingId,
-                userId: booking.user,
-              },
-            });
-            console.log("✅ Booking email event sent to Inngest");
-          } catch (inngestError) {
-            console.error(
-              "⚠️ Failed to send Inngest event:",
-              inngestError.message
-            );
-          }
-        }
-
         break;
       }
 
@@ -279,22 +235,6 @@ export const stripeWebhookHandler = async (request, response) => {
               console.error("❌ Failed to cancel subscription:", error);
             }
           }
-
-          if (bookingId) {
-            try {
-              await Booking.findByIdAndUpdate(bookingId, {
-                isPaid: false,
-                paymentLink: "",
-              });
-
-              console.log(
-                "⚠️ Booking marked as unpaid due to payment failure:",
-                bookingId
-              );
-            } catch (error) {
-              console.error("❌ Failed to handle booking failure:", error);
-            }
-          }
         }
         break;
       }
@@ -330,18 +270,6 @@ export const stripeWebhookHandler = async (request, response) => {
           }
         }
 
-        if (bookingId) {
-          try {
-            await Booking.findByIdAndUpdate(bookingId, {
-              isPaid: false,
-              paymentLink: "",
-            });
-
-            console.log("⚠️ Booking expired:", bookingId);
-          } catch (error) {
-            console.error("❌ Failed to handle booking expiration:", error);
-          }
-        }
         break;
       }
 

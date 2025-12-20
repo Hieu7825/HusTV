@@ -367,6 +367,25 @@ HusTV/
                           │ name: String │
                           │ createdAt    │
                           └──────────────┘
+
+                                  ┌──────────────┐
+                                  │    Admin     │
+                                  ├──────────────┤
+                                  │ _id: String  │
+                                  │ clerkId      │ (Unique, Index)
+                                  │ name         │
+                                  │ email        │ (Unique, Index)
+                                  │ role         │ (e.g. superadmin)
+                                  │ isActive     │
+                                  │ createdAt    │
+                                  │ updatedAt    │
+                                  └──────────────┘
+
+    Admin (1) ─────→ (Many) Video
+    Admin (1) ─────→ (Many) Genre
+    Admin (1) ─────→ (Many) SubscriptionPlan
+    Admin (1) ─────→ (Many) User (admin actions / audits)
+
 ```
 
 ### 5.2 Bảng Chi Tiết
@@ -632,6 +651,31 @@ Genre (1) ─────→ (Many) Video [referenced in array]
 │ + getVideos(): Video[]   │
 │ + getById(id): Genre     │
 └──────────────────────────┘
+
+┌─────────────────────────────────────┐
+│             Admin                   │
+├─────────────────────────────────────┤
+│ - clerkId: string                   │
+│ - name: string                      │
+│ - email: string                     │
+│ - role: string                      │
+│ - isActive: boolean                 │
+├─────────────────────────────────────┤
+│ + createVideo(data): Video          │
+│ + updateVideo(id, data): Video     │
+│ + deleteVideo(id): void             │
+│ + createPlan(data): SubscriptionPlan│
+│ + updatePlan(id, data): SubscriptionPlan│
+│ + deletePlan(id): void              │
+│ + createGenre(data): Genre         │
+│ + manageUser(id, action): void     │
+└─────────────────────────────────────┘
+
+Admin "manages" -> Video
+Admin "manages" -> Genre
+Admin "manages" -> SubscriptionPlan
+Admin "manages" -> User
+
 ```
 
 ### 6.2 Sequence Diagram - Quy Trình Xem Phim

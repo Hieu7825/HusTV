@@ -1,3 +1,768 @@
+# 📱 HusTVクライアントドキュメント
+
+Reactフロントエンドの構造、コンポーネント、ページ、フック、サービス、ワークフローに関する詳細ドキュメント。
+
+---
+
+## 📁 ディレクトリ構造
+
+```
+client/
+├── src/
+│   ├── components/        - 再利用可能なコンポーネント
+│   │   └── admin/        - 管理者専用コンポーネント
+│   ├── pages/            - メインページ
+│   │   └── admin/        - 管理者ページ
+│   ├── hooks/            - カスタムReactフック
+│   ├── services/         - APIサービス呼び出し
+│   ├── lib/              - ユーティリティ関数 (axios, format)
+│   ├── assets/           - 画像、ビデオ
+│   ├── App.jsx           - ルートコンポーネント
+│   ├── main.jsx          - エントリーポイント
+│   └── index.css         - Tailwind CSS
+├── public/               - 静的ファイル
+├── vite.config.js        - Vite設定
+├── package.json          - 依存関係
+└── .env                  - 環境変数
+```
+
+---
+
+## 🔧 各ディレクトリの詳細
+
+### 1️⃣ **App.jsx** - ルートコンポーネント
+
+```jsx
+<ClerkProvider>
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+</ClerkProvider>
+```
+
+**機能**:
+
+- Clerk認証のセットアップ
+- アプリケーション全体のルーター設定
+- Toaster通知の配置
+- StrictModeを無効化（API呼び出しの重複を防ぐ）
+
+**ルート**:
+
+```
+/                    - ホーム
+/movies              - 映画リスト
+/movies/:id          - 映画詳細
+/video/:id           - ビデオ視聴
+/favorite            - お気に入りビデオ
+/subscriptions       - マイサブスクリプション
+/admin/*             - 管理ダッシュボード（保護）
+```
+
+---
+
+### 2️⃣ **components/** - UIコンポーネント
+
+アプリケーション全体で再利用されるコンポーネント。
+
+#### **共有コンポーネント**
+
+| コンポーネント            | 機能                                                 |
+| ------------------------- | ---------------------------------------------------- |
+| `Navbar.jsx`              | ナビゲーションバー、検索、認証ボタン、テーマ切り替え |
+| `Footer.jsx`              | リンク、著作権情報を含むフッター                     |
+| `SearchBar.jsx`           | ビデオ検索用の検索入力                               |
+| `MovieCard.jsx`           | 1つのビデオ情報を表示するカード                      |
+| `Pagination.jsx`          | リスト用のページネーション                           |
+| `Loading.jsx`             | ローディングスピナー                                 |
+| `ProtectedRoute.jsx`      | 認証が必要なルートを保護                             |
+| `Switch.jsx`              | テーマ切り替え（ライト/ダーク）                      |
+| `BlurCircle.jsx`          | 装飾用ブラーエフェクト                               |
+| `SnowflakeBackground.jsx` | スノーフレーク背景アニメーション（クリスマス）       |
+
+#### **ランディングページコンポーネント**
+
+| コンポーネント          | 機能                                       |
+| ----------------------- | ------------------------------------------ |
+| `HeroSection.jsx`       | ヒーローカルーセルバナー（トレンドビデオ） |
+| `FeaturedSection.jsx`   | 注目セクション（注目のビデオ）             |
+| `SubscriptionPlans.jsx` | サブスクリプションプランの表示             |
+| `SubscriptionCard.jsx`  | 1つのサブスクリプションプランカード        |
+
+#### **admin/** - 管理者コンポーネント
+
+| コンポーネント            | 機能                                         |
+| ------------------------- | -------------------------------------------- |
+| `AdminNavBar.jsx`         | 管理者ナビゲーションバー                     |
+| `AdminSideBar.jsx`        | 管理者サイドバーメニュー                     |
+| `ProtectedAdminRoute.jsx` | 管理者ルートを保護（管理者ロールをチェック） |
+| `AddNewMovie.jsx`         | 映画の追加/編集モーダル                      |
+| `AddNewPlan.jsx`          | サブスクリプションプランの追加/編集モーダル  |
+| `MovieDetailsModal.jsx`   | 映画詳細表示モーダル                         |
+| `PlanDetailsModal.jsx`    | プラン詳細表示モーダル                       |
+| `Title.jsx`               | ページタイトルコンポーネント                 |
+
+#### **movie-form/** - 映画フォームコンポーネント（サブコンポーネント）
+
+| コンポーネント         | 機能                                   |
+| ---------------------- | -------------------------------------- |
+| `VideoUploadInput.jsx` | ビデオファイルアップロード入力         |
+| `ImageUploadInput.jsx` | 画像アップロード入力（ポスター、背景） |
+| `GenreSelector.jsx`    | ジャンル選択ドロップダウン             |
+| `CastManager.jsx`      | キャストリスト管理（俳優の追加/削除）  |
+| `UploadProgress.jsx`   | アップロード用プログレスバー           |
+
+---
+
+### 3️⃣ **pages/** - ページコンポーネント
+
+アプリケーションのメインページ。
+
+#### **ユーザーページ**
+
+| ページ                | ルート           | 機能                                             |
+| --------------------- | ---------------- | ------------------------------------------------ |
+| `Home.jsx`            | `/`              | ホームページ（ヒーロー + 注目 + プラン）         |
+| `Movies.jsx`          | `/movies`        | 全映画リスト（検索、フィルタ、ページネーション） |
+| `MovieDetails.jsx`    | `/movies/:id`    | 映画詳細（情報、トレーラー、関連）               |
+| `Video.jsx`           | `/video/:id`     | ビデオ視聴（プレーヤー、履歴、続きから視聴）     |
+| `Favorite.jsx`        | `/favorite`      | お気に入りビデオリスト                           |
+| `MySubscriptions.jsx` | `/subscriptions` | ユーザーのサブスクリプション管理                 |
+
+#### **admin/** - 管理者ページ
+
+| ページ            | ルート               | 機能                                     |
+| ----------------- | -------------------- | ---------------------------------------- |
+| `Layout.jsx`      | `/admin`             | ナビバー + サイドバーを含むレイアウト    |
+| `Dashboard.jsx`   | `/admin/dashboard`   | 統計情報を含むダッシュボード             |
+| `AddMovies.jsx`   | `/admin/movies`      | 映画の追加/編集/削除                     |
+| `ListMovies.jsx`  | `/admin/movies/list` | 映画リスト                               |
+| `AddGenre.jsx`    | `/admin/genres`      | ジャンルの追加/編集/削除                 |
+| `AddPlans.jsx`    | `/admin/plans`       | サブスクリプションプランの追加/編集/削除 |
+| `ListBooking.jsx` | `/admin/bookings`    | サブスクリプションリスト                 |
+
+---
+
+### 4️⃣ **services/** - APIサービス呼び出し
+
+バックエンドサーバーへのAPI呼び出しを行うサービス。
+
+#### **userService.js** - ユーザーAPI
+
+```javascript
+userService = {
+  // プロフィール
+  getUserProfile()              // プロフィール情報取得
+  getUserStats()                // ユーザー統計取得
+
+  // お気に入り
+  getFavorites()                // お気に入りリスト取得
+  toggleFavorite(videoId)       // お気に入りの追加/削除
+  checkFavorite(videoId)        // ビデオがお気に入りかチェック
+
+  // 視聴履歴
+  getWatchHistory()             // 視聴履歴取得
+  updateWatchProgress()         // 視聴進捗更新
+  getWatchProgress(videoId)     // 1つのビデオの進捗取得
+  deleteWatchHistory(id)        // 履歴から1つのビデオを削除
+  clearWatchHistory()           // 全履歴をクリア
+
+  // 設定
+  updatePreferences()           // 設定を更新
+  getPreferences()              // 設定を取得
+
+  // デバイス
+  getDevices()                  // デバイスリスト取得
+  updateDevice()                // デバイス更新
+  removeDevice()                // デバイス削除
+
+  // おすすめ
+  getContinueWatching()         // 続きから視聴を取得
+  getRecommendedVideos()        // おすすめビデオを取得
+}
+```
+
+#### **videoService.js** - ビデオAPI
+
+```javascript
+videoService = {
+  // アップロード (Cloudinary)
+  getCloudinarySignature()      // アップロード署名取得
+  uploadToCloudinary()          // Cloudinaryに直接ファイルアップロード
+
+  // 取得
+  getAllVideos()                // ビデオリスト取得（検索、フィルタ）
+  getVideoById()                // 1つのビデオの詳細取得
+  getFeaturedVideos()           // 注目のビデオ取得
+  getTrendingVideos()           // トレンドビデオ取得
+  getVideosByGenre()            // ジャンル別ビデオ取得
+  searchVideos()                // ビデオ検索
+
+  // ストリーミング
+  streamVideo()                 // ビデオ再生
+  getTrailerUrl()               // トレーラーURL取得
+
+  // 管理（管理者）
+  createVideo()                 // 新規ビデオ作成
+  updateVideo()                 // ビデオ更新
+  deleteVideo()                 // ビデオ削除
+  incrementView()               // 視聴回数増加
+  toggleFeatured()              // 注目マークを切り替え
+  toggleTrending()              // トレンドマークを切り替え
+}
+```
+
+#### **subscriptionService.js** - サブスクリプションAPI
+
+```javascript
+subscriptionService = {
+  // プラン
+  getAllPlans()                 // プランリスト取得
+  getPlanById()                 // 1つのプラン詳細取得
+  createPlan()                  // 新規プラン作成（管理者）
+  updatePlan()                  // プラン更新（管理者）
+  deletePlan()                  // プラン削除（管理者）
+
+  // サブスクリプション
+  createSubscription()          // サブスクリプション作成（決済）
+  getCurrentSubscription()      // 現在のサブスクリプション取得
+  getSubscriptionHistory()      // サブスクリプション履歴取得
+  cancelSubscription()          // サブスクリプションキャンセル
+}
+```
+
+#### **genreService.js** - ジャンルAPI
+
+```javascript
+genreService = {
+  getAllGenres()                // ジャンルリスト取得
+  getGenreById()                // 1つのジャンル詳細取得
+  createGenre()                 // 新規ジャンル作成（管理者）
+  updateGenre()                 // ジャンル更新（管理者）
+  deleteGenre()                 // ジャンル削除（管理者）
+}
+```
+
+#### **adminService.js** - 管理者API
+
+```javascript
+adminService = {
+  checkAdmin()                  // ユーザーが管理者かチェック
+  getDashboardStats()           // ダッシュボード統計取得
+  getAllUsers()                 // ユーザーリスト取得
+  toggleUserBan()               // ユーザーのBAN/BAN解除
+  getAllSubscriptions()         // サブスクリプションリスト取得
+}
+```
+
+#### **index.js** - 全サービスのエクスポート
+
+```javascript
+export {
+  userService,
+  videoService,
+  subscriptionService,
+  genreService,
+  adminService,
+};
+```
+
+---
+
+### 5️⃣ **hooks/** - カスタムReactフック
+
+#### **useMovieForm.js** - 映画フォームフック
+
+**機能**: 映画の追加/編集フォームの状態とロジックを管理
+
+```javascript
+const {
+  formData, // フォームデータ状態
+  errors, // バリデーションエラー
+  isSubmitting, // ローディング状態
+  uploadProgress, // アップロード進捗（0-100）
+
+  // プレビュー状態
+  posterPreview,
+  backdropPreview,
+  trailerFile,
+  videoFile,
+
+  // ハンドラー
+  handleChange, // 入力変更
+  handleSubmit, // フォーム送信
+  handleGenreAdd, // ジャンル追加
+  handleCastAdd, // キャスト追加
+  handleImageUpload, // 画像アップロード
+  handleVideoUpload, // ビデオアップロード
+  // ... その他のハンドラー
+} = useMovieForm(movie, onSuccess);
+```
+
+**ワークフロー**:
+
+1. ユーザーがファイルを選択（ポスター、背景、トレーラー、ビデオ）
+2. フックがファイルサイズを計算し、バリデーションをチェック
+3. Cloudinaryに直接アップロード（サーバー経由なし）
+4. 返されたURLを取得
+5. 全URLを含むフォームをバックエンドに送信
+6. バックエンドがURLを使用してビデオを作成/更新
+
+---
+
+### 6️⃣ **lib/** - ユーティリティ関数
+
+#### **axios.js** - Axios設定
+
+```javascript
+const api = axios.create({
+  baseURL: process.env.VITE_API_URL,
+  timeout: 300000, // 5分
+});
+
+// リクエストインターセプター
+- ClerkトークンをAuthorizationヘッダーに追加
+- FormDataを処理（Content-Typeを削除してaxiosが自動設定）
+
+// レスポンスインターセプター
+- グローバルエラー処理
+- 期限切れの場合にトークンをリフレッシュ
+```
+
+#### **dateFormat.js** - 日付フォーマット
+
+ベトナム形式で日付をフォーマットするユーティリティ
+
+```javascript
+formatDate(date); // フォーマット: DD/MM/YYYY
+formatDateTime(); // フォーマット: DD/MM/YYYY HH:MM:SS
+getRelativeTime(); // フォーマット: "2時間前"
+```
+
+#### **timeFormat.js** - 時間フォーマット
+
+```javascript
+formatDuration(seconds); // フォーマット: "1h 30m 45s"
+formatWatchTime(); // 視聴時間を時間でフォーマット
+```
+
+---
+
+### 7️⃣ **assets/** - 静的ファイル
+
+#### **assets.js** - アセットインポート
+
+`assets/`フォルダから全ての画像、ビデオを一元的にインポート
+
+```javascript
+export const assets = {
+  logo: require("./image/logo.png"),
+  heroImage: require("./image/hero.png"),
+  // ... その他のアセット
+};
+```
+
+#### **image/** - 画像
+
+- ロゴ、アイコン、背景
+- UI用の静的画像
+
+#### **video/** - ビデオ
+
+- デモビデオ、トレーラー
+
+---
+
+### 8️⃣ **main.jsx** - エントリーポイント
+
+```jsx
+createRoot(root).render(
+  <ClerkProvider publishableKey={VITE_CLERK_PUBLISHABLE_KEY}>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </ClerkProvider>,
+);
+```
+
+**機能**:
+
+- Clerk認証の読み込み
+- React Routerのセットアップ
+- AppコンポーネントをDOMにマウント
+
+---
+
+### 9️⃣ **index.css** - Tailwind CSS
+
+- グローバルスタイル
+- Tailwind設定
+- カスタムCSSクラス
+- ダークモード設定
+
+---
+
+## 🚀 動作フロー
+
+### 1. ユーザーがホームページにアクセス
+
+1. `main.jsx`がアプリを読み込み
+2. `App.jsx`がレイアウトをレンダリング
+3. `Home.jsx`がレンダリング:
+   - `HeroSection` - 注目ビデオのカルーセル
+   - `FeaturedSection` - 注目のビデオ
+   - `SubscriptionPlans` - サブスクリプションプラン
+4. サービスがAPIを呼び出してデータを取得
+
+### 2. ユーザーがビデオを視聴
+
+1. 映画をクリック → `MovieDetails.jsx`
+2. トレーラー、情報を表示
+3. 「ビデオを視聴」をクリック → `Video.jsx`
+4. `videoService.streamVideo()`がURLを取得
+5. ReactPlayerがビデオを再生
+6. `userService.updateWatchProgress()`が進捗を保存
+
+### 3. ユーザーがサブスクリプションを購入
+
+1. プランをクリック → `SubscriptionPlans.jsx`
+2. `subscriptionService.createSubscription()`
+3. Stripeチェックアウトにリダイレクト
+4. 決済成功
+5. Stripeコールバックリダイレクト
+6. `userService.getUserProfile()`がサブスクリプション情報を更新
+
+### 4. 管理者がビデオを追加
+
+1. `/admin/movies`へ移動
+2. `AddNewMovie.jsx`モーダルが開く
+3. `useMovieForm`フックがフォームを管理
+4. ユーザーがファイルを選択 → Cloudinaryにアップロード
+5. `addNewMovie()`がフォームを送信
+6. `videoService.createVideo()`がビデオを作成
+7. 映画がデータベースに追加される
+
+### 5. 検索とフィルタ
+
+1. ユーザーがキーワードを入力 → `SearchBar.jsx`
+2. `Movies.jsx`が`videoService.searchVideos()`を呼び出し
+3. ジャンル、年などでフィルタ
+4. ページネーション付きで結果を表示
+
+---
+
+## 📊 データフロー
+
+```
+ユーザーインタラクション（クリック、入力）
+        ↓
+コンポーネント状態更新
+        ↓
+サービス呼び出し（API）
+        ↓
+Axiosインターセプター（トークン追加）
+        ↓
+バックエンドサーバー
+        ↓
+レスポンスインターセプター
+        ↓
+コンポーネント状態更新
+        ↓
+UI再レンダリング
+```
+
+---
+
+## 🔐 認証フロー
+
+### Clerkセットアップ
+
+1. `main.jsx`がClerkProviderを読み込み
+2. ClerkProviderがClerkセッションを初期化
+3. ユーザーがClerkモーダルでログイン
+4. `useAuth()`フックがユーザー情報にアクセス
+5. Clerkトークンがヘッダーにアタッチされる（インターセプター）
+
+### 保護されたルート
+
+```jsx
+<ProtectedRoute>
+  <Page />
+</ProtectedRoute>
+```
+
+- `useAuth().isSignedIn`をチェック
+- 未ログインの場合は`/`にリダイレクト
+
+### 管理者ルート
+
+```jsx
+<ProtectedAdminRoute>
+  <AdminPage />
+</ProtectedAdminRoute>
+```
+
+- `useAuth()` + `adminService.checkAdmin()`を呼び出してチェック
+- 管理者でない場合は`/`にリダイレクト
+
+---
+
+## 🎯 コンポーネント階層
+
+```
+<App>
+  ├── <Navbar>
+  ├── <Routes>
+  │   ├── <Home>
+  │   │   ├── <HeroSection>
+  │   │   ├── <FeaturedSection>
+  │   │   └── <SubscriptionPlans>
+  │   │       └── <SubscriptionCard>
+  │   ├── <Movies>
+  │   │   ├── <SearchBar>
+  │   │   ├── <MovieCard> (複数)
+  │   │   └── <Pagination>
+  │   ├── <MovieDetails>
+  │   ├── <Video>
+  │   ├── <Favorite>
+  │   ├── <MySubscriptions>
+  │   └── <ProtectedAdminRoute>
+  │       └── <Layout>
+  │           ├── <AdminNavBar>
+  │           ├── <AdminSideBar>
+  │           └── <Routes>
+  │               ├── <Dashboard>
+  │               ├── <AddMovies>
+  │               ├── <AddGenre>
+  │               └── <AddPlans>
+  └── <Footer>
+```
+
+---
+
+## 📝 環境変数 (.env)
+
+```
+# API
+VITE_API_URL=http://localhost:3000/api
+
+# Clerk認証
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+
+# Cloudinary (オプション - クライアント側アップロードの場合)
+VITE_CLOUDINARY_CLOUD_NAME=...
+```
+
+---
+
+## 📦 依存関係
+
+| パッケージ           | 機能                       |
+| -------------------- | -------------------------- |
+| `react`              | UIライブラリ               |
+| `react-router-dom`   | クライアント側ルーティング |
+| `@clerk/clerk-react` | 認証                       |
+| `axios`              | HTTPリクエスト             |
+| `tailwindcss`        | スタイリング               |
+| `lucide-react`       | アイコン                   |
+| `react-player`       | ビデオプレーヤー           |
+| `react-hot-toast`    | 通知                       |
+| `vite`               | ビルドツール               |
+
+---
+
+## 🎨 スタイリング - Tailwind CSS
+
+- **ダークモード**: 設定済み
+- **カラー**: カスタムダークテーマ（グレー、レッド）
+- **レスポンシブ**: モバイルファーストアプローチ
+- **コンポーネント**: Tailwindユーティリティクラス
+
+---
+
+## ⚡ パフォーマンス最適化
+
+### 遅延読み込み
+
+```jsx
+const Component = lazy(() => import("./Component"));
+<Suspense fallback={<Loading />}>
+  <Component />
+</Suspense>;
+```
+
+### コード分割
+
+- Viteがルートごとに自動的にコードを分割
+
+### キャッシング
+
+- Axiosレスポンスキャッシング
+- ブラウザキャッシュヘッダー
+
+### ページネーション
+
+- ページあたり12アイテムを読み込み（Movies.jsx）
+- 一度に全データを読み込むことを回避
+
+---
+
+## 🐛 デバッグのヒント
+
+### 1. Clerk初期化のチェック
+
+```javascript
+const { isLoaded, isSignedIn } = useAuth();
+console.log("Clerk読み込み済み:", isLoaded);
+console.log("ユーザーログイン済み:", isSignedIn);
+```
+
+### 2. API呼び出しのチェック
+
+```javascript
+// Axiosインターセプターがリクエスト/レスポンスをログ
+// ブラウザDevTools → Networkタブを開く
+```
+
+### 3. コンポーネント状態のチェック
+
+```javascript
+console.log("フォームデータ:", formData);
+console.log("アップロード進捗:", uploadProgress);
+```
+
+### 4. ルーティングのチェック
+
+```javascript
+import { useLocation } from "react-router-dom";
+const location = useLocation();
+console.log("現在のルート:", location.pathname);
+```
+
+---
+
+## 📝 コード例
+
+### ビデオの取得と表示
+
+```jsx
+const [videos, setVideos] = useState([]);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  const fetchVideos = async () => {
+    try {
+      const response = await videoService.getAllVideos({
+        status: "published",
+        limit: 20,
+      });
+      setVideos(response.data.videos || []);
+    } catch (error) {
+      toast.error("ビデオの取得に失敗しました");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchVideos();
+}, []);
+```
+
+### お気に入りの切り替え
+
+```jsx
+const handleToggleFavorite = async (videoId) => {
+  try {
+    const response = await userService.toggleFavorite(videoId);
+
+    if (response.data.isFavorite) {
+      toast.success("お気に入りに追加されました");
+    } else {
+      toast.success("お気に入りから削除されました");
+    }
+
+    // お気に入りを更新
+    fetchFavorites();
+  } catch (error) {
+    toast.error("お気に入りの切り替えに失敗しました");
+  }
+};
+```
+
+### ビデオアップロード（クライアント側）
+
+```jsx
+const handleVideoUpload = async (file) => {
+  try {
+    const response = await videoService.uploadToCloudinary(
+      file,
+      { folder: "hustv/videos" },
+      (progress) => setUploadProgress(progress),
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      video_url: response.url,
+    }));
+
+    toast.success("ビデオが正常にアップロードされました");
+  } catch (error) {
+    toast.error("アップロードに失敗しました");
+  }
+};
+```
+
+---
+
+## 🔗 使用されるAPIエンドポイント
+
+### ユーザーエンドポイント
+
+```
+GET    /api/users/profile
+POST   /api/users/favorites
+GET    /api/users/favorites
+GET    /api/users/watch-history
+POST   /api/users/watch-progress/:id
+GET    /api/users/stats
+```
+
+### ビデオエンドポイント
+
+```
+GET    /api/videos
+POST   /api/videos/upload
+GET    /api/videos/:id
+GET    /api/videos/featured
+GET    /api/videos/search
+POST   /api/videos/cloudinary/signature
+```
+
+### サブスクリプションエンドポイント
+
+```
+GET    /api/subscriptions/plans
+POST   /api/subscriptions/create
+GET    /api/subscriptions/current
+```
+
+### 管理者エンドポイント
+
+```
+GET    /api/admin/check
+GET    /api/admin/dashboard/stats
+GET    /api/admin/users
+POST   /api/videos/upload
+```
+
+---
+
+## 📞 お問い合わせとサポート
+
+クライアントに関する質問がある場合は、対応するファイルを確認するか、開発チームにお問い合わせください。
+
+**最終更新日**: 2025年12月
+
 # 📱 HusTV Client Documentation
 
 Tài liệu chi tiết về cấu trúc React frontend, các components, pages, hooks, services và workflows.
@@ -381,7 +1146,7 @@ createRoot(root).render(
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </ClerkProvider>
+  </ClerkProvider>,
 );
 ```
 
@@ -697,7 +1462,7 @@ const handleVideoUpload = async (file) => {
     const response = await videoService.uploadToCloudinary(
       file,
       { folder: "hustv/videos" },
-      (progress) => setUploadProgress(progress)
+      (progress) => setUploadProgress(progress),
     );
 
     setFormData((prev) => ({

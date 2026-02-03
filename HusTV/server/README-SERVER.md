@@ -1,3 +1,594 @@
+# 📺 HusTVサーバードキュメント
+
+サーバー構造、各ディレクトリの機能と関数に関する詳細ドキュメント。
+
+---
+
+## 📁 ディレクトリ構造
+
+```
+server/
+├── configs/          - データベース接続設定
+├── controllers/      - クライアントからのリクエスト処理ロジック
+├── models/           - データベース用MongoDBスキーマ
+├── routes/           - APIエンドポイントのルーティング
+├── middleware/       - 認証とリクエスト処理のミドルウェア
+├── utils/            - 共通ユーティリティ関数
+├── inngest/          - ジョブキューと自動化ワークフロー
+├── cron/             - 定期実行タスク
+├── temp & tmp/       - アップロード用一時ディレクトリ
+├── server.js         - メインサーバー起動ファイル
+├── package.json      - 依存関係とスクリプト
+└── .env              - 環境変数
+```
+
+---
+
+## 🔧 各ディレクトリの詳細
+
+### 1️⃣ **configs/** - データベース設定
+
+#### `db.js`
+
+- **機能**: MongoDBデータベースへの接続
+- **主要関数**: `connectDB()`
+  - Mongooseを使用してMongoDBに接続
+  - server.jsの起動時に呼び出される
+
+```javascript
+// 使用例:
+await connectDB();
+```
+
+---
+
+### 2️⃣ **controllers/** - ビジネスロジック処理
+
+コントローラーはクライアントからのリクエストを処理するすべてのロジックを含みます。
+
+#### **userController.js** - ユーザー管理
+
+| 関数                     | 機能                                              |
+| ------------------------ | ------------------------------------------------- |
+| `getUserProfile()`       | ユーザープロフィール + サブスクリプション情報取得 |
+| `toggleFavorite()`       | お気に入りビデオの追加/削除                       |
+| `getFavorites()`         | お気に入りビデオリスト取得                        |
+| `checkFavorite()`        | ビデオがお気に入りリストにあるかチェック          |
+| `getWatchHistory()`      | ビデオ視聴履歴取得                                |
+| `updateWatchProgress()`  | 視聴進捗更新（分、秒）                            |
+| `getWatchProgress()`     | 1つのビデオの視聴進捗取得                         |
+| `deleteWatchHistory()`   | 視聴履歴から1項目削除                             |
+| `clearWatchHistory()`    | 全視聴履歴をクリア                                |
+| `updatePreferences()`    | 設定更新（言語、年齢など）                        |
+| `getPreferences()`       | ユーザー設定取得                                  |
+| `getDevices()`           | ログインデバイスリスト取得                        |
+| `updateDevice()`         | デバイス名/情報更新                               |
+| `removeDevice()`         | デバイス削除                                      |
+| `getUserStats()`         | 統計取得（合計視聴、お気に入りビデオなど）        |
+| `getContinueWatching()`  | 続きから視聴リスト取得                            |
+| `getRecommendedVideos()` | 設定に基づくおすすめビデオ取得                    |
+
+#### **videoController.js** - ビデオ管理
+
+| 関数                  | 機能                                                       |
+| --------------------- | ---------------------------------------------------------- |
+| `uploadVideo()`       | 新規ビデオアップロード（クライアント側・サーバー側両対応） |
+| `getAllVideos()`      | ページネーション付きビデオリスト取得                       |
+| `getVideoById()`      | 1つのビデオの詳細取得                                      |
+| `getFeaturedVideos()` | 注目のビデオ取得                                           |
+| `getTrendingVideos()` | トレンドビデオ取得                                         |
+| `getVideosByGenre()`  | ジャンル別ビデオ取得                                       |
+| `searchVideos()`      | キーワードでビデオ検索                                     |
+| `streamVideo()`       | ビデオストリーミング（オンライン再生）                     |
+| `getTrailerUrl()`     | ビデオのトレーラーURL取得                                  |
+| `updateVideo()`       | ビデオ情報更新                                             |
+| `deleteVideo()`       | ビデオ削除                                                 |
+| `incrementView()`     | 視聴回数増加                                               |
+| `toggleFeatured()`    | 注目のビデオマーク                                         |
+| `toggleTrending()`    | トレンドビデオマーク                                       |
+
+#### **subscriptionController.js** - サブスクリプション管理
+
+| 関数                       | 機能                                     |
+| -------------------------- | ---------------------------------------- |
+| `getAllPlans()`            | 利用可能な全サブスクリプションプラン取得 |
+| `recalculateRanks()`       | サブスクリプションプランのランク再計算   |
+| `createSubscription()`     | 新規サブスクリプション作成（決済開始）   |
+| `getCurrentSubscription()` | ユーザーの現在のサブスクリプション取得   |
+| `getSubscriptionHistory()` | サブスクリプション履歴取得               |
+| `cancelSubscription()`     | サブスクリプションキャンセル             |
+| `syncClerkMetadata()`      | Clerkからメタデータを同期                |
+
+#### **adminController.js** - 管理ダッシュボード
+
+| 関数                    | 機能                                                           |
+| ----------------------- | -------------------------------------------------------------- |
+| `isAdmin()`             | ユーザーが管理者かチェック                                     |
+| `getDashboardData()`    | ダッシュボードデータ取得（収益、ユーザー、サブスクリプション） |
+| `getAllSubscriptions()` | 全サブスクリプションリスト取得（フィルタ、ページネーション）   |
+| `getAllUsers()`         | 全ユーザーリスト取得                                           |
+| `toggleUserBan()`       | ユーザーのBAN/BAN解除                                          |
+
+#### **genreController.js** - ジャンル管理
+
+| 関数             | 機能                  |
+| ---------------- | --------------------- |
+| `getAllGenres()` | 全ジャンルリスト取得  |
+| `getGenreById()` | 1つのジャンル詳細取得 |
+| `createGenre()`  | 新規ジャンル作成      |
+| `updateGenre()`  | ジャンル更新          |
+| `deleteGenre()`  | ジャンル削除          |
+
+#### **stripeWebhooks.js** - Stripe Webhook処理
+
+| 関数                     | 機能                                                 |
+| ------------------------ | ---------------------------------------------------- |
+| `stripeWebhookHandler()` | Stripeからのイベント処理（決済成功、キャンセルなど） |
+
+---
+
+### 3️⃣ **models/** - データベーススキーマ
+
+#### `User.js`
+
+- 保存内容: Clerk ID、メール、お気に入り、設定、デバイス
+- 関連: `currentSubscription`（Subscriptionから）
+
+#### `Video.js`
+
+- 保存内容: タイトル、概要、ビデオURL、ポスター、トレーラー、ジャンル、キャスト
+- 関連: `genres`（Genreから）
+
+#### `Subscription.js`
+
+- 保存内容: ユーザーID、プランID、ステータス、有効期限、決済情報
+- 関連: `user`（Userから）、`plan`（SubscriptionPlanから）
+
+#### `SubscriptionPlan.js`
+
+- 保存内容: プラン名、価格、期間、機能、ティアランク
+
+#### `Genre.js`
+
+- 保存内容: ジャンル名、説明、アイコン/カラー
+
+#### `WatchHistory.js`
+
+- 保存内容: ユーザーID、ビデオID、最終視聴日時、視聴進捗
+- 関連: `user`（Userから）、`video`（Videoから）
+
+---
+
+### 4️⃣ **routes/** - APIエンドポイント
+
+#### `userRoutes.js`
+
+```
+GET    /api/users/profile              - ユーザープロフィール取得
+POST   /api/users/favorites            - お気に入り追加/削除
+GET    /api/users/favorites            - お気に入りリスト取得
+GET    /api/users/watch-history        - 視聴履歴取得
+POST   /api/users/watch-progress       - 視聴進捗更新
+GET    /api/users/continue-watching    - 続きから視聴取得
+```
+
+#### `videoRoutes.js`
+
+```
+GET    /api/videos                     - ビデオリスト取得
+POST   /api/videos/upload              - 新規ビデオアップロード
+GET    /api/videos/:id                 - ビデオ詳細取得
+GET    /api/videos/featured            - 注目のビデオ取得
+GET    /api/videos/trending            - トレンドビデオ取得
+GET    /api/videos/genre/:id           - ジャンル別ビデオ取得
+GET    /api/videos/search              - ビデオ検索
+```
+
+#### `subscriptionRoutes.js`
+
+```
+GET    /api/subscriptions/plans        - プランリスト取得
+POST   /api/subscriptions/create       - 新規サブスクリプション作成
+GET    /api/subscriptions/current      - 現在のサブスクリプション取得
+DELETE /api/subscriptions/:id          - サブスクリプションキャンセル
+```
+
+#### `adminRoutes.js`
+
+```
+GET    /api/admin/dashboard            - ダッシュボードデータ取得
+GET    /api/admin/users                - ユーザーリスト取得
+GET    /api/admin/subscriptions        - サブスクリプションリスト取得
+```
+
+#### `genreRoutes.js`
+
+```
+GET    /api/genres                     - ジャンルリスト取得
+POST   /api/genres                     - 新規ジャンル作成
+PUT    /api/genres/:id                 - ジャンル更新
+DELETE /api/genres/:id                 - ジャンル削除
+```
+
+#### `adminPlanRoutes.js`
+
+```
+GET    /api/admin/plans                - 全プラン取得
+POST   /api/admin/plans                - 新規プラン作成
+PUT    /api/admin/plans/:id            - プラン更新
+DELETE /api/admin/plans/:id            - プラン削除
+```
+
+#### `webhookRoutes.js`
+
+```
+POST   /api/webhooks/stripe            - Stripe Webhook処理
+```
+
+---
+
+### 5️⃣ **middleware/** - 認証と処理
+
+#### `auth.js` - Clerk認証
+
+```javascript
+protectAdmin(req, res, next)
+  - ユーザーが管理者かチェック
+  - Clerk privateMetadataを使用
+```
+
+#### `validation.js`
+
+- クライアントからの入力データを検証
+- express-validatorを使用
+
+#### `rateLimiter.js`
+
+- 1つのIPからのリクエスト数を制限（DDoS攻撃防止）
+- 設定: 各エンドポイント用の`apiLimiter`
+
+#### `errorHandler.js`
+
+```javascript
+errorHandler(err, req, res, next)
+  - アプリケーション全体のエラー処理
+
+notFound(req, res)
+  - 404 Not Foundの処理
+```
+
+#### `uploadVideo.js`
+
+- ビデオアップロード用のmulter設定
+- ビデオ、トレーラー、ポスター、背景のアップロードをサポート
+
+#### `validateSubscription.js`
+
+- ユーザーが有効なサブスクリプションを持っているかチェック
+
+#### `index.js`
+
+- 全ミドルウェアをエクスポート
+
+---
+
+### 6️⃣ **utils/** - ユーティリティ関数
+
+#### `email.js` - メール送信
+
+```javascript
+sendSubscriptionConfirmation() - サブスクリプション確認メールを送信;
+
+sendUpgradeConfirmation() - サブスクリプションアップグレード確認メールを送信;
+
+sendPaymentReceipt() - 決済領収書メールを送信;
+
+sendExpiryReminder() - サブスクリプション期限切れ間近の通知メールを送信;
+```
+
+#### `stripe.js` - Stripe決済
+
+```javascript
+createCheckoutSession()
+  - Stripe決済セッションを作成
+  - Stripe Checkout URLを返す
+
+verifyWebhookSignature()
+  - StripeからのWebhook署名を検証
+```
+
+#### `cloudinary.js` - メディアアップロード
+
+```javascript
+uploadVideo()
+  - Cloudinaryにビデオをアップロード
+  - ビデオURLを返す
+
+uploadImage()
+  - 画像をアップロード（ポスター、背景）
+
+deleteVideo()
+  - Cloudinaryからビデオを削除
+
+deleteImage()
+  - Cloudinaryから画像を削除
+
+getStreamingUrl()
+  - ビデオストリーミングURLを作成
+```
+
+#### `index.js`
+
+- 全ユーティリティ関数をエクスポート
+
+---
+
+### 7️⃣ **inngest/** - ジョブキューとワークフロー
+
+Inngestは非同期ジョブ（async jobs）を実行するプラットフォームです。
+
+#### `client.js`
+
+- Inngestクライアントを作成
+
+#### `index.js`
+
+- Inngest関数の設定とエクスポート
+
+#### **functions/**
+
+##### `emailAutomation.js` - 自動メール送信
+
+```javascript
+sendSubscriptionConfirmedEmail
+  - サブスクリプション作成時にメールを送信
+  - トリガー: イベント "subscription/confirmed"
+
+sendUpgradeEmail
+  - ユーザーがプランをアップグレードしたときにメールを送信
+  - トリガー: イベント "subscription/upgraded"
+
+sendExpiryReminderEmail
+  - サブスクリプション期限切れ間近の通知メールを送信
+  - トリガー: イベント "subscription/expiring-soon"
+```
+
+##### `subscriptionJobs.js` - サブスクリプションジョブ
+
+```javascript
+processSubscriptionRenewal
+  - サブスクリプションの自動更新
+
+checkExpiredSubscriptions
+  - 期限切れサブスクリプションをチェック
+  - ステータスを"Expired"に更新
+```
+
+##### `videoProcessing.js` - ビデオ処理
+
+```javascript
+processVideoUpload
+  - アップロード後のビデオ処理
+  - リサイズ、トランスコード、サムネイル作成
+
+generateVideoThumbnail
+  - ビデオからサムネイルを作成
+```
+
+##### `clerkSync.js` - Clerk同期
+
+```javascript
+syncUserFromClerk - Clerkからユーザーデータを同期 - MongoDBに更新;
+
+syncUserDeletion - Clerkからのユーザー削除を同期;
+```
+
+---
+
+### 8️⃣ **cron/** - 定期実行タスク
+
+#### `subscriptionChecker.js`
+
+```javascript
+startSubscriptionChecker()
+  - 毎時実行
+  - 期限切れサブスクリプションをチェック
+  - 7日前に通知メールを送信
+  - 期限切れ時にステータスを更新
+  - 変更をログに記録
+```
+
+---
+
+### 9️⃣ **server.js** - 起動ファイル
+
+```javascript
+// Expressアプリを初期化
+const app = express();
+
+// CORS設定
+// localhost:5173 (開発) と hustv.vercel.app (本番) からのリクエストを許可
+
+// MongoDB接続
+await connectDB();
+
+// ミドルウェア
+- Webhookルートは最初に配置（express.json()の前）
+- ボディパーサー（JSON、URLエンコード）
+- CORS
+- Clerk認証
+- レート制限
+- エラーハンドラー
+
+// ルート
+- webhookRoutes
+- subscriptionRoutes
+- userRoutes
+- videoRoutes
+- adminRoutes
+- genreRoutes
+- adminPlanRoutes
+
+// Cronジョブ
+- startSubscriptionChecker()
+
+// Inngest Webhook
+- serve(inngest, functions)
+
+// サーバー起動
+app.listen(port)
+```
+
+---
+
+### 🔟 **package.json** - 依存関係
+
+| パッケージ           | 機能                 |
+| -------------------- | -------------------- |
+| `express`            | Webフレームワーク    |
+| `mongoose`           | MongoDB ODM          |
+| `@clerk/express`     | 認証                 |
+| `stripe`             | 決済                 |
+| `cloudinary`         | メディアアップロード |
+| `nodemailer`         | メール送信           |
+| `inngest`            | ジョブキュー         |
+| `multer`             | ファイルアップロード |
+| `express-validator`  | バリデーション       |
+| `express-rate-limit` | レート制限           |
+| `cors`               | CORS処理             |
+| `node-cron`          | スケジュールタスク   |
+| `dotenv`             | 環境変数             |
+
+---
+
+## 🚀 動作フロー
+
+### 1. ユーザー登録とログイン
+
+1. Clerkがユーザーを認証
+2. `userController.getUserProfile()`がClerkからプロフィールを取得
+3. MongoDBにユーザーを保存/更新
+
+### 2. ユーザーがビデオを視聴
+
+1. `videoController.getVideoById()`がビデオ情報を取得
+2. `validateSubscription()`でサブスクリプションをチェック
+3. `videoController.streamVideo()`がビデオを再生
+4. `videoController.incrementView()`が視聴回数を増加
+5. `userController.updateWatchProgress()`が進捗を保存
+
+### 3. ユーザーがサブスクリプションを購入
+
+1. `subscriptionController.createSubscription()`がサブスクリプションを作成
+2. `stripe.createCheckoutSession()`が決済セッションを作成
+3. ユーザーがStripeで決済
+4. Stripeが`/api/webhooks/stripe`にWebhookを送信
+5. `stripeWebhookHandler()`がWebhookを処理
+6. `inngest`がメール自動化をトリガー
+7. `emailAutomation.sendSubscriptionConfirmedEmail()`がメールを送信
+
+### 4. サブスクリプション期限切れ間近
+
+1. `subscriptionChecker.js`（cronジョブ）が毎時実行
+2. 期限切れサブスクリプションをチェック
+3. 7日前に通知メールを送信
+4. 期限切れ時にステータスを更新
+
+### 5. 管理者がビデオを管理
+
+1. `adminController.getDashboardData()`がダッシュボードを表示
+2. `videoController.uploadVideo()`がビデオをアップロード
+3. `videoController.updateVideo()`が情報を更新
+4. `videoController.toggleFeatured()`が注目マークを付ける
+5. `videoController.deleteVideo()`がビデオを削除
+
+---
+
+## 📊 データフロー図
+
+```
+フロントエンド（クライアント）
+        ↓
+    ルート（APIエンドポイント）
+        ↓
+    ミドルウェア（認証、バリデーション、レート制限）
+        ↓
+    コントローラー（ビジネスロジック）
+        ↓
+    モデル（MongoDBスキーマ）
+        ↓
+    データベース（MongoDB）
+
+追加:
+  - ユーティリティ（メール、Stripe、Cloudinary）
+  - Inngest（非同期ジョブ）
+  - Cron（スケジュールタスク）
+```
+
+---
+
+## 🔐 セキュリティ
+
+- **認証**: Clerk + JWT
+- **認可**: Clerk `privateMetadata`から管理者ロールをチェック
+- **レート制限**: `express-rate-limit`（DDoS攻撃防止）
+- **入力検証**: `express-validator`
+- **CORS**: 許可されたドメインからのリクエストのみ許可
+- **Webhook検証**: Stripe署名の検証
+
+---
+
+## 📝 環境変数 (.env)
+
+```
+# データベース
+MONGODB_URI=your_mongodb_connection_string
+
+# Clerk
+CLERK_SECRET_KEY=your_clerk_secret_key
+
+# Stripe
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+
+# メール
+SMTP_USER=your_brevo_email
+SMTP_PASS=your_brevo_password
+SENDER_EMAIL=noreply@hustv.com
+
+# Cloudinary
+CLOUDINARY_NAME=your_cloudinary_name
+CLOUDINARY_KEY=your_cloudinary_key
+CLOUDINARY_SECRET=your_cloudinary_secret
+
+# Inngest
+INNGEST_EVENT_KEY=your_inngest_key
+
+# サーバー
+WEBSITE_URL=http://localhost:5173
+```
+
+---
+
+## 🎯 まとめ
+
+- **Controllers**: ロジック処理（ユーザー、ビデオ、サブスクリプション、管理、ジャンル）
+- **Models**: スキーマ定義（User、Video、Subscription、Genre、WatchHistory）
+- **Routes**: APIエンドポイントのルーティング
+- **Middleware**: 認証、バリデーション、エラー処理
+- **Utils**: ユーティリティ関数（メール、Stripe、Cloudinary）
+- **Inngest**: 非同期ジョブ実行（メール、サブスクリプション、ビデオ処理）
+- **Cron**: 定期的なサブスクリプションチェック
+- **Server.js**: メインアプリの起動
+
+---
+
+## 📞 お問い合わせとサポート
+
+サーバーに関する質問がある場合は、対応するファイルを確認するか、開発チームにお問い合わせください。
+
+**最終更新日**: 2025年12月
+
 # 📺 HusTV Server Documentation
 
 Tài liệu chi tiết về cấu trúc server, các hàm và chức năng của từng thư mục.

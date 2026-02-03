@@ -1,3 +1,1478 @@
+# HusTVプロジェクト報告書
+
+**作成日:** 2025年12月20日  
+**プロジェクト名:** HusTV - 映画ストリーミングプラットフォーム  
+**技術:** React + Vite (フロントエンド), Node.js + Express (バックエンド), MongoDB (データベース)
+
+---
+
+## 📋 目次
+
+1. [プロジェクト概要](#プロジェクト概要)
+2. [システムアーキテクチャ](#システムアーキテクチャ)
+3. [主要機能](#主要機能)
+4. [使用技術](#使用技術)
+5. [データベーススキーマ](#データベーススキーマ)
+6. [UML図](#uml図)
+7. [主要業務フロー](#主要業務フロー)
+8. [APIドキュメント](#apiドキュメント)
+9. [ミドルウェアとバリデーション](#ミドルウェアとバリデーション)
+10. [デプロイと環境](#デプロイと環境)
+11. [セキュリティ機能](#セキュリティ機能)
+12. [パフォーマンスと最適化](#パフォーマンスと最適化)
+13. [アプリケーションデモ](#アプリケーションデモ)
+14. [結論](#結論)
+
+---
+
+## 1. プロジェクト概要
+
+### 1.1 説明
+
+**HusTV**は、ユーザーが以下のことを可能にする現代的なオンライン映画ストリーミングプラットフォームです:
+
+- 映画とビデオの視聴
+- お気に入りの管理
+- サブスクリプションプランの購入
+- 視聴履歴の追跡
+- 個人アカウントの管理
+
+### 1.2 対象ユーザー
+
+- **一般ユーザー:** 映画視聴、プラン購入、お気に入り管理
+- **管理者 (Admin):** 映画、ジャンル、サブスクリプションプラン、顧客の管理
+- **ゲスト:** 映画情報の閲覧、アカウント登録
+
+### 1.3 コア機能
+
+✅ 映画とビデオのリスト表示  
+✅ ジャンル別の検索とフィルタリング  
+✅ 映画詳細表示 (トレーラー、評価、あらすじ)  
+✅ ビデオ視聴 (HLSストリーム)  
+✅ お気に入り管理  
+✅ サブスクリプションプランの購入と管理  
+✅ 視聴履歴の追跡  
+✅ ユーザープロフィール管理  
+✅ 管理者: 映画の追加/編集/削除  
+✅ 管理者: サブスクリプションプラン管理  
+✅ 管理者: メンバー管理
+
+---
+
+## 2. システムアーキテクチャ
+
+### 2.1 全体アーキテクチャ図
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ フロントエンド (React + Vite)                                │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐   │
+│ │ ホーム   │ │ 映画     │ │ 詳細     │ │ お気に入り   │   │
+│ │ ページ   │ │ ページ   │ │ ページ   │ │ ページ       │   │
+│ └──────────┘ └──────────┘ └──────────┘ └──────────────┘   │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐   │
+│ │ ビデオ   │ │プラン    │ │ 管理     │ │ ナビバー     │   │
+│ │ プレーヤー│ │ページ    │ │ダッシュ  │ │ フッター     │   │
+│ └──────────┘ └──────────┘ └──────────┘ └──────────────┘   │
+│ ┌────────────────────────────────────────────────────────┐ │
+│ │ Axios HTTPクライアント + サービス層                     │ │
+│ └────────────────────────────────────────────────────────┘ │
+│ ┌────────────────────────────────────────────────────────┐ │
+│ │ 認証 (Clerk) + React Router                            │ │
+│ └────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                          ↕ (HTTP/REST)
+┌─────────────────────────────────────────────────────────────┐
+│ バックエンド (Node.js + Express)                            │
+│ ┌──────────────────────────────────────────────────────┐   │
+│ │ ルート:                                               │   │
+│ │ • /api/users - ユーザー管理                          │   │
+│ │ • /api/videos - 映画/ビデオ管理                      │   │
+│ │ • /api/genres - ジャンル管理                         │   │
+│ │ • /api/subscriptions - サブスクリプション管理        │   │
+│ │ • /api/admin - 管理者機能                            │   │
+│ │ • /api/webhooks - Stripe Webhook                     │   │
+│ └──────────────────────────────────────────────────────┘   │
+│ ┌──────────────────────────────────────────────────────┐   │
+│ │ ミドルウェア:                                         │   │
+│ │ • 認証 (Clerk) • エラーハンドラー                    │   │
+│ │ • レート制限 • バリデーション                        │   │
+│ │ • CORS • サブスクリプション検証                      │   │
+│ └──────────────────────────────────────────────────────┘   │
+│ ┌──────────────────────────────────────────────────────┐   │
+│ │ コントローラー: User, Video, Admin, Genre,           │   │
+│ │ Subscription, Stripe Webhooks                        │   │
+│ └──────────────────────────────────────────────────────┘   │
+│ ┌──────────────────────────────────────────────────────┐   │
+│ │ サービスとユーティリティ:                            │   │
+│ │ • Cloudinary (ビデオアップロード)                    │   │
+│ │ • Stripe (決済処理)                                  │   │
+│ │ • メールサービス (Nodemailer)                        │   │
+│ │ • Inngest (ジョブキューと自動化)                     │   │
+│ │ • Cronジョブ (サブスクリプションチェッカー)          │   │
+│ └──────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                          ↕ (TCP/IP)
+┌─────────────────────────────────────────────────────────────┐
+│ データベースとサービス                                      │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐        │
+│ │ MongoDB      │ │ Cloudinary   │ │ Stripe       │        │
+│ │ (NoSQL DB)   │ │ (ビデオCDN)  │ │ (決済)       │        │
+│ └──────────────┘ └──────────────┘ └──────────────┘        │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐        │
+│ │ Clerk        │ │ Nodemailer   │ │ Inngest      │        │
+│ │ (認証)       │ │ (メール)     │ │ (ジョブキュー)│        │
+│ └──────────────┘ └──────────────┘ └──────────────┘        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 2.2 フォルダ構造
+
+```
+HusTV/
+├── client/                    # フロントエンド (React + Vite)
+│   ├── src/
+│   │   ├── components/        # Reactコンポーネント
+│   │   ├── pages/             # メインページ
+│   │   ├── services/          # API呼び出し
+│   │   ├── hooks/             # カスタムフック
+│   │   ├── lib/               # ユーティリティ
+│   │   └── assets/            # 画像、ビデオ
+│   └── package.json
+│
+└── server/                    # バックエンド (Node.js + Express)
+    ├── models/                # MongoDBスキーマ
+    ├── controllers/           # ビジネスロジック
+    ├── routes/                # APIエンドポイント
+    ├── middleware/            # Expressミドルウェア
+    ├── utils/                 # ユーティリティ (Cloudinary, Stripe, Email)
+    ├── services/              # ビジネスサービス
+    ├── inngest/               # ジョブキューと自動化
+    ├── cron/                  # スケジュールタスク
+    ├── configs/               # 設定 (DB)
+    └── package.json
+```
+
+---
+
+## 3. 主要機能
+
+### 3.1 映画とビデオの管理
+
+| 機能               | ユーザー | 管理者 | 説明                             |
+| ------------------ | -------- | ------ | -------------------------------- |
+| 映画リスト表示     | ✅       | ✅     | ページネーション付き全映画表示   |
+| 映画検索           | ✅       | ✅     | タイトルで映画を検索             |
+| ジャンル別フィルタ | ✅       | ✅     | ジャンルで映画をフィルタリング   |
+| 映画詳細表示       | ✅       | ✅     | ポスター、トレーラー、あらすじ等 |
+| ビデオ視聴         | ✅\*     | ✅     | \*有効なサブスクリプション必要   |
+| 新規映画追加       | ❌       | ✅     | フォームから映画をアップロード   |
+| 映画情報編集       | ❌       | ✅     | 映画情報の更新                   |
+| 映画削除           | ❌       | ✅     | システムから映画を削除           |
+
+### 3.2 サブスクリプション管理
+
+| 機能                 | ユーザー | 管理者 | 説明                         |
+| -------------------- | -------- | ------ | ---------------------------- |
+| プラン表示           | ✅       | ✅     | 利用可能なプランを表示       |
+| プラン購入           | ✅       | ✅     | Stripeで決済                 |
+| 現在のプラン確認     | ✅       | ✅     | 使用中のプラン情報を表示     |
+| プランキャンセル     | ✅       | ✅     | 現在のサブスクリプション解除 |
+| プランアップグレード | ✅       | ✅     | 上位プランへ変更             |
+| 新規プラン作成       | ❌       | ✅     | 新しいプランを作成           |
+| プラン編集           | ❌       | ✅     | プラン情報の更新             |
+| プラン削除           | ❌       | ✅     | システムからプランを削除     |
+
+### 3.3 アカウントとプロフィール管理
+
+| 機能                  | 説明                         |
+| --------------------- | ---------------------------- |
+| ログイン/サインアップ | Clerk経由 (SSO)              |
+| プロフィール表示      | 個人情報の閲覧               |
+| プロフィール更新      | 名前、画像、設定の編集       |
+| 設定                  | 言語、ビデオ品質、通知の選択 |
+| 視聴履歴表示          | 視聴した映画の確認           |
+| お気に入り管理        | お気に入り映画の追加/削除    |
+
+### 3.4 ジャンル管理
+
+| 機能               | ユーザー | 管理者 | 説明                 |
+| ------------------ | -------- | ------ | -------------------- |
+| ジャンルリスト表示 | ✅       | ✅     | 全ジャンルを表示     |
+| ジャンル別フィルタ | ✅       | ✅     | ジャンルの映画を表示 |
+| ジャンル追加       | ❌       | ✅     | 新規ジャンル作成     |
+| ジャンル編集       | ❌       | ✅     | ジャンル名の更新     |
+| ジャンル削除       | ❌       | ✅     | ジャンルを削除       |
+
+### 3.5 決済とWebhook
+
+| 機能                | 説明                         |
+| ------------------- | ---------------------------- |
+| Stripe決済          | Stripe経由の安全な決済処理   |
+| StripeからのWebhook | Stripeから決済イベントを受信 |
+| 注文ステータス更新  | 決済成功時に自動更新         |
+| 確認メール          | 決済完了時にメール送信       |
+
+### 3.6 自動化とバックグラウンドジョブ
+
+| 機能                           | 説明                                | 技術                 |
+| ------------------------------ | ----------------------------------- | -------------------- |
+| サブスクリプション期限チェック | 毎時実行、ステータス更新            | Cronジョブ           |
+| Clerkユーザー同期              | Clerkからユーザーを自動作成/更新    | Inngest              |
+| ビデオ処理                     | ビデオエンコード、HLSストリーム作成 | Inngest              |
+| 自動メール送信                 | 確認メール、通知の送信              | Inngest + Nodemailer |
+
+---
+
+## 4. 使用技術
+
+### 4.1 フロントエンド
+
+```
+- React 18+           → UIライブラリ
+- Vite                → ビルドツールと開発サーバー
+- React Router v6     → ルーティング
+- Axios               → HTTPクライアント
+- React Hot Toast     → 通知
+- Clerk               → 認証
+- CSS + Tailwind      → スタイリング
+```
+
+### 4.2 バックエンド
+
+```
+- Node.js             → ランタイム
+- Express 5.1         → Webフレームワーク
+- MongoDB + Mongoose  → データベース
+- Cloudinary          → ビデオ/画像CDN
+- Stripe              → 決済処理
+- Clerk               → 認証
+- Nodemailer          → メール送信
+- Inngest             → ジョブキューとワークフロー
+- Express Rate Limit  → API保護
+- Express Validator   → 入力検証
+- Multer              → ファイルアップロード
+- Node Cron           → スケジュールタスク
+- CORS                → クロスオリジンリクエスト
+- Dotenv              → 環境設定
+```
+
+### 4.3 外部サービス
+
+```
+- Clerk               → ユーザー認証と管理
+- Stripe              → 決済処理
+- Cloudinary          → ビデオと画像ホスティング
+- Nodemailer          → メールサービス
+- Inngest             → タスクキューと自動化
+- MongoDB Atlas       → データベースホスティング
+```
+
+### 4.4 開発ツール
+
+```
+- Nodemon             → サーバー自動リロード
+- Git                 → バージョン管理
+- VSCode              → IDE
+```
+
+---
+
+## 5. データベーススキーマ
+
+### 5.1 ER図
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ データベーススキーマ                                                 │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌──────────────┐
+│ User         │
+├──────────────┤
+│ _id: String  │ (MongoDB)
+│ clerkId      │ (ユニーク, インデックス)
+│ name         │
+│ email        │ (ユニーク, インデックス)
+│ image        │
+│ isActive     │
+│ isBanned     │
+│ preferences  │ (ネスト)
+│ createdAt    │
+│ updatedAt    │
+└──────────────┘
+       │
+┌───────────────┼───────────────┐
+│               │               │
+↓               ↓               ↓
+┌──────────────────┐  ┌──────────────┐  ┌────────────────┐
+│ Subscription     │  │ WatchHistory │  │ Favorite       │
+├──────────────────┤  ├──────────────┤  ├────────────────┤
+│ _id: ObjectId    │  │ _id: ObjectId│  │ _id: ObjectId  │
+│ user: String(FK) │  │ user: String │  │ user: String   │
+│ plan: String(FK) │  │ video: String│  │ video: String  │
+│ purchaseDate     │  │ watchedDur   │  │ addedAt        │
+│ expiryDate       │  │ totalDur     │  │ createdAt      │
+│ status           │  │ progress %   │  └────────────────┘
+│ amount           │  │ lastWatched  │
+│ currency         │  │ completed    │
+│ paymentId        │  │ createdAt    │
+│ createdAt        │  └──────────────┘
+└──────────────────┘
+       │
+       ↓
+┌──────────────────────────┐
+│ SubscriptionPlan         │
+├──────────────────────────┤
+│ _id: String (plan_xxxxx) │
+│ planName                 │
+│ price                    │
+│ description              │
+│ features[]               │
+│ connectedDevices         │
+│ duration (月額/年額)     │
+│ tierRank (1-10)          │
+│ isPopular                │
+│ isActive                 │
+│ createdAt                │
+└──────────────────────────┘
+
+┌──────────────┐
+│ Video        │
+├──────────────┤
+│ _id: String  │
+│ id: Number   │ (ユニーク)
+│ title        │
+│ overview     │
+│ video        │ (Cloudinary URL)
+│ trailer      │ (オプション)
+│ poster_path  │
+│ backdrop_path│
+│ releaseDate  │
+│ rating       │
+│ genres[]     │ (GenreへのFK)
+│ cast[]       │
+│ crew[]       │
+│ duration     │
+│ status       │
+│ createdAt    │
+└──────────────┘
+       │
+       ↓
+┌──────────────┐
+│ Genre        │
+├──────────────┤
+│ _id: ObjectId│
+│ id: Number   │
+│ name: String │
+│ createdAt    │
+└──────────────┘
+
+┌──────────────┐
+│ Admin        │
+├──────────────┤
+│ _id: String  │
+│ clerkId      │ (ユニーク, インデックス)
+│ name         │
+│ email        │ (ユニーク, インデックス)
+│ role         │ (例: superadmin)
+│ isActive     │
+│ createdAt    │
+│ updatedAt    │
+└──────────────┘
+
+Admin (1) ─────→ (多) Video
+Admin (1) ─────→ (多) Genre
+Admin (1) ─────→ (多) SubscriptionPlan
+Admin (1) ─────→ (多) User (管理アクション/監査)
+```
+
+### 5.2 詳細テーブル
+
+#### **コレクション: User**
+
+```javascript
+{
+  _id: "user_123",
+  clerkId: "clerk_xxxxx",         // Clerk User ID
+  name: "山田太郎",
+  email: "yamada@example.com",
+  image: "https://...",
+  currentSubscription: ObjectId("..."),  // Subscriptionへの参照
+  subscriptionStatus: "active",   // none | active | expired | cancelled
+  subscriptionTier: "Premium",
+  isActive: true,
+  isBanned: false,
+  preferences: {
+    language: "ja",
+    autoplay: true,
+    quality: "1080p",
+    notifications: {
+      email: true,
+      newReleases: true
+    }
+  },
+  createdAt: ISODate,
+  updatedAt: ISODate
+}
+```
+
+#### **コレクション: Video**
+
+```javascript
+{
+  _id: "video_123",
+  id: 1001,
+  title: "インセプション",
+  overview: "熟練した泥棒が...",
+  video: "https://cloudinary.com/...",      // HLSストリーム
+  trailer: "https://youtube.com/...",
+  poster_path: "https://cloudinary.com/...",
+  backdrop_path: "https://cloudinary.com/...",
+  releaseDate: ISODate,
+  rating: 8.8,
+  genres: ["アクション", "SF"],
+  cast: [
+    { name: "レオナルド・ディカプリオ", character: "コブ" },
+    { name: "エレン・ペイジ", character: "アリアドネ" }
+  ],
+  duration: 148,  // 分
+  status: "published",  // draft | processing | published
+  cloudinaryPublicId: "video_123_main",
+  createdAt: ISODate,
+  updatedAt: ISODate
+}
+```
+
+#### **コレクション: Subscription**
+
+```javascript
+{
+  _id: ObjectId,
+  user: "clerk_xxxxx",            // Clerk User ID
+  userName: "山田太郎",
+  userEmail: "yamada@example.com",
+  plan: "plan_premium",           // SubscriptionPlanのID
+  purchaseDate: ISODate,
+  expiryDate: ISODate,
+  status: "active",               // active | expired | cancelled
+  amount: 99.99,
+  currency: "JPY",
+  paymentMethod: "card",
+  paymentId: "pi_xxxxxxx",        // Stripe Payment Intent ID
+  transactionId: "ch_xxxxxx",     // Stripe Charge ID
+  metadata: {
+    autoRenew: true,
+    lastRenewDate: ISODate
+  },
+  createdAt: ISODate,
+  updatedAt: ISODate
+}
+```
+
+#### **コレクション: SubscriptionPlan**
+
+```javascript
+{
+  _id: "plan_basic",
+  planName: "ベーシック",
+  price: 4.99,
+  description: "カジュアル視聴者に最適",
+  features: [
+    "HD (720p) 画質",
+    "1デバイス",
+    "広告あり"
+  ],
+  connectedDevices: 1,
+  duration: "月額",
+  tierRank: 1,
+  isPopular: false,
+  isActive: true,
+  createdAt: ISODate,
+  updatedAt: ISODate
+}
+```
+
+#### **コレクション: Genre**
+
+```javascript
+{
+  _id: ObjectId,
+  id: 28,
+  name: "アクション",
+  createdAt: ISODate,
+  updatedAt: ISODate
+}
+```
+
+#### **コレクション: WatchHistory**
+
+```javascript
+{
+  _id: ObjectId,
+  user: "clerk_xxxxx",
+  video: "video_123",           // Videoへの参照
+  watchedDuration: 3600,        // 視聴秒数
+  totalDuration: 8880,          // 合計秒数
+  progress: 40.5,               // パーセンテージ
+  lastWatchedAt: ISODate,
+  completed: false,
+  createdAt: ISODate,
+  updatedAt: ISODate
+}
+```
+
+### 5.3 リレーション
+
+```
+User (1) ─────→ (多) Subscription
+User (1) ─────→ (多) WatchHistory
+User (1) ─────→ (多) Favorite [暗黙的]
+Subscription (多) ─────→ (1) SubscriptionPlan
+Subscription (多) ─────→ (1) User
+Video (1) ─────→ (多) WatchHistory
+Video (多) ─────→ (多) Genre [配列]
+Genre (1) ─────→ (多) Video [配列で参照]
+```
+
+---
+
+## 6. UML図
+
+### 6.1 クラス図
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ UMLクラス図                                                  │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────┐
+│ User                                │
+├─────────────────────────────────────┤
+│ - clerkId: string                   │
+│ - name: string                      │
+│ - email: string                     │
+│ - image: string                     │
+│ - subscriptionStatus: enum          │
+│ - subscriptionTier: string          │
+│ - isActive: boolean                 │
+│ - isBanned: boolean                 │
+│ - preferences: object               │
+├─────────────────────────────────────┤
+│ + getProfile(): Profile             │
+│ + updateProfile(data): void         │
+│ + getCurrentSubscription(): Sub     │
+│ + canWatchVideo(): boolean          │
+│ + isMember(): boolean               │
+│ + getWatchHistory(): Video[]        │
+└─────────────────────────────────────┘
+         ↑
+         │ 継承
+         │              使用
+┌─────┴─────┐           ↓              ↓
+┌──────────────────┐  ┌──────────────────┐
+│ Subscription     │  │ WatchHistory     │
+├──────────────────┤  ├──────────────────┤
+│ - user: User     │  │ - user: User     │
+│ - plan: Plan     │  │ - video: Video   │
+│ - purchaseDate   │  │ - progress: num  │
+│ - expiryDate     │  │ - completed: bool│
+│ - status: enum   │  │ - lastWatched    │
+│ - amount: num    │  ├──────────────────┤
+│ - paymentId      │  │ + updateProgress │
+├──────────────────┤  │ + markCompleted  │
+│ + isActive()     │  │ + getProgress()  │
+│ + isExpired()    │  └──────────────────┘
+│ + cancel()       │
+│ + renew()        │
+│ + getRemaining() │
+└──────────────────┘
+         ↓ 参照
+         ↓
+┌──────────────────────────┐
+│ SubscriptionPlan         │
+├──────────────────────────┤
+│ - planName: string       │
+│ - price: number          │
+│ - duration: enum         │
+│ - features: string[]     │
+│ - connectedDevices: num  │
+│ - tierRank: number       │
+│ - isPopular: boolean     │
+├──────────────────────────┤
+│ + getFeatures(): string[]│
+│ + isAvailable(): boolean │
+│ + getPrice(): number     │
+│ + compare(other): int    │
+└──────────────────────────┘
+
+┌──────────────────────────┐
+│ Video                    │
+├──────────────────────────┤
+│ - title: string          │
+│ - overview: string       │
+│ - video: URL             │
+│ - trailer: URL           │
+│ - poster_path: URL       │
+│ - releaseDate: Date      │
+│ - rating: number         │
+│ - genres: Genre[]        │
+│ - cast: Actor[]          │
+│ - duration: number       │
+│ - status: enum           │
+├──────────────────────────┤
+│ + getDetails(): object   │
+│ + isAvailable(): boolean │
+│ + getGenres(): Genre[]   │
+│ + getCast(): Actor[]     │
+│ + play(): Stream         │
+│ + getTrailer(): URL      │
+│ + search(query): Video[] │
+│ + filterByGenre(g): Video[]
+└──────────────────────────┘
+         ↓ 使用
+         ↓
+┌──────────────────────────┐
+│ Genre                    │
+├──────────────────────────┤
+│ - id: number             │
+│ - name: string           │
+├──────────────────────────┤
+│ + getName(): string      │
+│ + getVideos(): Video[]   │
+│ + getById(id): Genre     │
+└──────────────────────────┘
+
+┌─────────────────────────────────────┐
+│ Admin                               │
+├─────────────────────────────────────┤
+│ - clerkId: string                   │
+│ - name: string                      │
+│ - email: string                     │
+│ - role: string                      │
+│ - isActive: boolean                 │
+├─────────────────────────────────────┤
+│ + createVideo(data): Video          │
+│ + updateVideo(id, data): Video      │
+│ + deleteVideo(id): void             │
+│ + createPlan(data): SubscriptionPlan│
+│ + updatePlan(id, data): SubscriptionPlan│
+│ + deletePlan(id): void              │
+│ + createGenre(data): Genre          │
+│ + manageUser(id, action): void      │
+└─────────────────────────────────────┘
+
+Admin "管理" -> Video
+Admin "管理" -> Genre
+Admin "管理" -> SubscriptionPlan
+Admin "管理" -> User
+```
+
+### 6.2 シーケンス図 - 映画視聴フロー
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ シーケンス: ユーザーがビデオを視聴                                │
+└──────────────────────────────────────────────────────────────────┘
+
+ユーザー  フロントエンド  バックエンド  DB  Cloudinary
+   │           │              │         │        │
+   │──視聴─────│              │         │        │
+   │           │──GET /api/videos/:id──→│        │
+   │           │              │──クエリ→│        │
+   │           │◄─────────────レスポンス │        │
+   │◄──────────│              │         │        │
+   │           │──サブスクリプション確認→│        │
+   │           │    (アクティブ&時間チェック)     │
+   │           │◄─────────────────────────│        │
+   │           │              │         │        │
+   │           │──POST /api/videos/:id/watch──→  │
+   │           │      (視聴履歴記録)     │        │
+   │           │◄────────────────────────│        │
+   │           │              │         │        │
+   │──再生─────│              │         │        │
+   │           │──HLSストリームURL取得──────────────→│
+   │           │◄─────────────────────────────────│
+   │◄─ストリーム│              │         │        │
+   │           │──進捗更新────→│         │        │
+   │           │  (30秒ごと)   │         │        │
+   │           │◄────────────────────────│        │
+   │           │              │         │        │
+   │──視聴停止─│              │         │        │
+   │           │──POST /mark-completed──→│       │
+   │           │              │──更新──→│        │
+   │           │◄─────────────────────────│        │
+   │◄──OK──────│              │         │        │
+```
+
+### 6.3 シーケンス図 - プラン購入フロー
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ シーケンス: ユーザーがサブスクリプションプランを購入              │
+└──────────────────────────────────────────────────────────────────┘
+
+ユーザー フロントエンド バックエンド Stripe Inngest DB
+   │         │            │         │       │    │
+   │─プラン選択           │         │       │    │
+   │         │            │         │       │    │
+   │──決済───│            │         │       │    │
+   │         │            │         │       │    │
+   │         │──POST /subscriptions─→       │    │
+   │         │  (planId, paymentMethod)     │    │
+   │         │            │         │       │    │
+   │         │            │──決済Intent作成─→    │
+   │         │            │◄────clientSecret │    │
+   │◄────────│            │         │       │    │
+   │         │            │         │       │    │
+   │◄Stripe決済           │         │       │    │
+   │         │            │         │       │    │
+   │──支払い─│            │         │       │    │
+   │         │            │         │       │    │
+   │         │            │         │       │    │
+   │         │            │◄Webhook: charge.succeeded│
+   │         │            │────DBに保存────────────→│
+   │         │            │────メールジョブ追加──→  │
+   │         │            │         │  │──メール送信
+   │         │            │◄────確認 │  │          │
+   │         │◄──成功─────│         │  │          │
+   │◄─成功───│            │         │  │          │
+   │         │            │         │  │          │
+   │         │──GET /subscriptions──→  │          │
+   │         │◄─現在のプランデータ────  │          │
+   │◄アクティブプラン表示  │         │  │          │
+```
+
+### 6.4 シーケンス図 - 管理者が映画追加
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ シーケンス: 管理者が新しい映画を追加                              │
+└──────────────────────────────────────────────────────────────────┘
+
+管理者 フロントエンド バックエンド Cloudinary Inngest DB
+  │        │            │           │         │      │
+  │─フォーム入力         │           │         │      │
+  │        │            │           │         │      │
+  │──送信──│            │           │         │      │
+  │        │            │           │         │      │
+  │        │──POST /admin/videos──→ │         │      │
+  │        │  (title, overview, files)        │      │
+  │        │            │           │         │      │
+  │        │            │──ビデオアップロード→│      │
+  │        │            │           │────安全アップロード
+  │        │            │◄─URL & public_id   │      │
+  │        │            │           │         │      │
+  │        │            │──DBに保存──────────────────→│
+  │        │            │──ジョブ追加────────→│      │
+  │        │            │           │  ビデオ処理(HLS)
+  │        │            │           │  エンコード、変換│
+  │        │            │◄──────────ジョブ完了 │      │
+  │        │            │           │         │      │
+  │        │            │──ステータス更新: published ─→│
+  │        │◄──成功─────│           │         │      │
+  │◄リダイレクト         │           │         │      │
+  │  リストへ            │           │         │      │
+```
+
+---
+
+## 7. 主要業務フロー
+
+### 7.1 ユーザー登録と認証フロー
+
+```
+flowchart TD
+    A["ユーザーがアプリにアクセス"] --> B{"ログイン済み?"}
+    B -->|いいえ| C["Clerkログインへリダイレクト"]
+    C --> D["ユーザーがClerkでサインアップ/イン"]
+    D --> E["ClerkがユーザーデータをInngestに送信"]
+    E --> F["Inngest: ClerkSync関数"]
+    F --> G["MongoDBにユーザーが存在するかチェック"]
+    G -->|存在する| H["ユーザープロフィールを更新"]
+    G -->|新規| I["新しいUserドキュメントを作成"]
+    H --> J["subscriptionStatus: noneに設定"]
+    I --> J
+    J --> K["ユーザーをホームにリダイレクト"]
+    B -->|はい| K
+    K --> L{"コンテンツにアクセス可能?"}
+    L -->|サブスクリプションアクティブ| M["全コンテンツを表示"]
+    L -->|サブスクリプションなし| N["コンテンツプレビューを表示"]
+```
+
+### 7.2 サブスクリプションプラン購入フロー
+
+```
+flowchart TD
+    A["ユーザーがサブスクリプションプランを表示"] --> B["プランを選択"]
+    B --> C["「登録」ボタンをクリック"]
+    C --> D["POST /api/subscriptions"]
+    D --> E["バックエンドが検証:"]
+    E --> E1["- ユーザーが存在する"]
+    E --> E2["- プランがアクティブ"]
+    E --> E3["- アクティブなサブスクリプションがない"]
+    E1 --> F{"すべて有効?"}
+    E2 --> F
+    E3 --> F
+    F -->|いいえ| G["エラーを返す"]
+    F -->|はい| H["Stripe Payment Intentを作成"]
+    H --> I["clientSecretをフロントエンドに返す"]
+    I --> J["Stripe決済フォームを読み込む"]
+    J --> K["ユーザーがカード情報を入力"]
+    K --> L["フロントエンドが支払いを確認"]
+    L --> M["Stripeが決済を処理"]
+    M --> N{"決済成功?"}
+    N -->|いいえ| O["決済失敗 - ユーザーに通知"]
+    N -->|はい| P["StripeがWebhookを送信"]
+    P --> Q["バックエンドが受信: charge.succeeded"]
+    Q --> R["Subscriptionレコードを作成"]
+    R --> S["Userを更新: subscriptionStatus='active'"]
+    S --> T["確認メールをキューに追加"]
+    T --> U["Inngestジョブをキューに追加"]
+    U --> V["確認メールを送信"]
+    V --> W["フロントエンド: 成功を表示"]
+    W --> X["「マイサブスクリプション」へリダイレクト"]
+```
+
+### 7.3 サブスクリプション期限チェックフロー
+
+```
+flowchart TD
+    A["Cronジョブが毎時実行"] --> B["全サブスクリプションを取得"]
+    B --> C["フィルタ: expiryDate <= now"]
+    C --> D{"期限切れあり?"}
+    D -->|はい| E["subscriptionStatus = 'expired'に更新"]
+    E --> F["User: subscriptionStatus = 'expired'に更新"]
+    F --> G["メール通知をキューに追加"]
+    G --> H["「サブスクリプション期限切れ」メールを送信"]
+    H --> I["ユーザーはコンテンツを視聴できなくなる"]
+    D -->|いいえ| J["アクション不要"]
+    J --> K["次の時間まで待機"]
+```
+
+### 7.4 映画アップロードと処理フロー
+
+```
+flowchart TD
+    A["管理者が映画追加フォームに入力"] --> B["ビデオファイルを選択"]
+    B --> C["ポスター画像を選択"]
+    C --> D["「アップロード」をクリック"]
+    D --> E["フロントエンドが検証:"]
+    E --> E1["- ファイルサイズ < 上限"]
+    E --> E2["- ファイル形式が正しい"]
+    E --> E3["- すべてのフィールドが入力済み"]
+    E1 --> F{"有効?"}
+    E2 --> F
+    E3 --> F
+    F -->|いいえ| G["エラーメッセージを表示"]
+    F -->|はい| H["POST /admin/videos"]
+    H --> I["ビデオメタデータをDBに保存"]
+    I --> J["ビデオをCloudinaryにアップロード"]
+    J --> K["Inngestジョブをキューに追加: videoProcessing"]
+    K --> L["Inngest: ビデオをエンコード"]
+    L --> M["HLSプレイリストを生成"]
+    M --> N["ビデオステータスを更新: 'processed'"]
+    N --> O["Cloudinary public IDを更新"]
+    O --> P["管理者にメール: 「ビデオ準備完了」"]
+    P --> Q["ビデオがカタログに表示される"]
+```
+
+### 7.5 映画視聴フロー
+
+```
+flowchart TD
+    A["ユーザーがビデオを選択"] --> B["GET /api/videos/:id"]
+    B --> C["ビデオ詳細 + メタデータを返す"]
+    C --> D["フロントエンドがチェック:"]
+    D --> D1["- ユーザーはアクティブなサブスクリプションを持っているか?"]
+    D --> D2["- サブスクリプションティアはこのビデオを許可するか?"]
+    D1 --> E{"アクセス許可?"}
+    D2 --> E
+    E -->|サブスクリプションなし| F["アップグレードプロンプトを表示"]
+    E -->|はい| G["CloudinaryからHLSストリームURLを取得"]
+    G --> H["ビデオプレーヤーを初期化"]
+    H --> I["POST /api/videos/:id/watch"]
+    I --> J["WatchHistoryレコードを作成/更新"]
+    J --> K["ユーザーが視聴開始"]
+    K --> L["30秒ごと: PATCH progress"]
+    L --> M["watchedDurationとprogress%を更新"]
+    M --> N{"ビデオ完了?"}
+    N -->|いいえ| L
+    N -->|はい| O["POST /mark-completed"]
+    O --> P["WatchHistory: completed = trueに設定"]
+    P --> Q["「完了」バッジを表示"]
+```
+
+### 7.6 映画検索とフィルタリングフロー
+
+```
+flowchart TD
+    A["ユーザーが検索クエリを入力"] --> B["GET /api/videos/search?q=..."]
+    B --> C["バックエンドが検索:"]
+    C --> C1["- title (大文字小文字を区別しない)"]
+    C --> C2["- overview"]
+    C --> C3["- tagline"]
+    C1 --> D["一致するビデオを返す"]
+    C2 --> D
+    C3 --> D
+    D --> E["フロントエンドが結果を表示"]
+    E --> F["ユーザーが「ジャンルフィルタ」をクリック"]
+    F --> G["GET /api/videos?genres=..."]
+    G --> H["ジャンルでビデオをフィルタ"]
+    H --> I["フィルタリングされた結果を返す"]
+    I --> J["フロントエンドがフィルタリストを表示"]
+```
+
+### 7.7 お気に入り管理フロー
+
+```
+flowchart TD
+    A["ユーザーがビデオ詳細を表示"] --> B{"ビデオはお気に入り?"}
+    B -->|いいえ| C["「お気に入りに追加」ボタンを表示"]
+    B -->|はい| D["「お気に入りから削除」ボタンを表示"]
+    C --> E["ユーザーがボタンをクリック"]
+    D --> E
+    E --> F{"アクション?"}
+    F -->|追加| G["POST /api/videos/:id/favorite"]
+    F -->|削除| H["DELETE /api/videos/:id/favorite"]
+    G --> I["Favoriteレコードを作成"]
+    H --> J["Favoriteレコードを削除"]
+    I --> K["UIを更新"]
+    J --> K
+    K --> L["ユーザーが更新されたステータスを確認"]
+```
+
+---
+
+## 8. APIドキュメント
+
+### 8.1 認証とユーザーAPI
+
+#### **POST /api/auth/login**
+
+```javascript
+// 明示的なAPIなし - フロントエンドでClerkが処理
+// ClerkがInngest webhook経由でユーザーをMongoDBに同期
+```
+
+#### **GET /api/users/profile**
+
+```
+メソッド: GET
+認証: 必須 (Clerk JWT)
+レスポンス: {
+  _id: "user_123",
+  clerkId: "clerk_xxxxx",
+  name: "山田太郎",
+  email: "yamada@example.com",
+  image: "https://...",
+  subscriptionStatus: "active",
+  subscriptionTier: "Premium",
+  preferences: {...}
+}
+```
+
+#### **PATCH /api/users/profile**
+
+```
+メソッド: PATCH
+認証: 必須
+ボディ: {
+  name?: "新しい名前",
+  preferences?: {
+    language: "ja",
+    quality: "1080p",
+    autoplay: true
+  }
+}
+レスポンス: 更新されたユーザーオブジェクト
+```
+
+### 8.2 ビデオAPI
+
+#### **GET /api/videos**
+
+```
+メソッド: GET
+認証: オプション
+クエリパラメータ:
+  - page: number (デフォルト: 1)
+  - limit: number (デフォルト: 20)
+  - genres: string[] (カンマ区切り)
+  - sortBy: "rating" | "releaseDate" | "trending"
+レスポンス: {
+  data: [Video[], ...],
+  totalPages: number,
+  currentPage: number,
+  totalCount: number
+}
+```
+
+#### **GET /api/videos/:id**
+
+```
+メソッド: GET
+認証: オプション
+レスポンス: 完全な詳細を持つVideoオブジェクト
+```
+
+#### **GET /api/videos/search**
+
+```
+メソッド: GET
+クエリ: q=searchTerm
+レスポンス: Video[]
+```
+
+#### **POST /api/videos/:id/watch**
+
+```
+メソッド: POST
+認証: 必須
+ボディ: {
+  watchedDuration: number,
+  progress: number
+}
+レスポンス: {success: true}
+```
+
+#### **PATCH /api/videos/:id/progress**
+
+```
+メソッド: PATCH
+認証: 必須
+ボディ: {
+  watchedDuration: number,
+  progress: number
+}
+レスポンス: 更新されたWatchHistory
+```
+
+#### **POST /api/videos/:id/favorite**
+
+```
+メソッド: POST
+認証: 必須
+レスポンス: {success: true, message: "お気に入りに追加されました"}
+```
+
+#### **DELETE /api/videos/:id/favorite**
+
+```
+メソッド: DELETE
+認証: 必須
+レスポンス: {success: true, message: "お気に入りから削除されました"}
+```
+
+#### **POST /admin/videos**
+
+```
+メソッド: POST
+認証: 必須 (管理者のみ)
+ボディ: FormData {
+  title: string,
+  overview: string,
+  tagline?: string,
+  releaseDate: date,
+  rating: number,
+  genres: string[],
+  cast: [{name, character}, ...],
+  poster: File,
+  backdrop?: File,
+  video: File,
+  trailer?: string
+}
+レスポンス: 作成されたVideoオブジェクト
+```
+
+### 8.3 サブスクリプションAPI
+
+#### **GET /api/subscriptions/plans**
+
+```
+メソッド: GET
+認証: オプション
+レスポンス: SubscriptionPlan[]
+```
+
+#### **GET /api/subscriptions/current**
+
+```
+メソッド: GET
+認証: 必須
+レスポンス: 現在のSubscriptionまたはnull
+```
+
+#### **POST /api/subscriptions**
+
+```
+メソッド: POST
+認証: 必須
+ボディ: {
+  planId: string,
+  paymentMethodId: string
+}
+レスポンス: {
+  clientSecret: string,
+  subscriptionId: string
+}
+```
+
+#### **POST /api/subscriptions/cancel**
+
+```
+メソッド: POST
+認証: 必須
+レスポンス: {success: true, message: "サブスクリプションがキャンセルされました"}
+```
+
+#### **POST /api/subscriptions/upgrade**
+
+```
+メソッド: POST
+認証: 必須
+ボディ: {planId: string}
+レスポンス: 更新されたSubscription
+```
+
+### 8.4 ジャンルAPI
+
+#### **GET /api/genres**
+
+```
+メソッド: GET
+認証: オプション
+レスポンス: Genre[]
+```
+
+#### **POST /admin/genres**
+
+```
+メソッド: POST
+認証: 必須 (管理者のみ)
+ボディ: {name: string}
+レスポンス: 作成されたGenre
+```
+
+### 8.5 管理者API
+
+#### **GET /admin/dashboard**
+
+```
+メソッド: GET
+認証: 必須 (管理者のみ)
+レスポンス: {
+  totalUsers: number,
+  activeSubscriptions: number,
+  totalVideos: number,
+  revenue: number,
+  revenueChart: {month: string, amount: number}[],
+  topVideos: Video[],
+  recentSubscriptions: Subscription[]
+}
+```
+
+#### **GET /admin/users**
+
+```
+メソッド: GET
+認証: 必須 (管理者のみ)
+クエリ: page, limit, search
+レスポンス: ページネーションされたUserリスト
+```
+
+#### **GET /admin/subscriptions**
+
+```
+メソッド: GET
+認証: 必須 (管理者のみ)
+クエリ: page, limit, status
+レスポンス: ページネーションされたSubscriptionリスト
+```
+
+#### **POST /admin/plans**
+
+```
+メソッド: POST
+認証: 必須 (管理者のみ)
+ボディ: SubscriptionPlanデータ
+レスポンス: 作成されたPlan
+```
+
+### 8.6 Webhook API
+
+#### **POST /api/webhooks/stripe**
+
+```
+メソッド: POST
+ヘッダー: stripe-signature
+ボディ: Stripe webhookイベント
+処理されるイベント:
+  - charge.succeeded → Subscriptionを作成
+  - charge.failed → エラーメールを送信
+  - invoice.payment_succeeded → サブスクリプションを更新
+```
+
+---
+
+## 9. ミドルウェアとバリデーション
+
+### 9.1 ミドルウェアパイプライン
+
+```
+リクエスト
+    ↓
+CORS → レート制限 → 認証 (Clerk) → バリデーション → ルート
+    ↓
+レスポンス
+    ↓
+エラーハンドラー
+```
+
+### 9.2 レート制限設定
+
+```javascript
+apiLimiter = 15分間に15リクエスト/IP
+```
+
+### 9.3 バリデーションルール
+
+- メール: 有効なメール形式
+- パスワード: (Clerkが処理)
+- プランフィールド: 必須、有効な値
+- ビデオタイトル: 最大500文字
+- ビデオ概要: 最大2000文字
+
+---
+
+## 10. デプロイと環境
+
+### 10.1 環境変数
+
+**バックエンド (.env)**
+
+```
+# データベース
+MONGODB_URI=mongodb+srv://...
+
+# Clerk
+CLERK_API_KEY=sk_...
+CLERK_WEBHOOK_SECRET=whsec_...
+
+# Stripe
+STRIPE_SECRET_KEY=sk_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Cloudinary
+CLOUDINARY_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+
+# メール
+SMTP_USER=...
+SMTP_PASS=...
+SMTP_HOST=smtp.gmail.com
+
+# サーバー
+PORT=3000
+NODE_ENV=production
+
+# フロントエンド
+VITE_API_URL=https://api.hustv.com
+```
+
+**フロントエンド (.env)**
+
+```
+VITE_CLERK_PUBLISHABLE_KEY=pk_...
+VITE_API_URL=https://api.hustv.com
+```
+
+### 10.2 デプロイメント
+
+**Vercel (フロントエンド)**
+
+- ビルド: `npm run build`
+- 出力: `dist/`
+- 環境: VITE\_\* 変数
+
+**Vercel (バックエンド)**
+
+- フレームワーク: Node.js
+- ビルド: デフォルト
+- 開始: `node server.js`
+- 環境: すべての変数
+
+**データベース**
+
+- MongoDB Atlas (クラウド)
+
+**CDNとストレージ**
+
+- Cloudinary (ビデオと画像)
+
+---
+
+## 11. セキュリティ機能
+
+✅ **認証**
+
+- Clerk経由のOAuth 2.0
+- JWTトークン
+
+✅ **認可**
+
+- ロールベースアクセス (ユーザー/管理者)
+- 保護されたルート
+- サブスクリプション検証
+
+✅ **APIセキュリティ**
+
+- レート制限
+- 入力検証
+- CORSポリシー
+- 環境変数
+
+✅ **決済セキュリティ**
+
+- Stripe統合
+- Webhook署名検証
+- ログに機密データなし
+
+✅ **データ保護**
+
+- HTTPSのみ (Vercel)
+- パフォーマンス向上のためのMongoDBインデックス
+- ユーザーデータ暗号化
+
+---
+
+## 12. パフォーマンスと最適化
+
+✅ **フロントエンド**
+
+- Viteによるコード分割
+- コンポーネントの遅延ロード
+- 画像最適化
+
+✅ **バックエンド**
+
+- データベースインデックス
+- ページネーション
+- キャッシング (CDNによる暗黙的)
+- レート制限
+
+✅ **メディア**
+
+- ビデオのHLSストリーミング
+- Cloudinary経由の画像CDN
+- アダプティブビットレートストリーミング
+
+---
+
+## 13. アプリケーションデモ
+
+### 13.1 デモへのアクセス
+
+HusTVプロジェクトの完全なデモバージョンにアクセスできます:
+
+🌐 **URL:** https://hustv.vercel.app/
+
+### 13.2 テスト可能な機能
+
+**一般ユーザー**
+
+- ✅ アカウント登録/ログイン
+- ✅ 映画リスト表示
+- ✅ タイトルで映画を検索
+- ✅ ジャンルで映画をフィルタ
+- ✅ 映画詳細表示 (トレーラー、評価、あらすじ、キャスト)
+- ✅ 映画視聴 (有効なサブスクリプション必要)
+- ✅ 視聴進捗の追跡
+- ✅ お気に入り映画の追加/削除
+- ✅ サブスクリプションプラン管理
+- ✅ Stripeでプラン購入
+- ✅ 視聴履歴の確認
+- ✅ 個人プロフィールの更新
+
+**管理者**
+
+- ✅ 管理ダッシュボードへのログイン
+- ✅ 概要表示 (ダッシュボード統計)
+- ✅ 映画管理 (追加、編集、削除)
+- ✅ ビデオと画像のアップロード
+- ✅ 映画ジャンル管理
+- ✅ サブスクリプションプラン管理
+- ✅ ユーザーリスト表示
+- ✅ サブスクリプションリスト表示
+- ✅ 収益分析
+
+### 13.3 デモ使用ガイド
+
+**映画視聴:**
+
+1. アカウントにログイン
+2. 「Movies」ページへ移動
+3. 映画を選択
+4. サブスクリプションがない場合は「Upgrade Plan」をクリック
+5. 適切なプランを選択
+6. Stripeで決済 (テストカード使用: 4242 4242 4242 4242)
+7. 映画に戻り「Watch Now」をクリック
+
+**お気に入り管理:**
+
+1. 映画詳細を開く
+2. ハートボタンをクリックしてお気に入りに追加
+3. 「Favorites」ページへ移動してリストを確認
+
+**プラン管理:**
+
+1. 「My Subscriptions」ページへ移動
+2. 現在のプランを表示またはアップグレード
+3. 必要に応じてサブスクリプションをキャンセル
+
+**管理者向け:**
+
+1. 管理者アカウントでログイン
+2. `/admin/dashboard` にアクセス
+3. サイドバーから映画、ジャンル、プランを管理
+4. フォームから新しい映画をアップロード
+5. 統計とレポートを表示
+
+### 13.4 デモされる技術
+
+- ✅ Clerk認証 (OAuth)
+- ✅ Stripe決済統合
+- ✅ ビデオストリーミング (HLS)
+- ✅ リアルタイム検索とフィルタ
+- ✅ レスポンシブデザイン (モバイル、タブレット、デスクトップ)
+- ✅ ロールベースアクセス制御
+- ✅ データベース操作 (CRUD)
+- ✅ ファイルアップロード (ビデオと画像)
+- ✅ エラーハンドリングとバリデーション
+
+---
+
+## 14. 結論
+
+**HusTV**プロジェクトは、以下を備えた完全なストリーミングプラットフォームです:
+
+- ✅ 現代的なアーキテクチャ (React + Node.js)
+- ✅ 安全な認証 (Clerk OAuth)
+- ✅ PCI準拠の決済 (Stripe)
+- ✅ 柔軟なコンテンツ管理 (管理パネル)
+- ✅ スムーズなユーザーエクスペリエンス (HLSビデオプレーヤー)
+- ✅ 自動化 (Inngest + Cron)
+- ✅ 信頼性 (エラーハンドリング、ログ記録)
+
+---
+
+**このドキュメントの作成日:** 2025年12月20日  
+**バージョン:** 1.0  
+**著者:** Nguyễn Minh Hiếu (hieu7825)
+
+---
+
 # BÁO CÁO DỰ ÁN HusTV
 
 **Ngày tạo:** 20/12/2025  

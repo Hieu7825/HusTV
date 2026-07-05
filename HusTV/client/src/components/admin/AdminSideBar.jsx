@@ -33,7 +33,13 @@ const AdminSideBar = () => {
   ];
 
   return (
-    <div className="h-[calc(100vh-64px)] md:flex flex-col items-center pt-8 max-w-13 md:max-w-60 w-full border-r border-primary/20 text-sm relative overflow-hidden">
+    <div
+      className="h-[calc(100vh-64px)] md:flex flex-col items-center pt-8 max-w-13 md:max-w-60 w-full border-r text-sm relative overflow-hidden"
+      style={{
+        backgroundColor: "var(--color-bg-card)",
+        borderColor: "var(--color-border-primary)",
+      }}
+    >
       {/* Background Effects */}
       <div className="absolute inset-0 opacity-10">
         <div className="w-full h-full grid-background" />
@@ -44,29 +50,57 @@ const AdminSideBar = () => {
         {/* Avatar with glow */}
         <div className="relative group cursor-pointer">
           {/* Glow effect */}
-          <div className="absolute inset-0 bg-primary/40 rounded-full blur-xl group-hover:bg-primary/60 transition-all duration-300 animate-pulse"></div>
+          <div
+            className="absolute inset-0 rounded-full blur-xl group-hover:opacity-100 transition-all duration-300 animate-pulse"
+            style={{
+              backgroundColor: `${getComputedStyle(document.documentElement).getPropertyValue("--color-primary")}40`,
+            }}
+          ></div>
 
           {/* Rotating ring */}
-          <div className="absolute -inset-0.5 bg-gradient-to-br from-primary to-red-600 rounded-full opacity-75 animate-[spin_3s_linear_infinite]"></div>
+          <div
+            className="absolute -inset-0.5 rounded-full opacity-75 animate-[spin_3s_linear_infinite]"
+            style={{
+              background: `linear-gradient(to right, var(--color-primary), var(--btn-gradient-to))`,
+            }}
+          ></div>
 
           {/* Avatar */}
           <img
-            className="h-11 md:h-16 w-11 md:w-16 rounded-full mx-auto relative z-10 border-2 border-primary shadow-[0_0_15px_rgba(248,69,101,0.6)] group-hover:scale-105 transition-all duration-300"
+            className="h-11 md:h-16 w-11 md:w-16 rounded-full mx-auto relative z-10 border-2 group-hover:scale-105 transition-all duration-300"
+            style={{
+              borderColor: "var(--color-primary)",
+              boxShadow: `0 0 15px ${getComputedStyle(document.documentElement).getPropertyValue("--color-primary")}`,
+            }}
             src={user.imageUrl}
             alt="sidebar"
           />
 
           {/* Single sparkle */}
-          <Sparkles className="w-4 h-4 text-primary absolute -top-0.5 -right-0.5 animate-pulse drop-shadow-[0_0_6px_rgba(248,69,101,0.8)]" />
+          <Sparkles
+            className="w-4 h-4 absolute -top-0.5 -right-0.5 animate-pulse drop-shadow-lg"
+            style={{
+              color: "var(--color-primary)",
+            }}
+          />
         </div>
 
         {/* User name */}
-        <p className="mt-3 text-sm md:text-base max-md:hidden font-bold text-white drop-shadow-[0_2px_6px_rgba(248,69,101,0.4)]">
+        <p
+          className="mt-3 text-sm md:text-base max-md:hidden font-bold drop-shadow-lg max-md:hidden"
+          style={{ color: "var(--color-text-primary)" }}
+        >
           {user.firstName} {user.lastName}
         </p>
 
         {/* Simple decorative line */}
-        <div className="hidden md:block w-16 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent mt-2 rounded-full shadow-[0_0_8px_rgba(248,69,101,0.5)]"></div>
+        <div
+          className="hidden md:block w-16 h-0.5 mt-2 rounded-full"
+          style={{
+            background: `linear-gradient(to right, transparent, var(--color-primary), transparent)`,
+            boxShadow: `0 0 8px ${getComputedStyle(document.documentElement).getPropertyValue("--color-primary")}`,
+          }}
+        ></div>
       </div>
 
       {/* Navigation Links */}
@@ -79,20 +113,35 @@ const AdminSideBar = () => {
             className={({ isActive }) =>
               `relative flex items-center max-md:justify-center gap-3 w-full py-3.5 md:pl-10 transition-all duration-300 group ${
                 index === 0 ? "mt-6" : "mt-1"
-              } ${
-                isActive
-                  ? "bg-gradient-to-r from-primary/25 via-primary/15 to-transparent text-white border-l-4 border-primary shadow-[inset_0_0_20px_rgba(248,69,101,0.2)]"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-white/5 hover:border-l-2 hover:border-primary/50"
-              }`
+              } ${isActive ? "border-l-4 shadow-lg" : "hover:opacity-80"}`
             }
+            style={({ isActive }) => ({
+              backgroundColor: isActive
+                ? `${getComputedStyle(document.documentElement).getPropertyValue("--color-primary")}15`
+                : "transparent",
+              color: isActive
+                ? "var(--color-text-primary)"
+                : "var(--color-text-muted)",
+              borderColor: isActive ? "var(--color-primary)" : "transparent",
+            })}
           >
             {({ isActive }) => (
               <>
                 {/* Animated background glow for active state */}
                 {isActive && (
                   <>
-                    <span className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent animate-pulse pointer-events-none"></span>
-                    <span className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-transparent via-primary to-transparent animate-pulse"></span>
+                    <span
+                      className="absolute inset-0 animate-pulse pointer-events-none"
+                      style={{
+                        background: `linear-gradient(to right, var(--color-primary) 0%, rgba(0,0,0,0) 100%)`,
+                      }}
+                    ></span>
+                    <span
+                      className="absolute left-0 top-0 w-1 h-full animate-pulse"
+                      style={{
+                        background: `linear-gradient(to bottom, transparent, var(--color-primary), transparent)`,
+                      }}
+                    ></span>
                   </>
                 )}
 
@@ -100,24 +149,31 @@ const AdminSideBar = () => {
                 <div className="relative">
                   <link.icon
                     className={`w-5 h-5 transition-all duration-300 relative z-10 ${
-                      isActive
-                        ? "text-primary scale-125 drop-shadow-[0_0_8px_rgba(248,69,101,0.8)]"
-                        : "group-hover:scale-110 group-hover:text-primary/70"
+                      isActive ? "scale-125" : "group-hover:scale-110"
                     }`}
+                    style={{
+                      color: isActive ? "var(--color-primary)" : "inherit",
+                    }}
                   />
                   {/* Icon glow effect */}
                   {isActive && (
-                    <span className="absolute inset-0 bg-primary/30 blur-md rounded-full animate-pulse"></span>
+                    <span
+                      className="absolute inset-0 blur-md rounded-full animate-pulse"
+                      style={{
+                        backgroundColor: `${getComputedStyle(document.documentElement).getPropertyValue("--color-primary")}30`,
+                      }}
+                    ></span>
                   )}
                 </div>
 
                 {/* Text label with stronger styling */}
                 <p
                   className={`max-md:hidden font-semibold transition-all duration-300 ${
-                    isActive
-                      ? "text-white drop-shadow-[0_2px_8px_rgba(248,69,101,0.5)]"
-                      : "font-medium"
+                    isActive ? "drop-shadow-lg" : ""
                   }`}
+                  style={{
+                    color: isActive ? "var(--color-text-primary)" : "inherit",
+                  }}
                 >
                   {link.name}
                 </p>

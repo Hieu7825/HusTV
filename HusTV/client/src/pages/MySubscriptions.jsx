@@ -68,7 +68,7 @@ const MySubscriptions = () => {
     } catch (error) {
       console.error("❌ Failed to fetch subscriptions:", error);
       toast.error(
-        error.response?.data?.message || "Failed to load subscription plans"
+        error.response?.data?.message || "Failed to load subscription plans",
       );
     } finally {
       setIsLoading(false);
@@ -103,7 +103,7 @@ const MySubscriptions = () => {
         {
           id: "sync-toast",
           duration: 4000,
-        }
+        },
       );
     } finally {
       setIsSyncing(false);
@@ -125,7 +125,7 @@ const MySubscriptions = () => {
         maxPollingAttemptsRef.current += 1;
 
         console.log(
-          `🔄 Polling payment status (attempt ${maxPollingAttemptsRef.current}/${MAX_ATTEMPTS})`
+          `🔄 Polling payment status (attempt ${maxPollingAttemptsRef.current}/${MAX_ATTEMPTS})`,
         );
 
         const currentResponse =
@@ -140,13 +140,13 @@ const MySubscriptions = () => {
 
           toast.success(
             "✅ Payment successful! Your plan has been activated.",
-            { duration: 5000 }
+            { duration: 5000 },
           );
 
           window.history.replaceState(
             {},
             document.title,
-            window.location.pathname
+            window.location.pathname,
           );
 
           return;
@@ -158,7 +158,7 @@ const MySubscriptions = () => {
 
           toast.error(
             "Payment verification taking longer than expected. Please refresh the page.",
-            { duration: 6000 }
+            { duration: 6000 },
           );
 
           await fetchSubscriptions();
@@ -236,7 +236,7 @@ const MySubscriptions = () => {
       toast.dismiss();
       console.error("❌ Failed to subscribe:", error);
       toast.error(
-        error.response?.data?.message || "Failed to process subscription"
+        error.response?.data?.message || "Failed to process subscription",
       );
     }
   };
@@ -336,12 +336,12 @@ const MySubscriptions = () => {
                 ></div>
 
                 <div
-                  className={`relative bg-gradient-to-br from-gray-900 via-gray-900 to-black rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 hover:-translate-y-1 border ${
+                  className={`relative light:bg-gradient-to-br light:from-white light:via-gray-50 light:to-gray-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-900 dark:to-black rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 hover:-translate-y-1 border ${
                     subscribed
-                      ? "border-emerald-500/50 group-hover:border-emerald-400"
+                      ? "light:border-emerald-400 dark:border-emerald-500/50 light:group-hover:border-emerald-500 dark:group-hover:border-emerald-400"
                       : plan.isPopular
-                      ? "border-red-500/50 group-hover:border-red-400"
-                      : "border-gray-800 group-hover:border-red-500/50"
+                        ? "light:border-red-400 dark:border-red-500/50 light:group-hover:border-red-500 dark:group-hover:border-red-400"
+                        : "light:border-gray-300 dark:border-gray-800 light:group-hover:border-red-400 dark:group-hover:border-red-500/50"
                   }`}
                 >
                   {(plan.isPopular || subscribed) && (
@@ -371,30 +371,32 @@ const MySubscriptions = () => {
                   <div className="relative p-8 flex flex-col h-auto">
                     <div className="text-center mb-6 pt-4">
                       <h3
-                        className={`text-3xl font-bold text-white mb-3 uppercase tracking-wide transition-colors duration-300 ${
+                        className={`text-3xl font-bold light:text-gray-900 dark:text-white mb-3 uppercase tracking-wide transition-colors duration-300 ${
                           subscribed
-                            ? "text-emerald-400"
-                            : "group-hover:text-red-400"
+                            ? "light:text-emerald-600 dark:text-emerald-400"
+                            : "light:group-hover:text-red-600 dark:group-hover:text-red-400"
                         }`}
                       >
                         {plan.planName}
                       </h3>
-                      <p className="text-gray-400 text-sm leading-relaxed min-h-[44px] px-2">
+                      <p className="light:text-gray-600 dark:text-gray-400 text-sm leading-relaxed min-h-[44px] px-2">
                         {plan.description}
                       </p>
                     </div>
 
                     <div
-                      className={`text-center mb-6 py-6 bg-black/40 backdrop-blur-sm rounded-2xl border transition-all ${
+                      className={`text-center mb-6 py-6 light:bg-white/30 dark:bg-black/40 backdrop-blur-sm rounded-2xl border transition-all ${
                         subscribed
-                          ? "border-emerald-800 group-hover:border-emerald-700"
-                          : "border-gray-800 group-hover:border-gray-700"
+                          ? "light:border-emerald-300 dark:border-emerald-800 light:group-hover:border-emerald-400 dark:group-hover:border-emerald-700"
+                          : "light:border-gray-300 dark:border-gray-800 light:group-hover:border-gray-400 dark:group-hover:border-gray-700"
                       }`}
                     >
                       <div className="flex items-baseline justify-center gap-1 mb-2">
                         <span
                           className={`text-2xl font-semibold ${
-                            subscribed ? "text-emerald-500" : "text-gray-500"
+                            subscribed
+                              ? "light:text-emerald-600 dark:text-emerald-500"
+                              : "light:text-gray-600 dark:text-gray-500"
                           }`}
                         >
                           {currency}
@@ -402,8 +404,8 @@ const MySubscriptions = () => {
                         <span
                           className={`text-6xl font-extrabold transition-transform duration-300 ${
                             subscribed
-                              ? "text-emerald-400 group-hover:scale-105"
-                              : "text-white group-hover:scale-105"
+                              ? "light:text-emerald-600 dark:text-emerald-400 group-hover:scale-105"
+                              : "light:text-gray-900 dark:text-white group-hover:scale-105"
                           }`}
                         >
                           {plan.price}
@@ -412,7 +414,9 @@ const MySubscriptions = () => {
 
                       <p
                         className={`text-sm font-medium uppercase tracking-wider ${
-                          subscribed ? "text-emerald-600" : "text-gray-500"
+                          subscribed
+                            ? "light:text-emerald-700 dark:text-emerald-600"
+                            : "light:text-gray-600 dark:text-gray-500"
                         }`}
                       >
                         per {plan.duration === "Monthly" ? "month" : "year"}
@@ -420,10 +424,12 @@ const MySubscriptions = () => {
                     </div>
 
                     <div className="mb-6 flex-grow">
-                      <div className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider font-bold mb-4 px-1">
+                      <div className="flex items-center gap-2 text-xs light:text-gray-600 dark:text-gray-500 uppercase tracking-wider font-bold mb-4 px-1">
                         <div
                           className={`w-1 h-4 rounded-full ${
-                            subscribed ? "bg-emerald-600" : "bg-red-600"
+                            subscribed
+                              ? "bg-emerald-600 light:bg-emerald-500"
+                              : "bg-red-600 light:bg-red-500"
                           }`}
                         ></div>
                         <span>Features</span>
@@ -432,11 +438,13 @@ const MySubscriptions = () => {
                         {plan.features?.map((feature, idx) => (
                           <div
                             key={idx}
-                            className="flex items-start gap-3 text-sm text-gray-300 hover:text-white transition-colors group/feature"
+                            className="flex items-start gap-3 text-sm light:text-gray-700 dark:text-gray-300 light:hover:text-gray-900 dark:hover:text-white transition-colors group/feature"
                           >
                             <CheckCircle
                               className={`w-5 h-5 flex-shrink-0 mt-0.5 group-hover/feature:scale-110 transition-transform ${
-                                subscribed ? "text-emerald-500" : "text-red-500"
+                                subscribed
+                                  ? "light:text-emerald-600 dark:text-emerald-500"
+                                  : "light:text-red-600 dark:text-red-500"
                               }`}
                             />
                             <span className="leading-relaxed">{feature}</span>
@@ -445,16 +453,16 @@ const MySubscriptions = () => {
                       </div>
                     </div>
 
-                    <div className="mt-auto pt-6 border-t border-gray-800">
+                    <div className="mt-auto pt-6 light:border-t light:border-gray-300 dark:border-t dark:border-gray-800">
                       <button
                         disabled={subscribed || lowerTier}
                         onClick={() => handleSubscribe(plan)}
-                        className={`relative w-full py-4 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-all duration-300 transform overflow-hidden border ${
+                        className={`relative w-full py-4 font-bold text-sm uppercase tracking-wider rounded-xl transition-all duration-300 transform overflow-hidden border ${
                           subscribed
-                            ? "bg-emerald-600 hover:bg-emerald-700 border-emerald-500/50 cursor-default"
+                            ? "light:text-white dark:text-white light:bg-emerald-600 dark:bg-emerald-600 light:hover:bg-emerald-700 dark:hover:bg-emerald-700 light:border-emerald-500/50 dark:border-emerald-500/50 cursor-default"
                             : lowerTier
-                            ? "bg-gray-700 hover:bg-gray-600 border-gray-600/50 cursor-not-allowed"
-                            : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 border-red-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-red-500/50 cursor-pointer"
+                              ? "light:text-gray-700 dark:text-gray-400 light:bg-gray-300 dark:bg-gray-700 light:hover:bg-gray-400 dark:hover:bg-gray-600 light:border-gray-400/50 dark:border-gray-600/50 cursor-not-allowed"
+                              : "light:text-white dark:text-white light:bg-gradient-to-r light:from-red-600 light:to-red-700 dark:bg-gradient-to-r dark:from-red-600 dark:to-red-700 light:hover:from-red-500 light:hover:to-red-600 dark:hover:from-red-500 dark:hover:to-red-600 light:border-red-500/50 dark:border-red-500/50 light:hover:shadow-red-400/30 dark:hover:shadow-red-500/50 hover:scale-[1.02] hover:shadow-xl cursor-pointer"
                         }`}
                       >
                         <span className="relative z-10 flex items-center justify-center gap-2">

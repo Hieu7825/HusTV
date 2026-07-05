@@ -169,8 +169,8 @@ const Favorite = () => {
       </div>
 
       <div className="flex justify-center mb-8">
-        <div className="bg-gradient-to-r from-red-950/50 via-pink-950/50 to-red-950/50 border-2 border-red-600/30 rounded-full px-6 py-3 backdrop-blur-sm">
-          <p className="text-gray-300 text-sm flex items-center gap-2">
+        <div className="light:bg-red-50/80 light:border-red-200 dark:bg-gradient-to-r dark:from-red-950/50 dark:via-pink-950/50 dark:to-red-950/50 border-2 dark:border-red-600/30 rounded-full px-6 py-3 backdrop-blur-sm">
+          <p className="light:text-gray-700 dark:text-gray-300 text-sm flex items-center gap-2">
             <Heart className="w-4 h-4 text-red-500 fill-red-500" />
             You have{" "}
             <span className="text-red-500 font-bold text-lg mx-1">
@@ -199,7 +199,7 @@ const Favorite = () => {
               <span>
                 {" "}
                 matching "
-                <span className="text-white font-semibold">{searchQuery}</span>"
+                <span className="light:text-gray-900 dark:text-white font-semibold">{searchQuery}</span>"
               </span>
             )}
             {selectedGenreIds.length > 0 && (

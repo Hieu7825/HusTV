@@ -101,7 +101,7 @@ const SearchBar = ({ onSearch, onFilter, allMovies = [] }) => {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="Search for movies, actors, directors, genres..."
-                className="search-input w-full h-16 pl-16 pr-6 border-none rounded-2xl text-white text-lg placeholder-gray-400 focus:outline-none transition-all duration-300 font-medium focus:placeholder-gray-300"
+                className="search-input w-full h-16 pl-16 pr-6 border-none rounded-2xl light:text-gray-900 dark:text-white text-lg light:placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none transition-all duration-300 font-medium light:focus:placeholder-gray-600 dark:focus:placeholder-gray-300"
               />
 
               {/* Search Icon */}
@@ -119,7 +119,7 @@ const SearchBar = ({ onSearch, onFilter, allMovies = [] }) => {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className="relative h-16 px-6 rounded-2xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-gray-700/50 hover:border-red-500/50 transition-all duration-300 flex items-center gap-3 group overflow-hidden"
+              className="relative h-16 px-6 rounded-2xl light:bg-gradient-to-br light:from-gray-200/80 light:to-gray-300/80 dark:bg-gradient-to-br dark:from-gray-800/80 dark:to-gray-900/80 backdrop-blur-sm border light:border-gray-400/50 dark:border-gray-700/50 light:hover:border-red-400/50 dark:hover:border-red-500/50 transition-all duration-300 flex items-center gap-3 group overflow-hidden"
             >
               {/* Button Background Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -129,13 +129,13 @@ const SearchBar = ({ onSearch, onFilter, allMovies = [] }) => {
                   showFilterDropdown ? "rotate-90" : ""
                 }`}
               />
-              <span className="text-white font-medium relative z-10">
+              <span className="light:text-gray-800 dark:text-white font-medium relative z-10">
                 Filter
               </span>
 
               {/* Badge hiển thị số lượng bộ lọc đang áp dụng */}
               {selectedGenres.length > 0 && (
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold animate-pulse z-20">
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center light:text-gray-900 dark:text-white text-xs font-bold animate-pulse z-20">
                   {selectedGenres.length}
                 </div>
               )}
@@ -143,12 +143,12 @@ const SearchBar = ({ onSearch, onFilter, allMovies = [] }) => {
 
             {/* Filter Dropdown */}
             {showFilterDropdown && (
-              <div className="absolute right-0 mt-4 w-80 max-h-96 overflow-hidden bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl z-50 animate-fade-in">
+              <div className="absolute right-0 mt-4 w-80 max-h-96 overflow-hidden light:bg-gradient-to-br light:from-white/95 light:to-gray-50/95 dark:bg-gradient-to-br dark:from-gray-900/95 dark:to-black/95 backdrop-blur-xl light:border light:border-gray-300/50 dark:border dark:border-gray-700/50 rounded-2xl shadow-2xl z-50 animate-fade-in">
                 {/* Dropdown Header */}
-                <div className="sticky top-0 bg-gray-900/95 backdrop-blur-sm px-6 py-4 border-b border-gray-700/50 flex items-center justify-between z-10">
+                <div className="sticky top-0 light:bg-gray-100/95 dark:bg-gray-900/95 backdrop-blur-sm px-6 py-4 light:border-b light:border-gray-300/50 dark:border-b dark:border-gray-700/50 flex items-center justify-between z-10">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-5 h-5 text-red-500" />
-                    <h3 className="text-white font-semibold">
+                    <h3 className="light:text-gray-800 dark:text-white font-semibold">
                       Filter by Genre
                     </h3>
                   </div>
@@ -171,18 +171,18 @@ const SearchBar = ({ onSearch, onFilter, allMovies = [] }) => {
                         {genres.map((genre) => (
                           <label
                             key={genre.id}
-                            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-800/50 transition-all duration-200 cursor-pointer group"
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl light:hover:bg-gray-300/30 dark:hover:bg-gray-800/50 transition-all duration-200 cursor-pointer group"
                           >
                             <div className="relative">
                               <input
                                 type="checkbox"
                                 checked={selectedGenres.includes(genre.id)}
                                 onChange={() => toggleGenre(genre.id)}
-                                className="w-5 h-5 rounded border-2 border-gray-600 bg-transparent checked:bg-red-500 checked:border-red-500 transition-all duration-200 cursor-pointer appearance-none"
+                                className="w-5 h-5 rounded light:border-2 light:border-gray-500 dark:border-2 dark:border-gray-600 bg-transparent checked:bg-red-500 checked:border-red-500 transition-all duration-200 cursor-pointer appearance-none"
                               />
                               {selectedGenres.includes(genre.id) && (
                                 <svg
-                                  className="w-3 h-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                                  className="w-3 h-3 light:text-gray-900 dark:text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                                   fill="none"
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
@@ -194,7 +194,7 @@ const SearchBar = ({ onSearch, onFilter, allMovies = [] }) => {
                                 </svg>
                               )}
                             </div>
-                            <span className="text-gray-300 group-hover:text-white transition-colors duration-200 font-medium">
+                            <span className="light:text-gray-700 dark:text-gray-300 light:group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200 font-medium">
                               {genre.name}
                             </span>
                           </label>

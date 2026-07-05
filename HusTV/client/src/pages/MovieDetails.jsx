@@ -219,40 +219,40 @@ const MovieDetails = () => {
 
         {/* Movie Info */}
         <div className="flex flex-col gap-4">
-          <span className="text-red-500 font-bold text-sm tracking-wider uppercase bg-red-950/50 px-3 py-1 rounded-full w-fit border border-red-600/30">
+          <span className="text-red-500 font-bold text-sm tracking-wider uppercase light:bg-red-50 light:border-red-200 dark:bg-red-950/50 px-3 py-1 rounded-full w-fit border dark:border-red-600/30">
             {movie.original_language?.toUpperCase() || "EN"}
           </span>
 
-          <h1 className="text-4xl md:text-5xl font-bold max-w-2xl text-balance text-white drop-shadow-2xl">
+          <h1 className="text-4xl md:text-5xl font-bold max-w-2xl text-balance light:text-gray-900 dark:text-white drop-shadow-2xl">
             {movie.title}
           </h1>
 
           {movie.tagline && (
-            <p className="text-red-400 italic text-lg">"{movie.tagline}"</p>
+            <p className="light:text-red-600 dark:text-red-400 italic text-lg">"{movie.tagline}"</p>
           )}
 
-          <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full w-fit border-2 border-red-600/30 shadow-lg shadow-red-600/20">
+          <div className="flex items-center gap-2 light:bg-gray-100 light:border-gray-200 dark:bg-black/50 px-4 py-2 rounded-full w-fit border-2 dark:border-red-600/30 shadow-lg light:shadow-gray-200/50 dark:shadow-red-600/20">
             <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 drop-shadow-lg" />
-            <span className="text-white font-semibold">
+            <span className="light:text-gray-900 dark:text-white font-semibold">
               {movie.vote_average?.toFixed(1) || "N/A"}
             </span>
-            <span className="text-gray-400 text-sm">User Rating</span>
+            <span className="light:text-gray-600 dark:text-gray-400 text-sm">User Rating</span>
           </div>
 
-          <p className="text-gray-300 mt-2 leading-relaxed max-w-xl text-base drop-shadow-md">
+          <p className="light:text-gray-700 dark:text-gray-300 mt-2 leading-relaxed max-w-xl text-base drop-shadow-md">
             {movie.overview}
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 text-gray-300 text-sm">
-            <span className="bg-gray-900 px-3 py-1.5 rounded-full border border-red-600/30 shadow-md">
+          <div className="flex flex-wrap items-center gap-3 light:text-gray-700 dark:text-gray-300 text-sm">
+            <span className="light:bg-gray-100 dark:bg-gray-900 px-3 py-1.5 rounded-full border light:border-gray-200 dark:border-red-600/30 shadow-md">
               {timeFormat(movie.runtime)}
             </span>
             <span className="text-red-500">•</span>
-            <span className="bg-gray-900 px-3 py-1.5 rounded-full border border-red-600/30 shadow-md">
+            <span className="light:bg-gray-100 dark:bg-gray-900 px-3 py-1.5 rounded-full border light:border-gray-200 dark:border-red-600/30 shadow-md">
               {movie.genres?.map((genre) => genre.name).join(", ") || "N/A"}
             </span>
             <span className="text-red-500">•</span>
-            <span className="bg-gray-900 px-3 py-1.5 rounded-full border border-red-600/30 shadow-md">
+            <span className="light:bg-gray-100 dark:bg-gray-900 px-3 py-1.5 rounded-full border light:border-gray-200 dark:border-red-600/30 shadow-md">
               {new Date(movie.release_date).getFullYear()}
             </span>
           </div>
@@ -263,7 +263,7 @@ const MovieDetails = () => {
                 navigate(`/video/${id}`);
                 scrollTo(0, 0);
               }}
-              className="flex items-center gap-2 px-8 py-3 text-sm bg-gray-900 hover:bg-red-900 text-white transition-all duration-300 rounded-full font-medium cursor-pointer shadow-lg hover:shadow-xl hover:scale-105 border-2 border-red-600 hover:border-red-400 hover:shadow-red-600/50 active:scale-95"
+              className="flex items-center gap-2 px-8 py-3 text-sm light:bg-gray-100 light:hover:bg-red-100 light:text-gray-900 dark:bg-gray-900 dark:hover:bg-red-900 dark:text-white transition-all duration-300 rounded-full font-medium cursor-pointer shadow-lg hover:shadow-xl hover:scale-105 border-2 light:border-red-500 dark:border-red-600 light:hover:border-red-400 dark:hover:border-red-400 light:hover:shadow-red-400/30 dark:hover:shadow-red-600/50 active:scale-95"
             >
               <PlayCircle className="w-5 h-5" />
               Play Now
@@ -274,7 +274,7 @@ const MovieDetails = () => {
               className={`p-3 rounded-full transition-all duration-300 cursor-pointer border-2 shadow-lg hover:scale-110 active:scale-95 ${
                 isLiked
                   ? "bg-red-600 border-red-500 shadow-red-600/50 hover:shadow-red-600/70"
-                  : "bg-gray-900 border-red-600 shadow-red-600/30 hover:bg-red-900 hover:shadow-red-600/50"
+                  : "light:bg-gray-100 light:border-gray-300 light:hover:bg-gray-200 dark:bg-gray-900 dark:border-red-600 dark:shadow-red-600/30 dark:hover:bg-red-900 dark:hover:shadow-red-600/50"
               }`}
               title={isLiked ? "Remove from Favorites" : "Add to Favorites"}
             >
@@ -313,7 +313,7 @@ const MovieDetails = () => {
             navigate("/movies");
             scrollTo(0, 0);
           }}
-          className="px-12 py-3.5 text-sm bg-gray-900 hover:bg-red-900 text-white transition-all duration-300 rounded-full font-medium cursor-pointer shadow-lg hover:shadow-xl hover:scale-105 border-2 border-red-600 hover:border-red-400 hover:shadow-red-600/50 active:scale-95"
+          className="px-12 py-3.5 text-sm light:bg-gray-100 light:hover:bg-red-100 light:text-gray-900 dark:bg-gray-900 dark:hover:bg-red-900 dark:text-white transition-all duration-300 rounded-full font-medium cursor-pointer shadow-lg hover:shadow-xl hover:scale-105 border-2 light:border-red-500 dark:border-red-600 light:hover:border-red-400 dark:hover:border-red-400 light:hover:shadow-red-400/30 dark:hover:shadow-red-600/50 active:scale-95"
         >
           Show More Movies
         </button>

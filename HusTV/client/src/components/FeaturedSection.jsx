@@ -84,10 +84,10 @@ const FeaturedSection = () => {
 
         <button
           onClick={() => navigate("/movies")}
-          className="group flex items-center gap-2 px-4 py-2 text-sm text-gray-300 cursor-pointer hover:text-red-400 transition-all duration-300 border border-transparent hover:border-red-500/50 rounded-lg backdrop-blur-sm hover:bg-red-900/20"
+          className="group flex items-center gap-2 px-4 py-2 text-sm light:text-gray-700 dark:text-gray-300 cursor-pointer light:hover:text-red-600 dark:hover:text-red-400 transition-all duration-300 border border-transparent light:hover:border-red-400/50 dark:hover:border-red-500/50 rounded-lg backdrop-blur-sm light:hover:bg-red-100/20 dark:hover:bg-red-900/20"
         >
           <span className="group-hover:animate-pulse">View All</span>
-          <ArrowRight className="group-hover:translate-x-1 group-hover:text-red-400 transition-all duration-300 w-4.5 h-4.5" />
+          <ArrowRight className="light:group-hover:text-red-600 dark:group-hover:text-red-400 group-hover:translate-x-1 transition-all duration-300 w-4.5 h-4.5" />
         </button>
       </div>
 

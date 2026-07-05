@@ -185,7 +185,7 @@ const Movies = () => {
               <span>
                 {" "}
                 matching "
-                <span className="text-white font-semibold">{searchQuery}</span>"
+                <span className="light:text-gray-900 dark:text-white font-semibold">{searchQuery}</span>"
               </span>
             )}
             {selectedGenreIds.length > 0 && (

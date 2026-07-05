@@ -73,7 +73,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={goToPrevious}
         disabled={currentPage === 1}
-        className="group flex items-center gap-2 px-6 py-3 text-sm text-gray-400 hover:text-red-400 transition-all duration-300 border border-gray-700 hover:border-red-500/50 rounded-xl backdrop-blur-sm hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-red-500/10"
+        className="group flex items-center gap-2 px-6 py-3 text-sm light:text-gray-700 dark:text-gray-400 light:hover:text-red-600 dark:hover:text-red-400 transition-all duration-300 light:border light:border-gray-400 dark:border dark:border-gray-700 light:hover:border-red-400/50 dark:hover:border-red-500/50 rounded-xl backdrop-blur-sm light:hover:bg-red-100/20 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg light:hover:shadow-red-400/10 dark:hover:shadow-red-500/10"
       >
         <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform duration-300" />
         <span>Previous</span>
@@ -86,7 +86,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           if (page === "dots-start" || page === "dots-end") {
             return (
               <div key={`dots-${index}`} className="flex items-center px-3">
-                <span className="text-gray-500 text-lg">...</span>
+                <span className="light:text-gray-500 dark:text-gray-500 text-lg">
+                  ...
+                </span>
               </div>
             );
           }
@@ -98,8 +100,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
               onClick={() => goToPage(page)}
               className={`w-12 h-12 rounded-xl font-bold transition-all duration-300 cursor-pointer relative z-10 ${
                 page === currentPage
-                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-xl shadow-red-500/30 scale-110 border-2 border-red-400"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-red-500/20 hover:text-red-400 border border-gray-700 hover:border-red-500/50 hover:scale-105 hover:shadow-lg"
+                  ? "bg-gradient-to-r from-red-600 to-red-700 light:from-red-600 light:to-red-700 dark:from-red-600 dark:to-red-700 text-white light:text-white dark:text-white shadow-xl light:shadow-red-400/30 dark:shadow-red-500/30 scale-110 border-2 light:border-red-400 dark:border-red-400"
+                  : "light:bg-gray-200/50 dark:bg-gray-800/50 light:text-gray-700 dark:text-gray-400 light:hover:bg-red-100/20 dark:hover:bg-red-500/20 light:hover:text-red-600 dark:hover:text-red-400 light:border light:border-gray-400 dark:border dark:border-gray-700 light:hover:border-red-400/50 dark:hover:border-red-500/50 hover:scale-105 hover:shadow-lg"
               }`}
             >
               {page}
@@ -112,7 +114,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={goToNext}
         disabled={currentPage === totalPages}
-        className="group flex items-center gap-2 px-6 py-3 text-sm text-gray-400 hover:text-red-400 transition-all duration-300 border border-gray-700 hover:border-red-500/50 rounded-xl backdrop-blur-sm hover:bg-red-900/20 hover:shadow-lg hover:shadow-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="group flex items-center gap-2 px-6 py-3 text-sm light:text-gray-700 dark:text-gray-400 light:hover:text-red-600 dark:hover:text-red-400 transition-all duration-300 light:border light:border-gray-400 dark:border dark:border-gray-700 light:hover:border-red-400/50 dark:hover:border-red-500/50 rounded-xl backdrop-blur-sm light:hover:bg-red-100/20 dark:hover:bg-red-900/20 hover:shadow-lg light:hover:shadow-red-400/10 dark:hover:shadow-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span>Next</span>
         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />

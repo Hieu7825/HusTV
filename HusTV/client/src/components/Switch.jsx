@@ -6,17 +6,29 @@ const Switch = () => {
   const [isChecked, setIsChecked] = useState(false); // defaultChecked="darkTheme" -> giả sử ban đầu nó không được checked
   // Nếu bạn muốn nó checked mặc định, đặt là true
 
+  const updateThemeClasses = (theme) => {
+    if (theme === "light") {
+      document.documentElement.classList.add("light-mode");
+      document.documentElement.classList.remove("dark");
+    } else {
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light-mode");
+    }
+  };
+
   useEffect(() => {
     // Get saved theme
     const savedTheme = localStorage.getItem("theme") || "light";
     setIsChecked(savedTheme === "dark");
     document.documentElement.setAttribute("data-theme", savedTheme);
+    updateThemeClasses(savedTheme);
   }, []);
 
   const handleToggle = () => {
     const newTheme = !isChecked ? "dark" : "light";
     setIsChecked(!isChecked);
     document.documentElement.setAttribute("data-theme", newTheme);
+    updateThemeClasses(newTheme);
     localStorage.setItem("theme", newTheme);
   };
 

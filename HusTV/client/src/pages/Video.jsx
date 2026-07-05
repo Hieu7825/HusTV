@@ -49,7 +49,7 @@ export const Video = () => {
         } catch (streamError) {
           console.warn(
             "⚠️ Streaming URL fetch failed, using fallback:",
-            streamError
+            streamError,
           );
           // Fallback to direct video URL
           setStreamingUrl(movieData.video || "");
@@ -64,7 +64,7 @@ export const Video = () => {
         } catch (progressError) {
           console.warn(
             "⚠️ Watch progress update failed (non-critical):",
-            progressError
+            progressError,
           );
           // Don't fail the whole page if watch progress fails
         }
@@ -121,7 +121,7 @@ export const Video = () => {
           totalDuration,
         });
         console.log(
-          `⏱️ Watch progress updated: ${watchedDuration}/${totalDuration}s`
+          `⏱️ Watch progress updated: ${watchedDuration}/${totalDuration}s`,
         );
       } catch (error) {
         console.error("Failed to update watch progress:", error);
@@ -153,10 +153,10 @@ export const Video = () => {
           <Home className="text-blue-500 dark:text-red-500 w-5 h-5" />
           HusTV
         </button>
-        <ChevronRight className="w-5 h-5 text-gray-500" />
+        <ChevronRight className="w-5 h-5 light:text-gray-400 dark:text-gray-500" />
         <button
           onClick={() => navigate(`/movies/${id}`)}
-          className="cursor-pointer text-gray-600 dark:text-gray-300 font-medium text-lg drop-shadow-md"
+          className="cursor-pointer light:text-gray-700 dark:text-gray-600 light:hover:text-gray-900 dark:hover:text-gray-300 font-medium text-lg drop-shadow-md transition-colors"
         >
           {movie.title}
         </button>
@@ -170,8 +170,8 @@ export const Video = () => {
         {/* TV Frame */}
         <div className="relative bg-gradient-to-br from-gray-100 via-gray-200 to-white dark:from-gray-900 dark:via-gray-800 dark:to-black p-8 md:p-12 rounded-3xl shadow-2xl">
           {/* TV Stand/Base */}
-          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-48 h-8 bg-gradient-to-b from-gray-800 to-gray-900 rounded-b-2xl shadow-xl"></div>
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-32 h-4 bg-gray-950 rounded-full shadow-2xl"></div>
+          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-48 h-8 light:bg-gradient-to-b light:from-gray-600 light:to-gray-700 dark:bg-gradient-to-b dark:from-gray-800 dark:to-gray-900 rounded-b-2xl shadow-xl"></div>
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-32 h-4 light:bg-gray-700 dark:bg-gray-950 rounded-full shadow-2xl"></div>
 
           {/* TV Inner Bezel */}
           <div className="relative bg-black p-4 rounded-2xl shadow-inner">
@@ -195,7 +195,7 @@ export const Video = () => {
                     onError={(e) => {
                       console.error("❌ Video playback error:", e);
                       toast.error(
-                        "Failed to load video. Please try again later."
+                        "Failed to load video. Please try again later.",
                       );
                     }}
                   >
@@ -267,11 +267,15 @@ export const Video = () => {
 
       {/* Movie Info Below Video */}
       <div className="mt-12 max-w-7xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">{movie.title}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-4 light:text-gray-900 dark:text-white">
+          {movie.title}
+        </h1>
         {movie.tagline && (
-          <p className="text-red-400 italic text-lg mb-4">"{movie.tagline}"</p>
+          <p className="light:text-red-600 dark:text-red-400 italic text-lg mb-4">
+            "{movie.tagline}"
+          </p>
         )}
-        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+        <p className="light:text-gray-700 dark:text-gray-300 leading-relaxed">
           {movie.overview}
         </p>
       </div>
@@ -280,8 +284,8 @@ export const Video = () => {
       {relatedMovies.length > 0 && (
         <div className="mt-24">
           <div className="flex items-center gap-3 mb-8">
-            <div className="h-1 w-12 bg-gradient-to-r from-blue-500 dark:from-red-600 to-transparent rounded-full"></div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-lg">
+            <div className="h-1 w-12 light:bg-gradient-to-r light:from-blue-400 dark:bg-gradient-to-r dark:from-red-600 to-transparent rounded-full"></div>
+            <h2 className="text-2xl font-bold light:text-gray-900 dark:text-white drop-shadow-lg">
               You May Also Like
             </h2>
           </div>
@@ -301,7 +305,7 @@ export const Video = () => {
             navigate("/movies");
             scrollTo(0, 0);
           }}
-          className="px-12 py-3.5 text-sm bg-gray-900 hover:bg-red-900 text-white transition-all duration-300 rounded-full font-medium cursor-pointer shadow-lg hover:shadow-xl hover:scale-105 border-2 border-red-600 hover:border-red-400 hover:shadow-red-600/50 active:scale-95"
+          className="px-12 py-3.5 text-sm light:bg-gray-100 dark:bg-gray-900 light:hover:bg-red-100 dark:hover:bg-red-900 light:text-gray-900 dark:text-white transition-all duration-300 rounded-full font-medium cursor-pointer shadow-lg hover:shadow-xl hover:scale-105 light:border-2 light:border-red-500 dark:border-2 dark:border-red-600 light:hover:border-red-400 dark:hover:border-red-400 light:hover:shadow-red-400/30 dark:hover:shadow-red-600/50 active:scale-95"
         >
           Show More Movies
         </button>

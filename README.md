@@ -58,30 +58,19 @@ HusTV/
     └── server.js     # Khởi tạo và cấu hình Server
 ```
 
----
-
 ## 📸 Hình Ảnh Giao Diện
 
-### 🏠 Trang Chủ & Phim Nổi Bật
-![Trang Chủ](./HusTV/client/src/assets/image/Thumbnail.png)
+### 🏠 Trang Chủ - Chế Độ Tối (Default)
+![Trang Chủ - Dark Mode](./HusTV/client/src/assets/image/home_dark.png)
 
-### 🎬 Trang Chi Tiết Phim (Hỗ trợ chế độ Sáng/Tối)
-![Chi Tiết Phim](./HusTV/client/src/assets/image/1.png)
+### 🏠 Trang Chủ - Chế Độ Sáng
+![Trang Chủ - Light Mode](./HusTV/client/src/assets/image/home_light.png)
 
-### 📺 Trình Phát Video (Chế độ phát chuẩn TV)
-![Trình Phát Video](./HusTV/client/src/assets/image/2.png)
+### 🎬 Trang Danh Sách Phim - Chế Độ Tối
+![Danh Sách Phim - Dark Mode](./HusTV/client/src/assets/image/movies_dark.png)
 
-### 💳 Đăng Ký Gói Cước Dịch Vụ
-![Gói Dịch Vụ](./HusTV/client/src/assets/image/3.png)
-
-### ❤️ Trang Phim Yêu Thích Cá Nhân
-![Yêu Thích](./HusTV/client/src/assets/image/4.png)
-
-### ⚙️ Admin - Quản Lý Thêm Mới Phim
-![Thêm Phim](./HusTV/client/src/assets/image/5.png)
-
-### 📊 Admin - Dashboard Thống Kê Báo Cáo
-![Thống Kê](./HusTV/client/src/assets/image/6.png)
+### 🎬 Trang Danh Sách Phim - Chế Độ Sáng
+![Danh Sách Phim - Light Mode](./HusTV/client/src/assets/image/movies_light.png)
 
 ---
 

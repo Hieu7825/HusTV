@@ -27,7 +27,7 @@ const Navbar = () => {
   }, [lastScrollY]);
   return (
     <div
-      className={`fixed top-0 left-0 z-50 w-full flex items-center justify-between px-6 md:px-16 lg:px-36 py-3 transition-all duration-900 backdrop-blur ${
+      className={`fixed top-0 left-0 z-50 w-full flex items-center justify-between px-6 md:px-16 lg:px-36 py-2 transition-all duration-900 backdrop-blur ${
         showNavbar ? "translate-y-0" : "-translate-y-full"
       }`}
       style={{
@@ -41,7 +41,7 @@ const Navbar = () => {
       <div
         className={`max-md:absolute max-md:top-0 max-md:left-0 max-md:font-medium
       max-md:text-lg z-50 flex flex-col md:flex-row items-center
-      max-md:justify-center gap-8 min-md:px-8 py-3 max-md:h-screen
+      max-md:justify-center gap-8 min-md:px-8 py-1.5 max-md:h-screen
       min-md:rounded-full backdrop-blur md:border overflow-hidden transition-[width] duration-300 
       ${isOpen ? "max-md:w-full" : "max-md:w-0"}`}
         style={{
